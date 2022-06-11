@@ -6,7 +6,11 @@
 // TODO: much better than start button: kick everyone except oya out after finished round,
 // everyone has to rejoin. rejoining is the same as placing a bet: press join
 // and the betscreen shows locally, you're considered as when you've entered a
-// bet and press done. oya can press start round whenever there is at least one bet.
+// bet and press done. oya can press start round whenever there is at least one
+// bet.
+
+// TODO: oya and playerActive needs to be in every message (7 bits). always
+// update buttons
 
 using UdonSharp;
 using UnityEngine;
