@@ -322,27 +322,6 @@ namespace XZDice
         public void _BtnJoinPlayer3() { JoinPlayerBtn(3); }
         public void _BtnJoinPlayer4() { JoinPlayerBtn(4); }
 
-        /*
-        public override bool OnOwnershipRequest(VRCPlayerApi requester, VRCPlayerApi newOwner)
-        {
-
-            if (requester.playerId == newOwner.playerId) {
-                // Somebody joining attempting to grab ownership for themselves, in case there is no active owner
-                if (isOya()) {
-                    // Owner branch
-                    if (iAmPlayer <= 0) {
-                        // Owner isn't active in the game, it's fine
-                        return true;
-                    }
-                } else {
-                    //
-                }
-            } else {
-
-            }
-        }
-        */
-
         private void SendBetEvent(int player, int bet)
         {
             string fnname = string.Format("EventPlayer{0}Bet{1}", player, bet);
@@ -428,28 +407,6 @@ namespace XZDice
             // The oya owns the gameobject, and acts as "master" of the game
             return Networking.IsOwner(gameObject);
         }
-
-        // DiceListener
-        /*
-        public void SetThrown()
-        {
-            for (int i = 0; i < dieReadResult.Length; ++i) {
-                dieReadResult[i] = false;
-            }
-
-            if (isOwner()) {
-                for (int i = 0; i < recvResult.Length; ++i)
-                    recvResult[i] = -1;
-                recvResult_cntr = 0;
-                recvDieOutside = false;
-            } else {
-                // FIXME: Actually this might not be neccessary, since the oya should know that a dice throw is about to happen
-                // If we aren't the oya, we must inform the oya that we just threw, so the oya can prepare to receive the result events.
-                // TODO: make sure there are no races... alternatively switch to a method where all 3 dice are sent at once (then using events won't be realistic)
-                SendCustomNetworkEvent(NetworkEventTarget.Owner, nameof(SetThrown));
-            }
-        }
-        */
 
         public void SetThrown()
         {
@@ -565,9 +522,6 @@ namespace XZDice
                 bool[] pa = opoyareport_playerActive();
                 GameLogDebug(string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
                                            oya, pa[0], pa[1], pa[2], pa[3]));
-
-                // if (iAmPlayer <= 0)
-                //     UpdateJoinButtons(pa);
                 UpdateJoinButtons(pa);
             } else if (op_getop() == OPCODE_ENABLE_BET) {
                 if (!isOya() && iAmPlayer > 0 && iAmPlayer <= MAX_PLAYERS) {
@@ -585,10 +539,6 @@ namespace XZDice
                 // Disallow anyone from leaving/joining
                 foreach (GameObject btn in joinButtons)
                     btn.SetActive(false);
-
-                // if (iAmPlayer > 0 && iAmPlayer <= MAX_PLAYERS) {
-                //     joinButtons[iAmPlayer - 1].SetActive(false);
-                // }
             } else if (op_getop() == OPCODE_BET) {
                 int player = opbet_getplayer();
                 float total = opbet_gettotal();
@@ -612,38 +562,12 @@ namespace XZDice
                 bool[] pa = opplayer_playerActive();
                 GameLog(string.Format("P{0} entered the game (playerActive: {1},{2},{3},{4})",
                                       player, pa[0], pa[1], pa[2], pa[3]));
-
-                /*
-                if (iAmPlayer == player) {
-                    // Turn the button into a leave button, and disable other join buttons
-                    GameObject btn = joinButtons[player-1];
-                    SetButtonText(btn, "Leave");
-                    for (int i = 0; i < MAX_PLAYERS; ++i) {
-                        if (i + 1 != iAmPlayer)
-                            joinButtons[i].SetActive(false);
-                    }
-                } else {
-                    // Disable buttons based on playerActive elsewhere
-                    UpdateJoinButtons(pa);
-                }
-                */
                 UpdateJoinButtons(pa);
             } else if (op_getop() == OPCODE_PLAYERLEAVE) {
                 int player = opplayer_player();
                 bool[] pa = opplayer_playerActive();
                 GameLog(string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
                                       player, pa[0], pa[1], pa[2], pa[3]));
-
-                /*
-                if (iAmPlayer == player) {
-                    GameObject btn = joinButtons[player-1];
-                    btn.SetActive(true);
-                    SetButtonText(btn, "Join");
-                } else if (iAmPlayer <= 0) {
-                    // Update buttons for non-players
-                    UpdateJoinButtons(pa);
-                }
-                */
                 if (iAmPlayer == player)
                     iAmPlayer = -1;
                 UpdateJoinButtons(pa);
@@ -1087,47 +1011,6 @@ namespace XZDice
                         return; // We are no longer oya, so we no longer run the state machine
                     }
                 }
-/* 
-                } else if (state == STATE_BALANCE) {
-                    GameLogDebug(string.Format("state = STATE_BALANCE", currentPlayer));
-                    for (int i = 0; i < MAX_PLAYERS; ++i) {
-                        if (i + 1 != oya && playerActive[i]) {
-                            float amount = bets[i]*betMultiplier[i];
-                            GameLogDebug(string.Format("amount={1}, bets[{0}]={2}, betMultiplier[{0}]={3}",
-                                                       i, amount, bets[i], betMultiplier[i]));
-                            udonChips.money -= amount;
-                            mkop_balance(i+1, amount);
-                            Broadcast();
-                            // TODO: this state needs to be broken up into one
-                            // for each player, alternatively if we can do it
-                            // with one balance opcode
-                        }
-                    }
-                    // Round is done. Start over from the top
-                    state = STATE_FIRST;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 3);
-                    return;
-                } else if (state == STATE_OYAPAYOUT) {
-                    GameLogDebug("state = STATE_OYAPAYOUT");
-
-                    // payout based on oyaPayoutMultiplier here
-                    for (int i = 0; i < MAX_PLAYERS; ++i) {
-                        if (i + 1 != oya && playerActive[i]) {
-                            float amount = oyaPayoutMultiplier*bets[i];
-                            udonChips.money -= amount; // Remove from ourselves
-                            mkop_balance(i+1, amount); // Increase on remote player
-                            Broadcast();
-                            // TODO: this state needs to be broken up into one for each player
-                        }
-                    }
-
-                    // We failed. All gets reset and oya gets passed on
-                    // TODO: event/opcode to inform everyone about this?
-
-                    SendCustomEventDelayedSeconds(nameof(_ToNextOya), 3);
-                    return; // We are no longer oya, so we no longer run the state machine
-                }
-*/
             }
         }
 
