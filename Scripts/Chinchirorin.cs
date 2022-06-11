@@ -1142,6 +1142,9 @@ namespace XZDice
         private void RecvEventPlayerLeave(int player)
         {
             playerActive[player - 1] = false;
+            bets[player - 1] = 0.0f;
+            betMultiplier[player - 1] = 0;
+            betDone[player - 1] = false;
             mkop_playerleave(player, playerActive);
             Broadcast();
 
