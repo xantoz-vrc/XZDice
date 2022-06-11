@@ -644,6 +644,8 @@ namespace XZDice
                     UpdateJoinButtons(pa);
                 }
                 */
+                if (iAmPlayer == player)
+                    iAmPlayer = -1;
                 UpdateJoinButtons(pa);
             } else if (op_getop() == OPCODE_YOURTHROW) {
                 int player = opyourthrow_player();
