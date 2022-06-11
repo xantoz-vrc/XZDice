@@ -1149,6 +1149,8 @@ namespace XZDice
         // handle tricky things like this inline in OyaStateMachine
         private void RecvEventPlayerLeave(int player)
         {
+            GameLogDebug(string.Format("RecvEventPlayerLeave({0})", player));
+
             if (player < 1 || player > MAX_PLAYERS) {
                 Debug.LogError("invalid player variable");
                 GameLogError("invalid player variable");
@@ -1159,20 +1161,7 @@ namespace XZDice
             bets[player - 1] = 0.0f;
             betMultiplier[player - 1] = 0;
             betDone[player - 1] = false;
-            mkop_playerleave(player, playerActive);
-            Broadcast();
 
-            // Need to wait on serialization of the playerleave
-            SendCustomEventDelayedSeconds("_RecvEventPlayer" + player.ToString() + "Leave_Continuation", 0.5f);
-        }
-
-        public void _RecvEventPlayer1Leave_Continuation() { _RecvEventPlayerLeave_Continuation(1); }
-        public void _RecvEventPlayer2Leave_Continuation() { _RecvEventPlayerLeave_Continuation(2); }
-        public void _RecvEventPlayer3Leave_Continuation() { _RecvEventPlayerLeave_Continuation(3); }
-        public void _RecvEventPlayer4Leave_Continuation() { _RecvEventPlayerLeave_Continuation(4); }
-
-        private void _RecvEventPlayerLeave_Continuation(int player)
-        {
             // If oya left
             // If not set up arg0 so that the game is obviously unoccupied
             if (player == oya && player == iAmPlayer) {
@@ -1188,7 +1177,25 @@ namespace XZDice
                     mkop_nooya();
                     Broadcast();
                 }
-            } else if (getActivePlayerCount() < 2) {
+            } else {
+                mkop_playerleave(player, playerActive);
+                Broadcast();
+
+                // Need to wait on serialization of the playerleave (maybe superfluous)
+                SendCustomEventDelayedSeconds("_RecvEventPlayer" + player.ToString() + "Leave_Continuation", 0.5f);
+            }
+        }
+
+        public void _RecvEventPlayer1Leave_Continuation() { _RecvEventPlayerLeave_Continuation(1); }
+        public void _RecvEventPlayer2Leave_Continuation() { _RecvEventPlayerLeave_Continuation(2); }
+        public void _RecvEventPlayer3Leave_Continuation() { _RecvEventPlayerLeave_Continuation(3); }
+        public void _RecvEventPlayer4Leave_Continuation() { _RecvEventPlayerLeave_Continuation(4); }
+
+        private void _RecvEventPlayerLeave_Continuation(int player)
+        {
+            GameLogDebug(string.Format("_RecvEventPlayerLeave_Continuation({0})", player));
+
+            if (getActivePlayerCount() < 2) {
                 // Too few to play. We have to go back to STATE_FIRST
                 state = STATE_FIRST;
                 SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
