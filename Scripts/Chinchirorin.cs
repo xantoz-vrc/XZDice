@@ -1149,6 +1149,12 @@ namespace XZDice
         // handle tricky things like this inline in OyaStateMachine
         private void RecvEventPlayerLeave(int player)
         {
+            if (player < 1 || player > MAX_PLAYERS) {
+                Debug.LogError("invalid player variable");
+                GameLogError("invalid player variable");
+                return;
+            }
+
             playerActive[player - 1] = false;
             bets[player - 1] = 0.0f;
             betMultiplier[player - 1] = 0;
@@ -1156,8 +1162,17 @@ namespace XZDice
             mkop_playerleave(player, playerActive);
             Broadcast();
 
-            // TODO: here we need to wait on serialization to finish
+            // Need to wait on serialization of the playerleave
+            SendCustomEventDelayedSeconds("_RecvEventPlayer" + player.ToString() + "Leave_Continuation", 0.5f);
+        }
 
+        public void _RecvEventPlayer1Leave_Continuation() { _RecvEventPlayerLeave_Continuation(1); }
+        public void _RecvEventPlayer2Leave_Continuation() { _RecvEventPlayerLeave_Continuation(2); }
+        public void _RecvEventPlayer3Leave_Continuation() { _RecvEventPlayerLeave_Continuation(3); }
+        public void _RecvEventPlayer4Leave_Continuation() { _RecvEventPlayerLeave_Continuation(4); }
+
+        private void _RecvEventPlayerLeave_Continuation(int player)
+        {
             // If oya left
             // If not set up arg0 so that the game is obviously unoccupied
             if (player == oya && player == iAmPlayer) {
