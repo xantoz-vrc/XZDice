@@ -734,7 +734,11 @@ namespace XZDice
                 ResetClientVariables();
                 oya = -1;
                 iAmPlayer = -1;
-                UpdateJoinButtons(playerActive);
+                //UpdateJoinButtons(playerActive);
+                foreach (GameObject btn in joinButtons) {
+                    btn.SetActive(true);
+                    SetButtonText(btn, "Join");
+                }
             }
         }
 
