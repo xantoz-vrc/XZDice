@@ -59,7 +59,6 @@ namespace XZDice
 
         private bool langJp = false;
 
-
         // Max bet in part makes sure we do not go above 2^16 (even when tripled), as we serialize bets as 16 bit uint
         //   2*20000 = 60000 < 2^16 = 65536
         private readonly float MAXBET = 20000.0f;
@@ -127,13 +126,6 @@ namespace XZDice
             return str;
         }
 
-        private int _test_x = 0;
-        public void _Test()
-        {
-            GameLogDebug("test " + _test_x.ToString());
-            _test_x++;
-        }
-
         private void Start()
         {
             if (dieGrabSphere.dice.Length != 3)
@@ -162,16 +154,20 @@ namespace XZDice
 
             udonChips = GameObject.Find("UdonChips").GetComponent<UdonChips>();
 
-            // TODO: removeme (ttest code)
-            SendCustomEventDelayedSeconds(nameof(_Test), 1.0f);
-            SendCustomEventDelayedSeconds(nameof(_Test), 2.0f);
-            SendCustomEventDelayedSeconds(nameof(_Test), 3.0f);
-            SendCustomEventDelayedSeconds(nameof(_Test), 4.0f);
-
             ResetClientVariables();
             ResetServerVariables();
             ResetTable();
 
+            // Delay this so first enabling of join buttons is likely to happen after serialization on late
+            // joiners. Unfortunately cannot currently do it in a smarter way,
+            // since the first joiner of instance (first master) does not get
+            // OnDeserializatizon.
+            // Maybe something with OnPlayerJoined could be done, though?
+            SendCustomEventDelayedSeconds(nameof(_MaybeEnableJoinButtonsOnStart), 1.0f);
+        }
+
+        public void _MaybeEnableJoinButtonsOnStart()
+        {
             // When entering instance, show join buttons if table is currently inactive
             if (op_getop() == OPCODE_NOOYA)
             {
