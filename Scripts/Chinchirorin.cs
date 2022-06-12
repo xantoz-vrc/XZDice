@@ -299,17 +299,17 @@ namespace XZDice
 
         private void JoinPlayerBtn(int player)
         {
+            // Disable all buttons to prevent double-click events (some buttons
+            // might be re-enabled once we get ACKed)
+            foreach (GameObject btn in joinButtons) {
+                btn.SetActive(false);
+            }
+
             if (iAmPlayer > 0) {
                 // Already joined means we leave
                 LeaveGame(iAmPlayer);
             } else {
                 JoinGame(player);
-            }
-
-            // Disable all buttons to prevent double-click events (some buttons
-            // might be re-enabled once we get ACKed)
-            for (int i = 0; i < MAX_PLAYERS; ++i) {
-                joinButtons[i].SetActive(false);
             }
         }
 
