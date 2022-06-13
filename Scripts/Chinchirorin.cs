@@ -636,7 +636,14 @@ namespace XZDice
                 else
                     GameLog(string.Format("Oya P{0} -> P{1} (playerActive: {2},{3},{4},{5})",
                                           fromPlayer, toPlayer, pa[0], pa[1], pa[2], pa[3]));
-                UpdateJoinButtons(pa);
+
+                // Nobody gets to leave or join until oyareport, because it can
+                // break the state machine and cause an infinite loop (TODO:
+                // reatructure state-machine to be explicitly event-driven and
+                // in general suck less. That way the state-machine should be
+                // able to reject events in states it can't handle them)
+                foreach (GameObject btn in joinButtons)
+                    btn.SetActive(false);
 
                 if (iAmPlayer > 0 && toPlayer == iAmPlayer) {
                     // Become owner/oya
@@ -646,6 +653,7 @@ namespace XZDice
                     ResetServerVariables();
                     // Set playerActive based on what previous oya told us
                     playerActive = pa;
+
 
                     // Start the oya state machine here
                     state = STATE_FIRST;
