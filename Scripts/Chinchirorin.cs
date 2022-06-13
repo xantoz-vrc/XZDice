@@ -56,11 +56,18 @@ namespace XZDice
         private GameObject[] startRoundButtons;
 
         [SerializeField]
-        private GameLog gameLog;
+        private GameLog gameLog = null;
+
+        [SerializeField]
+        [Tooltip("GameLog which gets debug logs written to it as well")]
+        private GameLog gameLogDebug = null;
+
+        [SerializeField]
+        [Tooltip("Enable debugging (also make sure to set gameLogDebug)")]
+        private bool DEBUG = true;
+
 
         private UdonChips udonChips = null;
-
-        private readonly bool DEBUG = true;
 
         private bool langJp = false;
 
@@ -103,15 +110,19 @@ namespace XZDice
 
         private void GameLog(string message)
         {
-            if (gameLog) {
+            if (gameLog != null) {
                 gameLog.Log(message);
+            }
+            if (gameLogDebug != null) {
+                gameLogDebug.Log(message);
             }
         }
 
         private void GameLogDebug(string message)
         {
-            if (DEBUG)
-                GameLog("<color=\"grey\">" + message + "</color>");
+            if (DEBUG && gameLogDebug != null) {
+                gameLogDebug.Log("<color=\"grey\">" + message + "</color>");
+            }
         }
 
         private void GameLogError(string message)
