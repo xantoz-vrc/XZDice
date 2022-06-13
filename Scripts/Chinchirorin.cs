@@ -9,8 +9,13 @@
 // bet and press done. oya can press start round whenever there is at least one
 // bet.
 
+// TODO: handling of when oya disappears (OnOwnerShipTransferred)
+
 // TODO: oya and playerActive needs to be in every message (7 bits). always
-// update buttons
+// update buttons?
+
+// TODO: alternative: always disable buttons in OnDeserializatizon, making them
+// only appear when a command explicitly enabling them arrives?
 
 using UdonSharp;
 using UnityEngine;
