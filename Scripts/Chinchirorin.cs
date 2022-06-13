@@ -280,6 +280,7 @@ namespace XZDice
             // First person joining when table is empty is oya
             if (op_getop() == OPCODE_NOOYA) {
                 GameLogDebug(string.Format("First person joining the table (arg0={0:X})", arg0));
+                oya = iAmPlayer; // Set this already here so OnOwnerShipTransferred knows this wasn't the oya leaving the instance
                 if (!Networking.IsOwner(gameObject))
                     Networking.SetOwner(Networking.LocalPlayer, gameObject);
 
@@ -522,6 +523,21 @@ namespace XZDice
             }
         }
 
+        public override void OnOwnershipTransferred(VRCPlayerApi player)
+        {
+            if (player != null && Networking.IsOwner(player, gameObject)) {
+                // If we were explicitly instructed to become oya, iAmPlayer
+                // should equal oya for the owner of the object. If this is not
+                // the case, this means the oya left the instance.
+
+                if (iAmPlayer != oya) {
+                    GameLog("Oya disappeared: Game reset");
+                    mkop_nooya();
+                    Broadcast();
+                }
+            }
+        }
+
         public override void OnDeserialization()
         {
             if (op_getop() == OPCODE_RESET_TABLE) {
@@ -670,25 +686,20 @@ namespace XZDice
                     // Set playerActive based on what previous oya told us
                     playerActive = pa;
 
-
                     // Start the oya state machine here
                     state = STATE_FIRST;
                     // TODO: should use OnPostSerialization ?
                     SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
                 }
             } else if (op_getop() == OPCODE_NOOYA) {
-                // TODO: reset various things like text displays, betting screens etc.
+                // reset various things like text displays, betting screens etc.
                 GameLogDebug("Table is empty");
                 ResetTable();
                 ResetServerVariables();
                 ResetClientVariables();
                 oya = -1;
                 iAmPlayer = -1;
-                //UpdateJoinButtons(playerActive);
-                foreach (GameObject btn in joinButtons) {
-                    btn.SetActive(true);
-                    SetButtonText(btn, "Join");
-                }
+                UpdateJoinButtons(playerActive);
             }
         }
 
