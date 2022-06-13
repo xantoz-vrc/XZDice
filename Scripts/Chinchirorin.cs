@@ -540,16 +540,14 @@ namespace XZDice
 
         public override void OnDeserialization()
         {
-            if (op_getop() == OPCODE_RESET_TABLE) {
-                GameLogDebug("Got reset table");
-                ResetTable();
-            } else if (op_getop() == OPCODE_OYAREPORT) {
+            if (op_getop() == OPCODE_OYAREPORT) {
                 int player = opoyareport_oya();
+                ResetTable(); // Reset the bet displays and such
                 
                 oya = player;
                 bool[] pa = opoyareport_playerActive();
-                GameLogDebug(string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
-                                           oya, pa[0], pa[1], pa[2], pa[3]));
+                GameLog(string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
+                                      oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
             } else if (op_getop() == OPCODE_ENABLE_BET) {
                 if (!isOya() && iAmPlayer > 0 && iAmPlayer <= MAX_PLAYERS) {
@@ -721,8 +719,7 @@ namespace XZDice
 
         #region states
         private readonly int STATE_FIRST = 1;
-        private readonly int STATE_RESET_TABLE = 1;
-        private readonly int STATE_OYAREPORT = 2;
+        private readonly int STATE_OYAREPORT = 1;
         private readonly int STATE_WAITINGFORPLAYERS = 5;
         private readonly int STATE_WAITINGFORROUNDSTART = 6;
         private readonly int STATE_PREPAREBETS = 7;
@@ -778,16 +775,7 @@ namespace XZDice
             // case we need to wait on some event (reception of those events is
             // also responsible for calling the state machine again)
             while (true) {
-                if (state == STATE_RESET_TABLE) {
-                    GameLogDebug("state = STATE_RESET_TABLE");
-                    mkop_reset_table(); // TODO: merge this and oyareport
-                    Broadcast();
-
-                    // TODO: wait with OnPostSerialization instead
-                    state = STATE_OYAREPORT;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-                    return;
-                } else if (state == STATE_OYAREPORT) {
+                if (state == STATE_OYAREPORT) {
                     GameLogDebug("state = STATE_OYAREPORT");
                     mkop_oyareport(iAmPlayer, playerActive);
                     Broadcast();
@@ -1420,14 +1408,13 @@ namespace XZDice
         private readonly uint OPCODE_BET = 3;
         private readonly uint OPCODE_BETUNDO = 4;
         private readonly uint OPCODE_BETDONE = 5; // Display that a particular player is done betting
-        private readonly uint OPCODE_RESET_TABLE = 6;
+        private readonly uint OPCODE_OYAREPORT = 0xF0u; // simply update the oya variable
         private readonly uint OPCODE_PLAYERJOIN = 10; // A player has joined: Switch their join button to leave, and make it so only that player can press it
         private readonly uint OPCODE_PLAYERLEAVE = 11;
         private readonly uint OPCODE_YOURTHROW = 20; // This enables the dice for one particular player, but disables them (pickup disabled) for everyone else (if player nbr is 0 just disable)
         private readonly uint OPCODE_THROWRESULT = 21;
         private readonly uint OPCODE_OYATHROWRESULT = 22;
         private readonly uint OPCODE_BALANCE = 30;  // This applies the change to a particular players udonChips balance (Oya applies changes to own balance on their own)
-        private readonly uint OPCODE_OYAREPORT = 0xF0u; // simply update the oya variable
         private readonly uint OPCODE_OYACHANGE = 0xF1u; // Requests that another player take over as oya
         private readonly uint OPCODE_NOOYA     = 0x00u; // Sent by the oya when it is the last person leaving, resetting the game. Also the value in arg0 on start
         private readonly uint OPCODE_NOOP      = 0xFFu;
@@ -1460,11 +1447,6 @@ namespace XZDice
             uint playerpart = (uint)player & 0b111u;
             uint totalpart = (uint)total & 0xFFFFu;
             arg0 = OPCODE_BETDONE | playerpart << 8 | totalpart << 16;
-        }
-
-        private void mkop_reset_table()
-        {
-            arg0 = OPCODE_RESET_TABLE;
         }
 
         int opbet_getplayer()
