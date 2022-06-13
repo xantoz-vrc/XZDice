@@ -707,14 +707,9 @@ namespace XZDice
         private readonly int STATE_WAITINGFORBETS = 8;
         private readonly int STATE_PREPARE_OYATHROW = 10;
         private readonly int STATE_OYATHROW = 11;
-        private readonly int STATE_PREPARE_P1THROW = 12; // TODO: perhaps we could condense all the player throws into one state plus an active player var
-        private readonly int STATE_P1THROW = 13;
-        private readonly int STATE_PREPARE_P2THROW = 14;
-        private readonly int STATE_P2THROW = 15;
-        private readonly int STATE_PREPARE_P3THROW = 16;
-        private readonly int STATE_P3THROW = 17;
-        private readonly int STATE_PREPARE_P4THROW = 18;
-        private readonly int STATE_P4THROW = 19;
+        private readonly int STATE_PREPARE_THROWS = 20;
+        private readonly int STATE_PREPARE_THROW = 21;
+        private readonly int STATE_THROW = 22;
         private readonly int STATE_PREPARE_BALANCE = 30;
         private readonly int STATE_BALANCE = 31; // "Normal" round with individual results for everybody
         private readonly int STATE_PREPARE_OYAPAYOUT = 40;
@@ -847,112 +842,45 @@ namespace XZDice
                         state = STATE_PREPARE_OYAPAYOUT;
                         continue;
                     }
-                } else if (state == STATE_PREPARE_P1THROW) {
-                    GameLogDebug("state = STATE_PREPARE_P1THROW");
+                } else if (state == STATE_PREPARE_THROWS) {
+                    GameLogDebug("state = STATE_PREPARE_THROWS");
 
-                    rethrowCount = 0;
-                    betMultiplier[0] = 0;
-
-                    state = STATE_P1THROW;
+                    for (int i = 0; i < MAX_PLAYERS; ++i) {
+                        betMultiplier[i] = 0;
+                    }
+                    currentPlayer = 1;
+                    state = STATE_PREPARE_THROW;
                     continue;
-                } else if (state == STATE_P1THROW) {
-                    GameLogDebug("state = STATE_P1THROW");
+                } else if (state == STATE_PREPARE_THROW) {
+                    GameLogDebug(string.Format("state = STATE_PREPARE_THROW, currentPlayer={0}", currentPlayer));
+                    rethrowCount = 0;
+                    state = STATE_THROW;
+                    continue;
+                } else if (state == STATE_THROW) {
+                    GameLogDebug(string.Format("state = STATE_THROW, currentPlayer={0}", currentPlayer));
+
+                    if (currentPlayer > MAX_PLAYERS) {
+                        state = STATE_PREPARE_BALANCE;
+                        continue;
+                    }
 
                     // Skip if oya, or not active
-                    if (oya == 1 || !playerActive[0]) {
-                        state = STATE_PREPARE_P2THROW;
+                    if (oya == currentPlayer || !playerActive[currentPlayer - 1]) {
+                        ++currentPlayer;
+                        state = STATE_PREPARE_THROW;
                         continue;
                     }
 
                     if (rethrowCount < MAX_RETHROWS) {
                         PrepareRecvThrow();
-                        mkop_yourthrow(1, rethrowCount);
+                        mkop_yourthrow(currentPlayer, rethrowCount);
                         Broadcast();
                         return; // Wait on throw result
                     } else {
-                        betMultiplier[0] = -1;
+                        betMultiplier[currentPlayer - 1] = -1;
                         // TODO: event/opcode to inform everyone about the fail? Maybe a sound effect? Throwresult?
-                        state = STATE_PREPARE_P2THROW;
-                        continue;
-                    }
-                } else if (state == STATE_PREPARE_P2THROW) {
-                    GameLogDebug("state = STATE_PREPARE_P2THROW");
-
-                    rethrowCount = 0;
-                    betMultiplier[1] = 0;
-
-                    state = STATE_P2THROW;
-                    continue;
-                } else if (state == STATE_P2THROW) {
-                    GameLogDebug("state = STATE_P2THROW");
-
-                    if (oya == 2 || !playerActive[1]) {
-                        state = STATE_PREPARE_P3THROW;
-                        continue;
-                    }
-
-                    if (rethrowCount < 3) {
-                        PrepareRecvThrow();
-                        mkop_yourthrow(2, rethrowCount);
-                        Broadcast();
-                        return; // Wait on throw result
-                    } else {
-                        betMultiplier[1] = -1;
-                        // TODO: event/opcode to inform everyone about the fail? Maybe a sound effect?
-                        state = STATE_PREPARE_P3THROW;
-                        continue;
-                    }
-                } else if (state == STATE_PREPARE_P3THROW) {
-                    GameLogDebug("state = STATE_PREPARE_P3THROW");
-
-                    rethrowCount = 0;
-                    betMultiplier[2] = 0;
-
-                    state = STATE_P3THROW;
-                    continue;
-                } else if (state == STATE_P3THROW) {
-                    GameLogDebug("state = STATE_P3THROW");
-
-                    if (oya == 3 || !playerActive[2]) {
-                        state = STATE_PREPARE_P4THROW;
-                        continue;
-                    }
-
-                    if (rethrowCount < 3) {
-                        PrepareRecvThrow();
-                        mkop_yourthrow(3, rethrowCount);
-                        Broadcast();
-                        return; // Wait on throw result
-                    } else {
-                        betMultiplier[2] = -1;
-                        // TODO: event/opcode to inform everyone about the fail? Maybe a sound effect?
-                        state = STATE_PREPARE_P4THROW;
-                        continue;
-                    }
-                } else if (state == STATE_PREPARE_P4THROW) {
-                    GameLogDebug("state = STATE_PREPARE_P4THROW");
-
-                    rethrowCount = 0;
-                    betMultiplier[3] = 0;
-
-                    state = STATE_P4THROW;
-                    continue;
-                } else if (state == STATE_P4THROW) {
-                    GameLogDebug("state = STATE_P4THROW");
-
-                    if (oya == 4 || !playerActive[3]) {
-                        state = STATE_PREPARE_BALANCE;
-                        continue;
-                    }
-                    if (rethrowCount < 3) {
-                        PrepareRecvThrow();
-                        mkop_yourthrow(4, rethrowCount);
-                        Broadcast();
-                        return; // Wait on throw result
-                    } else {
-                        betMultiplier[3] = -1;
-                        // TODO: event/opcode to inform everyone about the fail? Maybe a sound effect?
-                        state = STATE_PREPARE_BALANCE;
+                        ++currentPlayer;
+                        state = STATE_PREPARE_THROW;
                         continue;
                     }
                 } else if (state == STATE_PREPARE_BALANCE) {
@@ -1095,17 +1023,8 @@ namespace XZDice
                 SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
             } else {
                 // Handle leaving during certain states etc.
-                if (state == STATE_P1THROW) {
-                    state = STATE_PREPARE_P2THROW;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-                } else if (state == STATE_P2THROW) {
-                    state = STATE_PREPARE_P3THROW;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-                } else if (state == STATE_P3THROW) {
-                    state = STATE_PREPARE_P4THROW;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-                } else if (state == STATE_P4THROW) {
-                    state = STATE_PREPARE_BALANCE;
+                if (state == STATE_THROW) {
+                    ++currentPlayer;
                     SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
                 }
             }
@@ -1205,15 +1124,8 @@ namespace XZDice
                 oyaThrowType = throw_type;
                 GameLogDebug(string.Format("Wrote oyaThrowType: {0}", oyaThrowType));
             } else {
-                GameLogDebug("ProcessDiceResult, OTHER");
-                if (state == STATE_P1THROW)
-                    player = 1;
-                else if (state == STATE_P2THROW)
-                    player = 2;
-                else if (state == STATE_P3THROW)
-                    player = 3;
-                else if (state == STATE_P4THROW)
-                    player = 4;
+                GameLogDebug(string.Format("ProcessDiceResult, STATE_THROW, currentPlayer={0}", currentPlayer));
+                player = currentPlayer;
                 mkop_throwresult(player, recvResult, throw_type);
             }
             Broadcast();
@@ -1231,9 +1143,7 @@ namespace XZDice
         {
             GameLogDebug("_ProcessDiceResult_Continuation");
 
-            if (!(state == STATE_OYATHROW ||
-                  state == STATE_P1THROW || state == STATE_P2THROW ||
-                  state == STATE_P3THROW || state == STATE_P4THROW))
+            if (!(state == STATE_OYATHROW || state == STATE_THROW))
                 return;
             
             // Below here we advance the state machine based on the result
@@ -1277,8 +1187,8 @@ namespace XZDice
                     return;
                 }
 
-                // Is a result with between 2-5 points. Continue to STATE_PREPARE_P1THROW
-                state = STATE_PREPARE_P1THROW;
+                // Is a result with between 2-5 points. Continue to STATE_PREPARE_THROWS
+                state = STATE_PREPARE_THROWS;
                 _OyaStateMachine();
             } else {
                 if (throw_type == THROW_MENASHI) {
@@ -1311,15 +1221,9 @@ namespace XZDice
                     betMultiplier[player-1] = 0;
                 }
 
-                // Step state machine (depends on current state)
-                if (state == STATE_P1THROW)
-                    state = STATE_PREPARE_P2THROW;
-                else if (state == STATE_P2THROW)
-                    state = STATE_PREPARE_P3THROW;
-                else if (state == STATE_P3THROW)
-                    state = STATE_PREPARE_P4THROW;
-                else if (state == STATE_P4THROW)
-                    state = STATE_PREPARE_BALANCE;
+                // Run state machine for the next player (going to STATE_PREPARE_THROW)
+                ++currentPlayer;
+                state = STATE_PREPARE_THROW;
                 _OyaStateMachine();
             }
         }
@@ -1328,9 +1232,7 @@ namespace XZDice
         {
             GameLogDebug("RecvEventDiceResult");
             
-            if (state == STATE_OYATHROW ||
-                state == STATE_P1THROW || state == STATE_P2THROW ||
-                state == STATE_P3THROW || state == STATE_P4THROW) {
+            if (state == STATE_OYATHROW || state == STATE_THROW) {
                 if (result < 0 || result > 6) { // 0 is "valid" in that it represents being outside
                     Debug.LogError("Invalid dice result: " + result.ToString());
                     GameLogError("Invalid dice result: " + result.ToString());
