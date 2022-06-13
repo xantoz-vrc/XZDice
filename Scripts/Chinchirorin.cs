@@ -80,6 +80,7 @@ namespace XZDice
         // Client variables (also used on server)
         private int iAmPlayer = -1;
         private int oya = -1;
+        private float totalBet = 0.0f;
         private bool[] dieReadResult;
 
         private bool[] playerActive; // Used frequently by both, but client side
@@ -194,6 +195,7 @@ namespace XZDice
         private void ResetClientVariables()
         {
             dieReadResult = new bool[dice.Length];
+            totalBet = 0.0f;
             // Below is left out on purpose
             // oya = -1;
         }
@@ -335,20 +337,44 @@ namespace XZDice
         public void _BtnJoinPlayer3() { JoinPlayerBtn(3); }
         public void _BtnJoinPlayer4() { JoinPlayerBtn(4); }
 
+        private void SetBetScreenButtons(GameObject bs, bool val)
+        {
+            Button[] buttons = bs.GetComponentsInChildren<Button>();
+
+            foreach (Button btn in buttons) {
+                btn.interactable = val;
+            }
+        }
+
         private void SendBetEvent(int player, int bet)
         {
+            if ((totalBet + bet)*3 > udonChips.money) {
+                // TODO: local error sound effect and more obvious display than GameLog
+                GameLog(string.Format("<color=\"red\">You can at most bet a third of your total ({0})</color>",
+                                      formatChips(udonChips.money/3.0f)));
+                return;
+            }
+
+            // Temporarily disable betscreen buttons here until we get a
+            // message back from the owner to avoid double-presses.
+            SetBetScreenButtons(betScreens[player - 1], false);
+
             string fnname = string.Format("EventPlayer{0}Bet{1}", player, bet);
             SendToOya(fnname);
         }
 
         private void SendBetUndoEvent(int player)
         {
+            SetBetScreenButtons(betScreens[player - 1], false);
+
             string fnname = string.Format("EventPlayer{0}BetUndo", player);
             SendToOya(fnname);
         }
 
         private void SendBetDoneEvent(int player)
         {
+            SetBetScreenButtons(betScreens[player - 1], false);
+
             string fnname = string.Format("EventPlayer{0}BetDone", player);
             SendToOya(fnname);
         }
@@ -554,13 +580,13 @@ namespace XZDice
                     // For now we only enable the bet screen locally. In the
                     // future maybe we should enable them globally as a way to
                     // indicate to everyone that someone is betting.
-
-                    // That would require a method to only enable interacting
-                    // with it for the player that owns it, however. (loop
-                    // through all button components in children or something?)
+                    // TODO: the above is possible by smart application of SetBetScreenButtons!
                     GameObject bs = betScreens[iAmPlayer - 1];
                     bs.SetActive(true);
+                    SetBetScreenButtons(bs, true);
                 }
+
+                totalBet = 0.0f;
                 
                 // Disallow anyone from leaving/joining
                 foreach (GameObject btn in joinButtons)
@@ -568,20 +594,32 @@ namespace XZDice
             } else if (op_getop() == OPCODE_BET) {
                 int player = opbet_getplayer();
                 float total = opbet_gettotal();
+                totalBet = total;
                 GameLogDebug(string.Format("P{0} increased their bet to {1}", player, formatChips(total)));
                 // Here we could display chips or something coming up for each press
                 SetBetLabel(player, total);
+                if (iAmPlayer == player) {
+                    SetBetScreenButtons(betScreens[player - 1], true);
+                }
             } else if (op_getop() == OPCODE_BETUNDO) {
                 int player = opbet_getplayer();
+                totalBet = 0.0f;
                 GameLogDebug(string.Format("P{0} reset their bet", player));
                 // Here we would reset any chips displayed or so
                 SetBetLabel(player, 0.0f);
+                if (iAmPlayer == player) {
+                    SetBetScreenButtons(betScreens[player - 1], true);
+                }
             } else if (op_getop() == OPCODE_BETDONE) {
                 int player = opbet_getplayer();
                 float total = opbet_gettotal();
+                totalBet = total;
                 betScreens[player - 1].SetActive(false);
                 GameLog(string.Format("P{0} bet {1}", player, formatChips(total)));
                 SetBetLabel(player, total);
+                if (iAmPlayer == player) {
+                    SetBetScreenButtons(betScreens[player - 1], false);
+                }
             } else if (op_getop() == OPCODE_PLAYERJOIN) {
                 int player = opplayer_player();
                 oya = opplayerjoin_oya(); // Syncs up this variable in case we don't have it
