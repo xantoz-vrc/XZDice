@@ -288,7 +288,6 @@ namespace XZDice
         private void JoinGame(int player)
         {
             iAmPlayer = player;
-            Networking.LocalPlayer.SetPlayerTag("iAmPlayer", iAmPlayer.ToString());
 
             // First person joining when table is empty is oya
             if (op_getop() == OPCODE_NOOYA) {
@@ -535,16 +534,6 @@ namespace XZDice
         {
             betLabels[player - 1].text =
                 string.Format("Player {0}\nBet: {1}", player, formatChips(amount));
-        }
-
-        // TODO: need to verify that this actually runs on the leaving player.
-        //       if it doesn't, we might need another synced var :/
-        public override void OnPlayerLeft(VRCPlayerApi player)
-        {
-            string tag = player.GetPlayerTag("iAmPlayer") ?? "-1";
-            if (int.Parse(tag) == iAmPlayer) {
-                LeaveGame(iAmPlayer);
-            }
         }
 
         private void UpdateJoinButtons(bool[] pa)
