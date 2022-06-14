@@ -9,13 +9,13 @@
 // bet and press done. oya can press start round whenever there is at least one
 // bet.
 
-// TODO: handling of when oya disappears (OnOwnerShipTransferred)
-
 // TODO: oya and playerActive needs to be in every message (7 bits). always
 // update buttons?
 
 // TODO: alternative: always disable buttons in OnDeserializatizon, making them
 // only appear when a command explicitly enabling them arrives?
+
+// TODO: oyareport or enable_bet should inform how much money oya has, so we can have better feedback about how much you can bet
 
 using UdonSharp;
 using UnityEngine;
@@ -270,6 +270,17 @@ namespace XZDice
             foreach (bool b in playerActive)
                 if (b)
                     result++;
+
+            return result;
+        }
+
+        private float getTotalBets()
+        {
+            float result = 0.0f;
+            for (int i = 0; i < MAX_PLAYERS; ++i) {
+                if (playerActive[i])
+                    result += bets[i];
+            }
 
             return result;
         }
@@ -619,6 +630,17 @@ namespace XZDice
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
                     SetBetScreenButtons(betScreens[player - 1], false);
+                }
+            } else if (op_getop() == OPCODE_BETREJECT) {
+                int player = opbet_getplayer();
+                float total = opbet_gettotal();
+                totalBet = total;
+                GameLogDebug(string.Format("Oya rejected bet from P{0}", player, formatChips(total)));
+                SetBetLabel(player, total);
+                if (iAmPlayer == player) {
+                    // TODO: local error sound effect and more obvious display than GameLog
+                    GameLog("<color=\"red\">Oya rejected bet as too big</color>");
+                    SetBetScreenButtons(betScreens[player - 1], true);
                 }
             } else if (op_getop() == OPCODE_PLAYERJOIN) {
                 int player = opplayer_player();
@@ -1092,8 +1114,24 @@ namespace XZDice
         private void RecvBetEvent(int player, float amount)
         {
             if (state == STATE_WAITINGFORBETS) {
-                bets[player - 1] += amount;
-                mkop_bet(player, bets[player - 1]);
+                bool reject = false;
+
+                if (getTotalBets()*3.0f > udonChips.money) {
+                    GameLogDebug("Reject bet, because oya might not be able to pay");
+                    reject = true;
+                }
+
+                if (bets[player - 1] + amount > MAXBET) {
+                    GameLogDebug("Reject bet, because it is over MAXBET");
+                    reject = true;
+                }
+
+                if (reject) {
+                    mkop_betreject(player, bets[player - 1]);
+                } else {
+                    bets[player - 1] += amount;
+                    mkop_bet(player, bets[player - 1]);
+                }
                 Broadcast();
             }
         }
@@ -1446,7 +1484,8 @@ namespace XZDice
         private readonly uint OPCODE_BET = 3;
         private readonly uint OPCODE_BETUNDO = 4;
         private readonly uint OPCODE_BETDONE = 5; // Display that a particular player is done betting
-        private readonly uint OPCODE_OYAREPORT = 0xF0u; // simply update the oya variable
+        private readonly uint OPCODE_BETREJECT = 6; // Oya did not allow bet for some reason
+        private readonly uint OPCODE_OYAREPORT = 0xF0u; // update the oya variable &c.
         private readonly uint OPCODE_PLAYERJOIN = 10; // A player has joined: Switch their join button to leave, and make it so only that player can press it
         private readonly uint OPCODE_PLAYERLEAVE = 11;
         private readonly uint OPCODE_YOURTHROW = 20; // This enables the dice for one particular player, but disables them (pickup disabled) for everyone else (if player nbr is 0 just disable)
@@ -1485,6 +1524,13 @@ namespace XZDice
             uint playerpart = (uint)player & 0b111u;
             uint totalpart = (uint)total & 0xFFFFu;
             arg0 = OPCODE_BETDONE | playerpart << 8 | totalpart << 16;
+        }
+
+        private void mkop_betreject(int player, float total)
+        {
+            uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
+            uint totalpart = (uint)total & 0xFFFFu;  // 16 bit
+            arg0 = OPCODE_BETREJECT | playerpart << 8 | totalpart << 16;
         }
 
         int opbet_getplayer()

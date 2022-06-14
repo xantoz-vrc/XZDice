@@ -47,7 +47,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 12
-      Data: 76
+      Data: 77
     - Name: 
       Entry: 7
       Data: 
@@ -4051,7 +4051,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_OYAREPORT
+      Data: OPCODE_BETREJECT
     - Name: $v
       Entry: 7
       Data: 230|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4072,10 +4072,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_OYAREPORT
+      Data: OPCODE_BETREJECT
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_OYAREPORT
+      Data: OPCODE_BETREJECT
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4109,7 +4109,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_PLAYERJOIN
+      Data: OPCODE_OYAREPORT
     - Name: $v
       Entry: 7
       Data: 233|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4130,10 +4130,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_PLAYERJOIN
+      Data: OPCODE_OYAREPORT
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_PLAYERJOIN
+      Data: OPCODE_OYAREPORT
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4167,7 +4167,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_PLAYERLEAVE
+      Data: OPCODE_PLAYERJOIN
     - Name: $v
       Entry: 7
       Data: 236|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4188,10 +4188,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_PLAYERLEAVE
+      Data: OPCODE_PLAYERJOIN
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_PLAYERLEAVE
+      Data: OPCODE_PLAYERJOIN
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4225,7 +4225,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_YOURTHROW
+      Data: OPCODE_PLAYERLEAVE
     - Name: $v
       Entry: 7
       Data: 239|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4246,10 +4246,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_YOURTHROW
+      Data: OPCODE_PLAYERLEAVE
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_YOURTHROW
+      Data: OPCODE_PLAYERLEAVE
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4283,7 +4283,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_THROWRESULT
+      Data: OPCODE_YOURTHROW
     - Name: $v
       Entry: 7
       Data: 242|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4304,10 +4304,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_THROWRESULT
+      Data: OPCODE_YOURTHROW
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_THROWRESULT
+      Data: OPCODE_YOURTHROW
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4341,7 +4341,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_OYATHROWRESULT
+      Data: OPCODE_THROWRESULT
     - Name: $v
       Entry: 7
       Data: 245|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4362,10 +4362,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_OYATHROWRESULT
+      Data: OPCODE_THROWRESULT
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_OYATHROWRESULT
+      Data: OPCODE_THROWRESULT
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4399,7 +4399,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_BALANCE
+      Data: OPCODE_OYATHROWRESULT
     - Name: $v
       Entry: 7
       Data: 248|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4420,10 +4420,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_BALANCE
+      Data: OPCODE_OYATHROWRESULT
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_BALANCE
+      Data: OPCODE_OYATHROWRESULT
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4457,7 +4457,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_OYACHANGE
+      Data: OPCODE_BALANCE
     - Name: $v
       Entry: 7
       Data: 251|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4478,10 +4478,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_OYACHANGE
+      Data: OPCODE_BALANCE
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_OYACHANGE
+      Data: OPCODE_BALANCE
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4515,7 +4515,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_NOOYA
+      Data: OPCODE_OYACHANGE
     - Name: $v
       Entry: 7
       Data: 254|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4536,10 +4536,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_NOOYA
+      Data: OPCODE_OYACHANGE
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_NOOYA
+      Data: OPCODE_OYACHANGE
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4573,13 +4573,71 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_NOOP
+      Data: OPCODE_NOOYA
     - Name: $v
       Entry: 7
       Data: 257|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: fieldSymbol
       Entry: 7
       Data: 258|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
+    - Name: internalType
+      Entry: 9
+      Data: 110
+    - Name: declarationType
+      Entry: 3
+      Data: 258
+    - Name: syncMode
+      Entry: 3
+      Data: 0
+    - Name: symbolResolvedTypeName
+      Entry: 1
+      Data: SystemUInt32
+    - Name: symbolOriginalName
+      Entry: 1
+      Data: OPCODE_NOOYA
+    - Name: symbolUniqueName
+      Entry: 1
+      Data: OPCODE_NOOYA
+    - Name: symbolDefaultValue
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: fieldAttributes
+      Entry: 7
+      Data: 259|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: userBehaviourSource
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: OPCODE_NOOP
+    - Name: $v
+      Entry: 7
+      Data: 260|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
+    - Name: fieldSymbol
+      Entry: 7
+      Data: 261|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
     - Name: internalType
       Entry: 9
       Data: 110
@@ -4606,7 +4664,7 @@ MonoBehaviour:
       Data: 
     - Name: fieldAttributes
       Entry: 7
-      Data: 259|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
+      Data: 262|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
         mscorlib
     - Name: 
       Entry: 12
