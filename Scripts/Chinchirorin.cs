@@ -617,7 +617,6 @@ namespace XZDice
             } else if (op_getop() == OPCODE_BETDONE) {
                 int player = opbet_getplayer();
                 float total = opbet_gettotal();
-                totalBet = total;
                 betScreens[player - 1].SetActive(false);
                 GameLog(string.Format("P{0} bet {1}", player, formatChips(total)));
                 SetBetLabel(player, total);
