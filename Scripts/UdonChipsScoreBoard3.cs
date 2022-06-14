@@ -8,7 +8,6 @@ using VRC.Udon.Common.Enums;
 using UnityEngine.UI;
 using TMPro;
 using UCS;
-using System;
 
 namespace XZDice
 {
@@ -21,10 +20,10 @@ namespace XZDice
 
         [SerializeField]
         [Tooltip("How often to check udonChips.money for changes (seconds)")]
-        private int refresh_fast = 3; // Refresh locally and only send when changed
+        private float refresh_fast = 3.0f; // Refresh locally and only send when changed
         [SerializeField]
         [Tooltip("How often we retransmit udonChips.money even if the amount hasn't changed")]
-        private int refresh_slow = 60; // Send even if it hasn't changed
+        private float refresh_slow = 60.0f; // Send even if it hasn't changed
 
         [SerializeField]
         [Tooltip("When true the master will be indicated with a star in the list")]
@@ -62,8 +61,14 @@ namespace XZDice
                 entries_amount[i] = float.NaN;
             }
 
-            _ClearOldAmount(); // Starts the thread that resets old_amount every refresh_slow seconds (causing things to get sent even if udonChips.money remains unchanged)
-            _SendAmount(); // Starts the thread that checks whether udonchips has changed every refresh_fast seconds
+            // Randomize length of refresh_fast and refresh_slow a bit to avoid collisions
+            refresh_fast += Random.Range(-0.5f, 0.5f); // At most a seconds variance
+            refresh_slow += Random.Range(-refresh_slow/12.0f, refresh_slow/12.0f); // A variance up to 1/6
+
+            // Starts the thread that resets old_amount every refresh_slow seconds (causing things to get sent even if udonChips.money remains unchanged)
+            SendCustomEventDelayedSeconds(nameof(_ClearOldAmount), refresh_slow);
+            // Starts the thread that checks whether udonchips has changed every refresh_fast seconds
+            SendCustomEventDelayedSeconds(nameof(_SendAmount), refresh_fast);
         }
 
         public override void OnDeserialization()
