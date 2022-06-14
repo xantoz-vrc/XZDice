@@ -1107,11 +1107,15 @@ namespace XZDice
 
         private void RecvBetEvent(int player, float amount)
         {
+            GameLogDebug(string.Format("RecvBetEvent({0}, {1})", player, amount));
+
             if (state == STATE_WAITINGFORBETS) {
                 bool reject = false;
 
-                if (getTotalBets()*3.0f > udonChips.money) {
-                    GameLogDebug("Reject bet, because oya might not be able to pay");
+                float totalBets = getTotalBets() + amount;
+                if (totalBets*3.0f > udonChips.money) {
+                    GameLogDebug(string.Format("Reject bet, because oya might not be able to pay (getTotalBets()+amount={0}, udonChips.money={1})",
+                                               formatChips(totalBets), formatChips(udonChips.money)));
                     reject = true;
                 }
 
