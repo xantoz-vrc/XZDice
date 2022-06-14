@@ -358,6 +358,9 @@ namespace XZDice
 
         private void SendBetEvent(int player, int bet)
         {
+            GameLogDebug(string.Format("SendBetEvent({0}, {1}), totalBet={2}",
+                                       player, bet, totalBet));
+
             if ((totalBet + bet)*3 > udonChips.money) {
                 // TODO: local error sound effect and more obvious display than GameLog
                 GameLog(string.Format("<color=\"red\">You can at most bet a third of your total ({0})</color>",
@@ -569,6 +572,7 @@ namespace XZDice
             if (op_getop() == OPCODE_OYAREPORT) {
                 int player = opoyareport_oya();
                 ResetTable(); // Reset the bet displays and such
+                ResetClientVariables();
                 
                 oya = player;
                 bool[] pa = opoyareport_playerActive();
@@ -594,20 +598,20 @@ namespace XZDice
             } else if (op_getop() == OPCODE_BET) {
                 int player = opbet_getplayer();
                 float total = opbet_gettotal();
-                totalBet = total;
                 GameLogDebug(string.Format("P{0} increased their bet to {1}", player, formatChips(total)));
                 // Here we could display chips or something coming up for each press
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
+                    totalBet = total;
                     SetBetScreenButtons(betScreens[player - 1], true);
                 }
             } else if (op_getop() == OPCODE_BETUNDO) {
                 int player = opbet_getplayer();
-                totalBet = 0.0f;
                 GameLogDebug(string.Format("P{0} reset their bet", player));
                 // Here we would reset any chips displayed or so
                 SetBetLabel(player, 0.0f);
                 if (iAmPlayer == player) {
+                    totalBet = 0.0f;
                     SetBetScreenButtons(betScreens[player - 1], true);
                 }
             } else if (op_getop() == OPCODE_BETDONE) {
@@ -618,15 +622,16 @@ namespace XZDice
                 GameLog(string.Format("P{0} bet {1}", player, formatChips(total)));
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
+                    totalBet = total;
                     SetBetScreenButtons(betScreens[player - 1], false);
                 }
             } else if (op_getop() == OPCODE_BETREJECT) {
                 int player = opbet_getplayer();
                 float total = opbet_gettotal();
-                totalBet = total;
                 GameLogDebug(string.Format("Oya rejected bet from P{0}", player, formatChips(total)));
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
+                    totalBet = total;
                     // TODO: local error sound effect and more obvious display than GameLog
                     GameLog("<color=\"red\">Oya rejected bet as too big</color>");
                     SetBetScreenButtons(betScreens[player - 1], true);
