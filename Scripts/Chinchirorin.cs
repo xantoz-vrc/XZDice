@@ -17,6 +17,10 @@
 
 // TODO: oyareport or enable_bet should inform how much money oya has, so we can have better feedback about how much you can bet
 
+// TODO: * we need an outgoing opcode queue. while we can control how fast ops exit the state machine,
+//         it's not possible to control how fast players might press the bet button
+//       * alternatively if we make the state machine 100% event driven with a queue for incoming events instead (but how to handle the outgoing bet opcodes is still tricky)
+
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
