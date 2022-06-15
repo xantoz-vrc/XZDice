@@ -230,8 +230,10 @@ namespace XZDice
         }
 
         // Server to everybody communication. Actions are also taken on server
-        private void Broadcast()
+        private void Broadcast(uint op)
         {
+            arg0 = op;
+
             RequestSerialization();
             if (isOwner()) {
                 OnDeserialization();
@@ -293,7 +295,7 @@ namespace XZDice
             iAmPlayer = player;
 
             // First person joining when table is empty is oya
-            if (op_getop() == OPCODE_NOOYA) {
+            if (op_getop(arg0) == OPCODE_NOOYA) {
                 GameLogDebug(string.Format("First person joining the table (arg0={0:X})", arg0));
                 oya = iAmPlayer; // Set this already here so OnOwnerShipTransferred knows this wasn't the oya leaving the instance
                 if (!Networking.IsOwner(gameObject))
@@ -304,8 +306,7 @@ namespace XZDice
                 }
                 playerActive[iAmPlayer - 1] = true;
                 // TODO: we should probably do the equivalent of this inline here instead
-                mkop_oyachange(0, iAmPlayer, playerActive);
-                Broadcast();
+                Broadcast(mkop_oyachange(0, iAmPlayer, playerActive));
 
                 // We do not need to do the playerjoin event in this special
                 // case. The oyachange thing takes its place.
@@ -564,25 +565,24 @@ namespace XZDice
 
                 if (iAmPlayer != oya) {
                     GameLog("Oya disappeared: Game reset");
-                    mkop_nooya();
-                    Broadcast();
+                    Broadcast(mkop_nooya());
                 }
             }
         }
 
         public override void OnDeserialization()
         {
-            if (op_getop() == OPCODE_OYAREPORT) {
-                int player = opoyareport_oya();
+            if (op_getop(arg0) == OPCODE_OYAREPORT) {
+                int player = opoyareport_oya(arg0);
                 ResetTable(); // Reset the bet displays and such
                 ResetClientVariables();
                 
                 oya = player;
-                bool[] pa = opoyareport_playerActive();
+                bool[] pa = opoyareport_playerActive(arg0);
                 GameLog(string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
                                       oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
-            } else if (op_getop() == OPCODE_ENABLE_BET) {
+            } else if (op_getop(arg0) == OPCODE_ENABLE_BET) {
                 if (!isOya() && iAmPlayer > 0 && iAmPlayer <= MAX_PLAYERS) {
                     // For now we only enable the bet screen locally. In the
                     // future maybe we should enable them globally as a way to
@@ -598,9 +598,9 @@ namespace XZDice
                 // Disallow anyone from leaving/joining
                 foreach (GameObject btn in joinButtons)
                     btn.SetActive(false);
-            } else if (op_getop() == OPCODE_BET) {
-                int player = opbet_getplayer();
-                float total = opbet_gettotal();
+            } else if (op_getop(arg0) == OPCODE_BET) {
+                int player = opbet_getplayer(arg0);
+                float total = opbet_gettotal(arg0);
                 GameLogDebug(string.Format("P{0} increased their bet to {1}", player, formatChips(total)));
                 // Here we could display chips or something coming up for each press
                 SetBetLabel(player, total);
@@ -608,8 +608,8 @@ namespace XZDice
                     totalBet = total;
                     SetBetScreenButtons(betScreens[player - 1], true);
                 }
-            } else if (op_getop() == OPCODE_BETUNDO) {
-                int player = opbet_getplayer();
+            } else if (op_getop(arg0) == OPCODE_BETUNDO) {
+                int player = opbet_getplayer(arg0);
                 GameLogDebug(string.Format("P{0} reset their bet", player));
                 // Here we would reset any chips displayed or so
                 SetBetLabel(player, 0.0f);
@@ -617,9 +617,9 @@ namespace XZDice
                     totalBet = 0.0f;
                     SetBetScreenButtons(betScreens[player - 1], true);
                 }
-            } else if (op_getop() == OPCODE_BETDONE) {
-                int player = opbet_getplayer();
-                float total = opbet_gettotal();
+            } else if (op_getop(arg0) == OPCODE_BETDONE) {
+                int player = opbet_getplayer(arg0);
+                float total = opbet_gettotal(arg0);
                 betScreens[player - 1].SetActive(false);
                 GameLog(string.Format("P{0} bet {1}", player, formatChips(total)));
                 SetBetLabel(player, total);
@@ -627,9 +627,9 @@ namespace XZDice
                     totalBet = total;
                     SetBetScreenButtons(betScreens[player - 1], false);
                 }
-            } else if (op_getop() == OPCODE_BETREJECT) {
-                int player = opbet_getplayer();
-                float total = opbet_gettotal();
+            } else if (op_getop(arg0) == OPCODE_BETREJECT) {
+                int player = opbet_getplayer(arg0);
+                float total = opbet_gettotal(arg0);
                 GameLogDebug(string.Format("Oya rejected bet from P{0}", player, formatChips(total)));
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
@@ -638,24 +638,24 @@ namespace XZDice
                     GameLog("<color=\"red\">Oya rejected bet as too big</color>");
                     SetBetScreenButtons(betScreens[player - 1], true);
                 }
-            } else if (op_getop() == OPCODE_PLAYERJOIN) {
-                int player = opplayer_player();
-                oya = opplayerjoin_oya(); // Syncs up this variable in case we don't have it
-                bool[] pa = opplayer_playerActive();
+            } else if (op_getop(arg0) == OPCODE_PLAYERJOIN) {
+                int player = opplayer_player(arg0);
+                oya = opplayerjoin_oya(arg0); // Syncs up this variable in case we don't have it
+                bool[] pa = opplayer_playerActive(arg0);
                 GameLog(string.Format("P{0} entered the game (playerActive: {1},{2},{3},{4})",
                                       player, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
-            } else if (op_getop() == OPCODE_PLAYERLEAVE) {
-                int player = opplayer_player();
-                bool[] pa = opplayer_playerActive();
+            } else if (op_getop(arg0) == OPCODE_PLAYERLEAVE) {
+                int player = opplayer_player(arg0);
+                bool[] pa = opplayer_playerActive(arg0);
                 GameLog(string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
                                       player, pa[0], pa[1], pa[2], pa[3]));
                 if (iAmPlayer == player)
                     iAmPlayer = -1;
                 UpdateJoinButtons(pa);
-            } else if (op_getop() == OPCODE_YOURTHROW) {
-                int player = opyourthrow_player();
-                int rethrow = opyourthrow_rethrow();
+            } else if (op_getop(arg0) == OPCODE_YOURTHROW) {
+                int player = opyourthrow_player(arg0);
+                int rethrow = opyourthrow_rethrow(arg0);
 
                 for (int i = 0; i < dieReadResult.Length; ++i)
                     dieReadResult[i] = false;
@@ -677,10 +677,10 @@ namespace XZDice
                 }
                 // TODO: perhaps a sound effect to draw the users attention? (it
                 // should be fine just to do it inline here)
-            } else if (op_getop() == OPCODE_THROWRESULT) {
-                int player = opthrow_player();
-                int[] result = opthrow_result();
-                uint throw_type = opthrow_type();
+            } else if (op_getop(arg0) == OPCODE_THROWRESULT) {
+                int player = opthrow_player(arg0);
+                int[] result = opthrow_result(arg0);
+                uint throw_type = opthrow_type(arg0);
                 if (throw_type == THROW_SHONBEN)
                     GameLog(string.Format("P{0} threw outside", player));
                 else
@@ -688,10 +688,10 @@ namespace XZDice
                                           player, result[0], result[1], result[2],
                                           formatThrowType(throw_type)));
                 // TODO: specific display for the result
-            } else if (op_getop() == OPCODE_OYATHROWRESULT) {
-                int player = opthrow_player();
-                int[] result = opthrow_result();
-                uint throw_type = opthrow_type();
+            } else if (op_getop(arg0) == OPCODE_OYATHROWRESULT) {
+                int player = opthrow_player(arg0);
+                int[] result = opthrow_result(arg0);
+                uint throw_type = opthrow_type(arg0);
                 if (throw_type == THROW_SHONBEN)
                     GameLog(string.Format("P{0} (oya) threw outside", player));
                 else
@@ -699,9 +699,9 @@ namespace XZDice
                                           player, result[0], result[1], result[2],
                                           formatThrowType(throw_type)));
                 // TODO: specific display for the result
-            } else if (op_getop() == OPCODE_BALANCE) {
-                int player = opbalance_player();
-                float amount = opbalance_amount();
+            } else if (op_getop(arg0) == OPCODE_BALANCE) {
+                int player = opbalance_player(arg0);
+                float amount = opbalance_amount(arg0);
                 if (iAmPlayer > 0 && player == iAmPlayer)
                     udonChips.money += amount;  // TODO: handle no negative
 
@@ -709,10 +709,10 @@ namespace XZDice
                     GameLog(string.Format("P{0} won {1}", player, formatChips(Mathf.Abs(amount))));
                 else
                     GameLog(string.Format("P{0} lost {1}", player, formatChips(Mathf.Abs(amount))));
-            } else if (op_getop() == OPCODE_OYACHANGE) {
-                int toPlayer = opoyachange_toplayer();
-                int fromPlayer = opoyachange_fromplayer();
-                bool[] pa = opoyachange_playerActive();
+            } else if (op_getop(arg0) == OPCODE_OYACHANGE) {
+                int toPlayer = opoyachange_toplayer(arg0);
+                int fromPlayer = opoyachange_fromplayer(arg0);
+                bool[] pa = opoyachange_playerActive(arg0);
                 oya = toPlayer;
 
                 // TODO: display clearly who is oya (change playerlabel?)
@@ -745,7 +745,7 @@ namespace XZDice
                     // TODO: should use OnPostSerialization ?
                     SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
                 }
-            } else if (op_getop() == OPCODE_NOOYA) {
+            } else if (op_getop(arg0) == OPCODE_NOOYA) {
                 // reset various things like text displays, betting screens etc.
                 GameLogDebug("Table is empty");
                 ResetTable();
@@ -802,8 +802,7 @@ namespace XZDice
             int idx = iAmPlayer - 1;
             for (int i = 0; i < MAX_PLAYERS; ++i) {
                 if ((idx % MAX_PLAYERS) + 1 != iAmPlayer && playerActive[idx % MAX_PLAYERS]) {
-                    mkop_oyachange(iAmPlayer, (idx % MAX_PLAYERS) + 1, playerActive);
-                    Broadcast();
+                    Broadcast(mkop_oyachange(iAmPlayer, (idx % MAX_PLAYERS) + 1, playerActive));
                     ResetServerVariables();
                     return true;
                 }
@@ -833,8 +832,7 @@ namespace XZDice
             while (true) {
                 if (state == STATE_OYAREPORT) {
                     GameLogDebug("state = STATE_OYAREPORT");
-                    mkop_oyareport(iAmPlayer, playerActive);
-                    Broadcast();
+                    Broadcast(mkop_oyareport(iAmPlayer, playerActive));
 
                     // TODO: wait with OnPostSerialization instead
                     state = STATE_WAITINGFORPLAYERS;
@@ -865,8 +863,7 @@ namespace XZDice
                     betDone[oya - 1] = true; // Oya doesn't bet, so they're "done"
                     oyaPayoutMultiplier = 0;
 
-                    mkop_enable_bet(); // TODO: perhaps this could be an event
-                    Broadcast();
+                    Broadcast(mkop_enable_bet());
 
                     // TODO: should probably factor in OnPostSerialization or something
                     state = STATE_WAITINGFORBETS;
@@ -900,8 +897,7 @@ namespace XZDice
 
                     if (rethrowCount < MAX_RETHROWS) {
                         PrepareRecvThrow();
-                        mkop_yourthrow(oya, rethrowCount);
-                        Broadcast();
+                        Broadcast(mkop_yourthrow(oya, rethrowCount));
                         return; // Wait on throw result
                     } else {
                         oyaPayoutMultiplier = 1;
@@ -939,8 +935,7 @@ namespace XZDice
 
                     if (rethrowCount < MAX_RETHROWS) {
                         PrepareRecvThrow();
-                        mkop_yourthrow(currentPlayer, rethrowCount);
-                        Broadcast();
+                        Broadcast(mkop_yourthrow(currentPlayer, rethrowCount));
                         return; // Wait on throw result
                     } else {
                         betMultiplier[currentPlayer - 1] = -1;
@@ -964,8 +959,7 @@ namespace XZDice
                             GameLogDebug(string.Format("amount={1}, bets[{0}]={2}, betMultiplier[{0}]={3}",
                                                        i, amount, bets[i], betMultiplier[i]));
                             udonChips.money -= amount;
-                            mkop_balance(i+1, amount);
-                            Broadcast();
+                            Broadcast(mkop_balance(i+1, amount));
 
                             ++currentPlayer;
                             // TODO: OnPostSerialization ?
@@ -995,8 +989,7 @@ namespace XZDice
                         if (i + 1 != oya && playerActive[i]) {
                             float amount = oyaPayoutMultiplier*bets[i];
                             udonChips.money -= amount; // Remove from ourselves
-                            mkop_balance(i+1, amount); // Increase on remote player
-                            Broadcast();
+                            Broadcast(mkop_balance(i+1, amount)); // Increase on remote player
 
                             ++currentPlayer;
                             // TODO: OnPostSerialization ?
@@ -1021,8 +1014,7 @@ namespace XZDice
         private void RecvEventPlayerJoin(int player)
         {
             playerActive[player - 1] = true;
-            mkop_playerjoin(player, oya, playerActive);
-            Broadcast();
+            Broadcast(mkop_playerjoin(player, oya, playerActive));
 
             // TODO: fire of opcodes that will update all state (bet labels etc.), in case the newly
             // joining player joined the instance late?
@@ -1062,12 +1054,10 @@ namespace XZDice
                 // obviously the last person leaving, and the game should be
                 // reset so that the first person to join becomes owner
                 if (!found) {
-                    mkop_nooya();
-                    Broadcast();
+                    Broadcast(mkop_nooya());
                 }
             } else {
-                mkop_playerleave(player, playerActive);
-                Broadcast();
+                Broadcast(mkop_playerleave(player, playerActive));
 
                 // Need to wait on serialization of the playerleave (maybe superfluous)
                 SendCustomEventDelayedSeconds("_RecvEventPlayer" + player.ToString() + "Leave_Continuation", 0.5f);
@@ -1126,13 +1116,14 @@ namespace XZDice
                     reject = true;
                 }
 
+                uint op;
                 if (reject) {
-                    mkop_betreject(player, bets[player - 1]);
+                    op = mkop_betreject(player, bets[player - 1]);
                 } else {
                     bets[player - 1] += amount;
-                    mkop_bet(player, bets[player - 1]);
+                    op = mkop_bet(player, bets[player - 1]);
                 }
-                Broadcast();
+                Broadcast(op);
             }
         }
 
@@ -1140,8 +1131,7 @@ namespace XZDice
         {
             if (state == STATE_WAITINGFORBETS) {
                 bets[player - 1] = 0.0f;
-                mkop_betundo(player);
-                Broadcast();
+                Broadcast(mkop_betundo(player));
             }
         }
 
@@ -1151,8 +1141,7 @@ namespace XZDice
 
             if (state == STATE_WAITINGFORBETS) {
                 betDone[player - 1] = true;
-                mkop_betdone(player, bets[player - 1]);
-                Broadcast();
+                Broadcast(mkop_betdone(player, bets[player - 1]));
 
                 // Delay before continuing
                 SendCustomEventDelayedSeconds(nameof(_RecvBetDone_Continuation), 1);
@@ -1197,10 +1186,11 @@ namespace XZDice
             // Send a throwresult to everyone
             uint throw_type = classify_throw(recvResult);
             int player = 0;
+            uint op;
             if (state == STATE_OYATHROW) {
                 GameLogDebug("ProcessDiceResult, STATE_OYATHROW");
                 player = oya;
-                mkop_oyathrowresult(oya, recvResult, throw_type);
+                op = mkop_oyathrowresult(oya, recvResult, throw_type);
                 for (int i = 0; i < oyaResult.Length; ++i) {
                     oyaResult[i] = recvResult[i];
                 }
@@ -1209,9 +1199,9 @@ namespace XZDice
             } else {
                 GameLogDebug(string.Format("ProcessDiceResult, STATE_THROW, currentPlayer={0}", currentPlayer));
                 player = currentPlayer;
-                mkop_throwresult(player, recvResult, throw_type);
+                op = mkop_throwresult(player, recvResult, throw_type);
             }
-            Broadcast();
+            Broadcast(op);
 
             // Delay here before we advance the state machine (also allows the
             // opcode to get transferred)
@@ -1493,98 +1483,98 @@ namespace XZDice
         private readonly uint OPCODE_NOOYA     = 0x00u; // Sent by the oya when it is the last person leaving, resetting the game. Also the value in arg0 on start
         private readonly uint OPCODE_NOOP      = 0xFFu;
 
-        uint op_getop()
+        uint op_getop(uint op)
         {
-            return arg0 & 0xFFu;
+            return op & 0xFFu;
         }
 
-        private void mkop_enable_bet()
+        private uint mkop_enable_bet()
         {
-            arg0 = OPCODE_ENABLE_BET;
+            return OPCODE_ENABLE_BET;
         }
 
-        private void mkop_bet(int player, float total)
+        private uint mkop_bet(int player, float total)
         {
             uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
             uint totalpart = (uint)total & 0xFFFFu;  // 16 bit
-            arg0 = OPCODE_BET | playerpart << 8 | totalpart << 16;
+            return OPCODE_BET | playerpart << 8 | totalpart << 16;
         }
 
-        private void mkop_betundo(int player)
+        private uint mkop_betundo(int player)
         {
             uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
-            arg0 = OPCODE_BETUNDO | playerpart << 8;
+            return OPCODE_BETUNDO | playerpart << 8;
         }
 
-        private void mkop_betdone(int player, float total)
+        private uint mkop_betdone(int player, float total)
         {
             uint playerpart = (uint)player & 0b111u;
             uint totalpart = (uint)total & 0xFFFFu;
-            arg0 = OPCODE_BETDONE | playerpart << 8 | totalpart << 16;
+            return OPCODE_BETDONE | playerpart << 8 | totalpart << 16;
         }
 
-        private void mkop_betreject(int player, float total)
+        private uint mkop_betreject(int player, float total)
         {
             uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
             uint totalpart = (uint)total & 0xFFFFu;  // 16 bit
-            arg0 = OPCODE_BETREJECT | playerpart << 8 | totalpart << 16;
+            return OPCODE_BETREJECT | playerpart << 8 | totalpart << 16;
         }
 
-        int opbet_getplayer()
+        int opbet_getplayer(uint op)
         {
-            return (int)((arg0 >> 8) & 0b111u);
+            return (int)((op >> 8) & 0b111u);
         }
 
-        float opbet_gettotal()
+        float opbet_gettotal(uint op)
         {
-            return (float)((arg0 >> 16) & 0xFFFFu);
+            return (float)((op >> 16) & 0xFFFFu);
         }
 
-        private void mkop_playerjoin(int player, int oya, bool[] playerActive)
+        private uint mkop_playerjoin(int player, int oya, bool[] playerActive)
         {
             uint playerpart = (uint)player & 0b111u;
             uint oyapart = (uint)oya & 0b111u;
             uint playerActivePart = _mk_playerActivePart(playerActive);
-            arg0 = OPCODE_PLAYERJOIN | playerpart << 8 | oyapart << 11 | playerActivePart << 14;
+            return OPCODE_PLAYERJOIN | playerpart << 8 | oyapart << 11 | playerActivePart << 14;
         }
 
-        private int opplayerjoin_oya()
+        private int opplayerjoin_oya(uint op)
         {
-            return (int)((arg0 >> 11) & 0b111u);
+            return (int)((op >> 11) & 0b111u);
         }
 
-        private void mkop_playerleave(int player, bool[] playerActive)
+        private uint mkop_playerleave(int player, bool[] playerActive)
         {
             uint playerpart = (uint)player & 0b111u;
             uint playerActivePart = _mk_playerActivePart(playerActive);
-            arg0 = OPCODE_PLAYERLEAVE | playerpart << 8 | playerActivePart << 14;
+            return OPCODE_PLAYERLEAVE | playerpart << 8 | playerActivePart << 14;
         }
 
-        private int opplayer_player()
+        private int opplayer_player(uint op)
         {
-            return (int)((arg0 >> 8) & 0b111u);
+            return (int)((op >> 8) & 0b111u);
         }
 
-        private bool[] opplayer_playerActive()
+        private bool[] opplayer_playerActive(uint op)
         {
-            return _get_playerActive(14);
+            return _get_playerActive(op, 14);
         }
 
-        private void mkop_yourthrow(int player, int rethrow)
+        private uint mkop_yourthrow(int player, int rethrow)
         {
             uint playerpart = (uint)player & 0b111u;
             uint rethrowpart = (uint)rethrow & 0b111u;
-            arg0 = OPCODE_YOURTHROW | playerpart << 8 | rethrowpart << 25;
+            return OPCODE_YOURTHROW | playerpart << 8 | rethrowpart << 25;
         }
 
-        private int opyourthrow_player()
+        private int opyourthrow_player(uint op)
         {
-            return (int)((arg0 >> 8) & 0b111u);
+            return (int)((op >> 8) & 0b111u);
         }
 
-        private int opyourthrow_rethrow()
+        private int opyourthrow_rethrow(uint op)
         {
-            return (int)((arg0 >> 25) & 0b111u);
+            return (int)((op >> 25) & 0b111u);
         }
 
         private uint _mkop_throw_helper(uint opcode, int player, int[] result, uint throw_type)
@@ -1597,54 +1587,54 @@ namespace XZDice
             return (opcode & 0xFFu) | playerpart << 8 | resultpart << 11 | throwpart << 20;
         }
 
-        private void mkop_throwresult(int player, int[] result, uint throw_type)
+        private uint mkop_throwresult(int player, int[] result, uint throw_type)
         {
-            arg0 = _mkop_throw_helper(OPCODE_THROWRESULT, player, result, throw_type);
+            return _mkop_throw_helper(OPCODE_THROWRESULT, player, result, throw_type);
         }
 
-        private void mkop_oyathrowresult(int player, int[] result, uint throw_type)
+        private uint mkop_oyathrowresult(int player, int[] result, uint throw_type)
         {
-            arg0 = _mkop_throw_helper(OPCODE_OYATHROWRESULT, player, result, throw_type);
+            return _mkop_throw_helper(OPCODE_OYATHROWRESULT, player, result, throw_type);
         }
 
-        private int opthrow_player()
+        private int opthrow_player(uint op)
         {
-            return (int)((arg0 >> 8) & 0b111u);
+            return (int)((op >> 8) & 0b111u);
         }
 
-        private int[] opthrow_result()
+        private int[] opthrow_result(uint op)
         {
             int[] result = new int[3];
-            uint resultpart = (arg0 >> 11);
+            uint resultpart = (op >> 11);
             result[0] = (int)(resultpart & 0b111u);
             result[1] = (int)((resultpart >> 3) & 0b111u);
             result[2] = (int)((resultpart >> 6) & 0b111u);
             return result;
         }
 
-        private uint opthrow_type()
+        private uint opthrow_type(uint op)
         {
-            uint throwpart = (arg0 >> 20) & 0b1111u;
+            uint throwpart = (op >> 20) & 0b1111u;
             return throwpart;
         }
 
-        private void mkop_balance(int player, float amount)
+        private uint mkop_balance(int player, float amount)
         {
             uint playerpart = (uint)player & 0b111u;
             uint signpart = (amount < 0.0f) ? 1u : 0u;
             uint amountpart = (uint)(Mathf.Abs(amount)) & 0xFFFFu;
-            arg0 = OPCODE_BALANCE | playerpart << 8 | signpart << 15 | amountpart << 16;
+            return OPCODE_BALANCE | playerpart << 8 | signpart << 15 | amountpart << 16;
         }
 
-        private int opbalance_player()
+        private int opbalance_player(uint op)
         {
-            return (int)((arg0 >> 8) & 0b111u);
+            return (int)((op >> 8) & 0b111u);
         }
 
-        private float opbalance_amount()
+        private float opbalance_amount(uint op)
         {
-            uint signpart = (arg0 >> 15) & 0b1u;
-            uint amountpart = (arg0 >> 16) & 0xFFFFu;
+            uint signpart = (op >> 15) & 0b1u;
+            uint amountpart = (op >> 16) & 0xFFFFu;
             float sign = (signpart == 0) ? 1.0f : -1.0f;
             return sign * (float)amountpart;
         }
@@ -1659,43 +1649,43 @@ namespace XZDice
             return playerActivePart;
         }
 
-        private void mkop_oyareport(int player, bool[] playerActive)
+        private uint mkop_oyareport(int player, bool[] playerActive)
         {
             uint playerPart = (uint)player & 0b111u;
             uint playerActivePart = _mk_playerActivePart(playerActive);
 
-            arg0 = OPCODE_OYAREPORT | playerPart << 8 | playerActivePart << 14;
+            return OPCODE_OYAREPORT | playerPart << 8 | playerActivePart << 14;
         }
 
-        private int opoyareport_oya()
+        private int opoyareport_oya(uint op)
         {
-            return opoyachange_toplayer();
+            return opoyachange_toplayer(op);
         }
 
-        private bool[] opoyareport_playerActive()
+        private bool[] opoyareport_playerActive(uint op)
         {
-            return _get_playerActive(14);
+            return _get_playerActive(op, 14);
         }
 
-        private void mkop_oyachange(int fromPlayer, int toPlayer, bool[] playerActive)
+        private uint mkop_oyachange(int fromPlayer, int toPlayer, bool[] playerActive)
         {
             uint toPlayerPart = (uint)toPlayer & 0b111u;
             uint fromPlayerPart = (uint)fromPlayer & 0b111u;
             uint playerActivePart = _mk_playerActivePart(playerActive);
-            arg0 = OPCODE_OYACHANGE | toPlayerPart << 8 | fromPlayerPart << 11 | playerActivePart << 14;
+            return OPCODE_OYACHANGE | toPlayerPart << 8 | fromPlayerPart << 11 | playerActivePart << 14;
         }
 
-        private int opoyachange_toplayer() {
-            return (int)((arg0 >> 8) & 0b111u);
+        private int opoyachange_toplayer(uint op) {
+            return (int)((op >> 8) & 0b111u);
         }
 
-        private int opoyachange_fromplayer() {
-            return (int)((arg0 >> 11) & 0b111u);
+        private int opoyachange_fromplayer(uint op) {
+            return (int)((op >> 11) & 0b111u);
         }
 
-        private bool[] _get_playerActive(int shift) {
+        private bool[] _get_playerActive(uint op, int shift) {
             bool[] result = new bool[MAX_PLAYERS];
-            uint playerActivePart = (arg0 >> shift) & 0b1111u;
+            uint playerActivePart = (op >> shift) & 0b1111u;
             for (int i = 0; i < MAX_PLAYERS; ++i) {
                 if (((playerActivePart >> i) & 1u) == 1)
                     result[i] = true;
@@ -1704,13 +1694,13 @@ namespace XZDice
             return result;
         }
 
-        private bool[] opoyachange_playerActive()
+        private bool[] opoyachange_playerActive(uint op)
         {
-            return _get_playerActive(14);
+            return _get_playerActive(op, 14);
         }
 
-        private void mkop_nooya() {
-            arg0 = OPCODE_NOOYA;
+        private uint mkop_nooya() {
+            return OPCODE_NOOYA;
         }
         #endregion
     }
