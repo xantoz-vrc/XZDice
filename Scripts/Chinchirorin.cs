@@ -240,7 +240,7 @@ namespace XZDice
 
         // TODO: consider just having Broadcast cause a SendCustomEventDelayedSeconds-based thread
         //       do these as some sort of optimization?
-        private void OnUpdate()
+        private void Update()
         {
             if (!isOwner())
                 return;
