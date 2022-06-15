@@ -566,6 +566,13 @@ namespace XZDice
                 GameLog(string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
                                       oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
+            } else if (op_getop(arg0) == OPCODE_WAITINGFORROUNDSTART) {
+                GameLog("Waiting for oya to start the round...");
+                if (isOya()) {
+                    startRoundButtons[oya - 1].SetActive(true);
+                } else {
+                    oya = opwaitingforroundstart_oya(arg0);
+                }
             } else if (op_getop(arg0) == OPCODE_ENABLE_BET) {
                 if (!isOya() && iAmPlayer > 0 && iAmPlayer <= MAX_PLAYERS) {
                     // For now we only enable the bet screen locally. In the
@@ -699,6 +706,8 @@ namespace XZDice
                 bool[] pa = opoyachange_playerActive(arg0);
                 oya = toPlayer;
 
+                // TODO: some sort of sound-effect or other clearly easy-to-understand thing to inform everyone
+
                 // TODO: display clearly who is oya (change playerlabel?)
                 if (fromPlayer <= 0)
                     GameLog(string.Format("P{0} became oya (playerActive: {1},{2},{3},{4})",
@@ -820,8 +829,7 @@ namespace XZDice
                     Broadcast(mkop_oyareport(iAmPlayer, playerActive));
 
                     state = STATE_WAITINGFORPLAYERS;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-                    return;
+                    continue;
                 } else if (state == STATE_WAITINGFORPLAYERS) {
                     GameLogDebug("state = STATE_WAITINGFORPLAYERS");
 
@@ -834,7 +842,7 @@ namespace XZDice
                 } else if (state == STATE_WAITINGFORROUNDSTART) {
                     GameLogDebug("state = STATE_WAITINGFORROUNDSTART");
 
-                    startRoundButtons[oya - 1].SetActive(true);
+                    Broadcast(mkop_waitingforroundstart(oya));
                     return; // Wait for button press + playerjoin events during STATE_WAITINGFORPLAYERS percolate through
                 } else if (state == STATE_PREPAREBETS) {
                     GameLogDebug("state = STATE_PREPAREBETS");
@@ -850,8 +858,7 @@ namespace XZDice
                     Broadcast(mkop_enable_bet());
 
                     state = STATE_WAITINGFORBETS;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-                    return;
+                    continue;
                 } else if (state == STATE_WAITINGFORBETS) {
                     GameLogDebug("state = STATE_WAITINGFORBETS");
 
@@ -945,8 +952,7 @@ namespace XZDice
                             Broadcast(mkop_balance(i+1, amount));
 
                             ++currentPlayer;
-                            SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-                            return;
+                            continue;
                         } else {
                             ++currentPlayer;
                             continue;
@@ -974,15 +980,13 @@ namespace XZDice
                             Broadcast(mkop_balance(i+1, amount)); // Increase on remote player
 
                             ++currentPlayer;
-                            SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-                            return;
+                            continue;
                         } else {
                             ++currentPlayer;
                             continue;
                         }
                     } else {
                         // We failed. All gets reset and oya gets passed on
-                        // TODO: event/opcode to inform everyone about this?
 
                         SendCustomEventDelayedSeconds(nameof(_ToNextOya), 3);
                         return; // We are no longer oya, so we no longer run the state machine
@@ -1040,29 +1044,17 @@ namespace XZDice
             } else {
                 Broadcast(mkop_playerleave(player, playerActive));
 
-                // Need to wait on serialization of the playerleave (maybe superfluous)
-                SendCustomEventDelayedSeconds("_RecvEventPlayer" + player.ToString() + "Leave_Continuation", 0.5f);
-            }
-        }
-
-        public void _RecvEventPlayer1Leave_Continuation() { _RecvEventPlayerLeave_Continuation(1); }
-        public void _RecvEventPlayer2Leave_Continuation() { _RecvEventPlayerLeave_Continuation(2); }
-        public void _RecvEventPlayer3Leave_Continuation() { _RecvEventPlayerLeave_Continuation(3); }
-        public void _RecvEventPlayer4Leave_Continuation() { _RecvEventPlayerLeave_Continuation(4); }
-
-        private void _RecvEventPlayerLeave_Continuation(int player)
-        {
-            GameLogDebug(string.Format("_RecvEventPlayerLeave_Continuation({0})", player));
-
-            if (getActivePlayerCount() < 2) {
-                // Too few to play. We have to go back to STATE_FIRST
-                state = STATE_FIRST;
-                SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
-            } else {
-                // Handle leaving during certain states etc.
-                if (state == STATE_THROW) {
-                    ++currentPlayer;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
+                if (getActivePlayerCount() < 2) {
+                    // Too few to play. We have to go back to STATE_FIRST
+                    state = STATE_FIRST;
+                    _OyaStateMachine();
+                } else {
+                    // Handle leaving during certain states etc.
+                    if (state == STATE_PREPARE_THROW || state == STATE_THROW ||
+                        state == STATE_BALANCE || state == STATE_OYAPAYOUT) {
+                        ++currentPlayer;
+                        _OyaStateMachine();
+                    }
                 }
             }
         }
@@ -1446,7 +1438,8 @@ namespace XZDice
 
         #region opcodes
         // Opcodes for all broadcasts from Oya to everyone else. sent in arg0
-        private readonly uint OPCODE_ENABLE_BET = 0x1u; // Enable bet panels everywhere
+        private readonly uint OPCODE_WAITINGFORROUNDSTART = 0x1u;
+        private readonly uint OPCODE_ENABLE_BET = 0x2u; // Enable bet panels everywhere
         private readonly uint OPCODE_BET = 0x3u;
         private readonly uint OPCODE_BETUNDO = 0x4u;
         private readonly uint OPCODE_BETDONE = 0x5u; // Display that a particular player is done betting
@@ -1465,6 +1458,17 @@ namespace XZDice
         uint op_getop(uint op)
         {
             return op & 0xFFu;
+        }
+
+        private uint mkop_waitingforroundstart(int oya)
+        {
+            uint oyapart = (uint)oya & 0b111u;
+            return OPCODE_WAITINGFORROUNDSTART | oyapart << 8;
+        }
+
+        private int opwaitingforroundstart_oya(uint op)
+        {
+            return (int)((op >> 8) & 0b111u);
         }
 
         private uint mkop_enable_bet()
