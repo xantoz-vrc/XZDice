@@ -106,6 +106,8 @@ namespace XZDice
 
         private int state = -1; // Used only by owner (drives the oya statemachine)
 
+        private bool serializing = false;
+
         // These variables are used when the oya sends messages to other players.
         // E.g. when to change udonchips balances;
         [UdonSynced] private uint arg0;
@@ -217,6 +219,7 @@ namespace XZDice
             state = -1;
 
             opqueue_Reset();
+            serializing = false;
         }
 
         // Client to server communication (but sent locally if we are master)
@@ -232,12 +235,34 @@ namespace XZDice
         // Server to everybody communication. Actions are also taken on server
         private void Broadcast(uint op)
         {
-            arg0 = op;
+            opqueue_Queue(op);
+        }
 
-            RequestSerialization();
-            if (isOwner()) {
+        // TODO: consider just having Broadcast cause a SendCustomEventDelayedSeconds-based thread
+        //       do these as some sort of optimization?
+        private void OnUpdate()
+        {
+            if (!isOwner())
+                return;
+
+            if (opqueue_Pending() && !serializing) {
+                arg0 = opqueue_Peek();
+                RequestSerialization();
                 OnDeserialization();
+                serializing = true;
             }
+        }
+
+        public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result)
+        {
+            GameLogDebug(string.Format("OnPostSerialization, success={0}, byteCount={1}",
+                                       result.success, result.byteCount));
+
+            if (result.success) {
+                opqueue_Dequeue();
+            }
+
+            serializing = false;
         }
 
         private void SendPlayerLeaveEvent(int player)
@@ -731,7 +756,6 @@ namespace XZDice
 
                     // Start the oya state machine here
                     state = STATE_FIRST;
-                    // TODO: should use OnPostSerialization ?
                     SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
                 }
             } else if (op_getop(arg0) == OPCODE_NOOYA) {
@@ -823,7 +847,6 @@ namespace XZDice
                     GameLogDebug("state = STATE_OYAREPORT");
                     Broadcast(mkop_oyareport(iAmPlayer, playerActive));
 
-                    // TODO: wait with OnPostSerialization instead
                     state = STATE_WAITINGFORPLAYERS;
                     SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
                     return;
@@ -854,7 +877,6 @@ namespace XZDice
 
                     Broadcast(mkop_enable_bet());
 
-                    // TODO: should probably factor in OnPostSerialization or something
                     state = STATE_WAITINGFORBETS;
                     SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
                     return;
@@ -951,7 +973,6 @@ namespace XZDice
                             Broadcast(mkop_balance(i+1, amount));
 
                             ++currentPlayer;
-                            // TODO: OnPostSerialization ?
                             SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
                             return;
                         } else {
@@ -981,7 +1002,6 @@ namespace XZDice
                             Broadcast(mkop_balance(i+1, amount)); // Increase on remote player
 
                             ++currentPlayer;
-                            // TODO: OnPostSerialization ?
                             SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 0.5f);
                             return;
                         } else {
@@ -1192,9 +1212,7 @@ namespace XZDice
             }
             Broadcast(op);
 
-            // Delay here before we advance the state machine (also allows the
-            // opcode to get transferred)
-            // TODO: using OnPostSerialization to verify it's really gotten serialized?
+            // Delay here before we advance the state machine
 
             _ProcessDiceResult_throw_type = throw_type; // Save some vars for the continuation
             _ProcessDiceResult_player = player;
