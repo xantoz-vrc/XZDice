@@ -104,9 +104,7 @@ namespace XZDice
         private int rethrowCount = 0; // Used only by owner
         private int currentPlayer = -1; //
 
-
         private int state = -1; // Used only by owner (drives the oya statemachine)
-
 
         // These variables are used when the oya sends messages to other players.
         // E.g. when to change udonchips balances;
