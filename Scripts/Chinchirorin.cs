@@ -1474,18 +1474,18 @@ namespace XZDice
 
         #region opcodes
         // Opcodes for all broadcasts from Oya to everyone else. sent in arg0
-        private readonly uint OPCODE_ENABLE_BET = 1; // Enable bet panels everywhere
-        private readonly uint OPCODE_BET = 3;
-        private readonly uint OPCODE_BETUNDO = 4;
-        private readonly uint OPCODE_BETDONE = 5; // Display that a particular player is done betting
-        private readonly uint OPCODE_BETREJECT = 6; // Oya did not allow bet for some reason
+        private readonly uint OPCODE_ENABLE_BET = 0x1u; // Enable bet panels everywhere
+        private readonly uint OPCODE_BET = 0x3u;
+        private readonly uint OPCODE_BETUNDO = 0x4u;
+        private readonly uint OPCODE_BETDONE = 0x5u; // Display that a particular player is done betting
+        private readonly uint OPCODE_BETREJECT = 0x6u; // Oya did not allow bet for some reason
         private readonly uint OPCODE_OYAREPORT = 0xF0u; // update the oya variable &c.
-        private readonly uint OPCODE_PLAYERJOIN = 10; // A player has joined: Switch their join button to leave, and make it so only that player can press it
-        private readonly uint OPCODE_PLAYERLEAVE = 11;
-        private readonly uint OPCODE_YOURTHROW = 20; // This enables the dice for one particular player, but disables them (pickup disabled) for everyone else (if player nbr is 0 just disable)
-        private readonly uint OPCODE_THROWRESULT = 21;
-        private readonly uint OPCODE_OYATHROWRESULT = 22;
-        private readonly uint OPCODE_BALANCE = 30;  // This applies the change to a particular players udonChips balance (Oya applies changes to own balance on their own)
+        private readonly uint OPCODE_PLAYERJOIN = 0x10u; // A player has joined: Switch their join button to leave, and make it so only that player can press it
+        private readonly uint OPCODE_PLAYERLEAVE = 0x11u;
+        private readonly uint OPCODE_YOURTHROW = 0x20u; // This enables the dice for one particular player, but disables them (pickup disabled) for everyone else (if player nbr is 0 just disable)
+        private readonly uint OPCODE_THROWRESULT = 0x21u;
+        private readonly uint OPCODE_OYATHROWRESULT = 0x22u;
+        private readonly uint OPCODE_BALANCE = 0x30u;   // This applies the change to a particular players udonChips balance (Oya applies changes to own balance on their own)
         private readonly uint OPCODE_OYACHANGE = 0xF1u; // Requests that another player take over as oya
         private readonly uint OPCODE_NOOYA     = 0x00u; // Sent by the oya when it is the last person leaving, resetting the game. Also the value in arg0 on start
         private readonly uint OPCODE_NOOP      = 0xFFu;
