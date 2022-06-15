@@ -111,7 +111,6 @@ namespace XZDice
         // These variables are used when the oya sends messages to other players.
         // E.g. when to change udonchips balances;
         [UdonSynced] private uint arg0;
-        //[UdonSynced] private uint arg1;
 
         private void GameLog(string message)
         {
@@ -1202,9 +1201,6 @@ namespace XZDice
                 GameLogDebug("ProcessDiceResult, STATE_OYATHROW");
                 player = oya;
                 mkop_oyathrowresult(oya, recvResult, throw_type);
-                // GameLogDebug(string.Format("oya={0}, recvResult=[{1},{2},{3}], recvDieOutside={4}, throw_type={5}",
-                //                            oya, recvResult[0], recvResult[1], recvResult[2], recvDieOutside, throw_type));
-                // GameLogDebug(string.Format("arg0={0:X}", arg0));
                 for (int i = 0; i < oyaResult.Length; ++i) {
                     oyaResult[i] = recvResult[i];
                 }
@@ -1480,7 +1476,7 @@ namespace XZDice
         #endregion
 
         #region opcodes
-        // Opcodes for all broadcasts from Oya to everyone else. sent in arg0 and (sometimes) arg1
+        // Opcodes for all broadcasts from Oya to everyone else. sent in arg0
         private readonly uint OPCODE_ENABLE_BET = 1; // Enable bet panels everywhere
         private readonly uint OPCODE_BET = 3;
         private readonly uint OPCODE_BETUNDO = 4;
