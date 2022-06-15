@@ -1743,6 +1743,7 @@ namespace XZDice
             if (outgoing_ops_pending <= 0) {
                 Debug.LogError("opqueue_Peek called while no ops pending");
                 GameLogError("opqueue_Peek called while no ops pending");
+                return 0;
             }
 
             return outgoing_ops[outgoing_ops_read];
@@ -1753,6 +1754,7 @@ namespace XZDice
             if (outgoing_ops_pending <= 0) {
                 Debug.LogError("opqueue_Dequeue called while no ops pending");
                 GameLogError("opqueue_Dequeue called while no ops pending");
+                return 0;
             }
 
             uint result;
