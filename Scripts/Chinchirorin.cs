@@ -1115,19 +1115,6 @@ namespace XZDice
             if (state == STATE_WAITINGFORBETS) {
                 betDone[player - 1] = true;
                 Broadcast(mkop_betdone(player, bets[player - 1]));
-
-                // Delay before continuing
-                SendCustomEventDelayedSeconds(nameof(_RecvBetDone_Continuation), 1);
-            }
-        }
-
-        public void _RecvBetDone_Continuation()
-        {
-            GameLogDebug("_RecvBetDone_Continuation");
-            
-            // We could theoretically end up with several calls into here, some
-            // potentially arriving late, so we must check the state
-            if (state == STATE_WAITINGFORBETS) {
                 _OyaStateMachine();
             }
         }
