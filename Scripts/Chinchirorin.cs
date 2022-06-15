@@ -183,13 +183,13 @@ namespace XZDice
             // since the first joiner of instance (first master) does not get
             // OnDeserializatizon.
             // Maybe something with OnPlayerJoined could be done, though?
-            SendCustomEventDelayedSeconds(nameof(_MaybeEnableJoinButtonsOnStart), 1.0f);
+            SendCustomEventDelayedSeconds(nameof(_MaybeEnableJoinButtonsOnStart), 2.0f);
         }
 
         public void _MaybeEnableJoinButtonsOnStart()
         {
             // When entering instance, show join buttons if table is currently inactive
-            if (op_getop() == OPCODE_NOOYA)
+            if (op_getop(arg0) == OPCODE_NOOYA)
             {
                 UpdateJoinButtons(playerActive);
             }
