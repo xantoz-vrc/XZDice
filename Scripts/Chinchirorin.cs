@@ -106,8 +106,6 @@ namespace XZDice
 
         private int state = -1; // Used only by owner (drives the oya statemachine)
 
-        private bool serializing = false;
-
         // These variables are used when the oya sends messages to other players.
         // E.g. when to change udonchips balances;
         [UdonSynced] private uint arg0;
@@ -176,6 +174,7 @@ namespace XZDice
 
             ResetClientVariables();
             ResetServerVariables();
+            opqueue_Reset();
             ResetTable();
 
             // Delay this so first enabling of join buttons is likely to happen after serialization on late
@@ -217,9 +216,6 @@ namespace XZDice
             betMultiplier = new int[MAX_PLAYERS];
             oyaPayoutMultiplier = 0;
             state = -1;
-
-            opqueue_Reset();
-            serializing = false;
         }
 
         // Client to server communication (but sent locally if we are master)
@@ -238,32 +234,6 @@ namespace XZDice
             opqueue_Queue(op);
         }
 
-        // TODO: consider just having Broadcast cause a SendCustomEventDelayedSeconds-based thread
-        //       do these as some sort of optimization?
-        private void Update()
-        {
-            if (!isOwner())
-                return;
-
-            if (opqueue_Pending() && !serializing) {
-                arg0 = opqueue_Peek();
-                RequestSerialization();
-                OnDeserialization();
-                serializing = true;
-            }
-        }
-
-        public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result)
-        {
-            GameLogDebug(string.Format("OnPostSerialization, success={0}, byteCount={1}",
-                                       result.success, result.byteCount));
-
-            if (result.success) {
-                opqueue_Dequeue();
-            }
-
-            serializing = false;
-        }
 
         private void SendPlayerLeaveEvent(int player)
         {
@@ -751,6 +721,7 @@ namespace XZDice
                         Networking.SetOwner(Networking.LocalPlayer, gameObject);
 
                     ResetServerVariables();
+                    opqueue_Reset();
                     // Set playerActive based on what previous oya told us
                     playerActive = pa;
 
@@ -763,6 +734,7 @@ namespace XZDice
                 GameLogDebug("Table is empty");
                 ResetTable();
                 ResetServerVariables();
+                opqueue_Reset();
                 ResetClientVariables();
                 oya = -1;
                 iAmPlayer = -1;
@@ -1712,6 +1684,8 @@ namespace XZDice
         #endregion
 
         #region opqueue
+        private bool serializing = false;
+
         private readonly int OPQUEUE_LENGTH = 32; // This should be more than large enough that normal play won't see lost commands
         private uint[] outgoing_ops;
         private int outgoing_ops_pending = 0;
@@ -1729,10 +1703,14 @@ namespace XZDice
             outgoing_ops_pending = 0;
             outgoing_ops_insert = 0;
             outgoing_ops_read = 0;
+
+            serializing = false;
         }
 
         private void opqueue_Queue(uint op)
         {
+            GameLogDebug(string.Format("opqueue_Queue(0x{0:X})", op));
+
             outgoing_ops[outgoing_ops_insert] = op;
             outgoing_ops_insert = (outgoing_ops_insert + 1) % OPQUEUE_LENGTH;
             ++outgoing_ops_pending;
@@ -1763,6 +1741,34 @@ namespace XZDice
             --outgoing_ops_pending;
 
             return result;
+        }
+
+        // TODO: consider just having Broadcast cause a SendCustomEventDelayedSeconds-based thread
+        //       do these as some sort of optimization?
+        private void Update()
+        {
+            if (!isOwner())
+                return;
+
+            if (opqueue_Pending() && !serializing) {
+                arg0 = opqueue_Peek();
+                GameLogDebug(string.Format("Serializing arg0=0x{0:X} ...", arg0));
+                RequestSerialization();
+                OnDeserialization();
+                serializing = true;
+            }
+        }
+
+        public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result)
+        {
+            GameLogDebug(string.Format("OnPostSerialization, success={0}, byteCount={1}",
+                                       result.success, result.byteCount));
+
+            if (serializing && result.success) {
+                opqueue_Dequeue();
+            }
+
+            serializing = false;
         }
         #endregion
     }
