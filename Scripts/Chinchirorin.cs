@@ -1697,8 +1697,8 @@ namespace XZDice
         private readonly int OPQUEUE_LENGTH = 32; // This should be more than large enough that normal play won't see lost commands
         private uint[] outgoing_ops;
         private int outgoing_ops_pending = 0;
-        private int outgoing_ops_insert = 0;
-        private int outgoing_ops_read = 0;
+        private int outgoing_ops_insert = 0; // Insert head
+        private int outgoing_ops_read = 0; // Read head
 
         private bool opqueue_Pending()
         {
@@ -1718,6 +1718,16 @@ namespace XZDice
             outgoing_ops[outgoing_ops_insert] = op;
             outgoing_ops_insert = (outgoing_ops_insert + 1) % OPQUEUE_LENGTH;
             ++outgoing_ops_pending;
+        }
+
+        private uint opqueue_Peek()
+        {
+            if (outgoing_ops_pending <= 0) {
+                Debug.LogError("opqueue_Peek called while no ops pending");
+                GameLogError("opqueue_Peek called while no ops pending");
+            }
+
+            return outgoing_ops[outgoing_ops_read];
         }
 
         private uint opqueue_Dequeue()
