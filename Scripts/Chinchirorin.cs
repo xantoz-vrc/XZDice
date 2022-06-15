@@ -215,6 +215,8 @@ namespace XZDice
             betMultiplier = new int[MAX_PLAYERS];
             oyaPayoutMultiplier = 0;
             state = -1;
+
+            opqueue_Reset();
         }
 
         // Client to server communication (but sent locally if we are master)
@@ -1699,6 +1701,49 @@ namespace XZDice
 
         private uint mkop_nooya() {
             return OPCODE_NOOYA;
+        }
+        #endregion
+
+        #region opqueue
+        private readonly int OPQUEUE_LENGTH = 32; // This should be more than large enough that normal play won't see lost commands
+        private uint[] outgoing_ops;
+        private int outgoing_ops_pending = 0;
+        private int outgoing_ops_insert = 0;
+        private int outgoing_ops_read = 0;
+
+        private bool opqueue_Pending()
+        {
+            return outgoing_ops_pending > 0;
+        }
+
+        private void opqueue_Reset()
+        {
+            outgoing_ops = new uint[OPQUEUE_LENGTH];
+            outgoing_ops_pending = 0;
+            outgoing_ops_insert = 0;
+            outgoing_ops_read = 0;
+        }
+
+        private void opqueue_Queue(uint op)
+        {
+            outgoing_ops[outgoing_ops_insert] = op;
+            outgoing_ops_insert = (outgoing_ops_insert + 1) % OPQUEUE_LENGTH;
+            ++outgoing_ops_pending;
+        }
+
+        private uint opqueue_Dequeue()
+        {
+            if (outgoing_ops_pending <= 0) {
+                Debug.LogError("opqueue_Dequeue called while no ops pending");
+                GameLogError("opqueue_Dequeue called while no ops pending");
+            }
+
+            uint result;
+            result = outgoing_ops[outgoing_ops_read];
+            outgoing_ops_read = (outgoing_ops_read + 1) % OPQUEUE_LENGTH;
+            --outgoing_ops_pending;
+
+            return result;
         }
         #endregion
     }
