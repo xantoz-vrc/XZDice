@@ -257,12 +257,6 @@ namespace XZDice
             SendToOya(fnname);
         }
 
-        private void SendPlayerJoinEventDelayedSeconds(int player, float seconds)
-        {
-            string fnname = "EventPlayerJoin" + player.ToString();
-            SendCustomEventDelayedSeconds(fnname, seconds);
-        }
-
         public void EventPlayerJoin1() { RecvEventPlayerJoin(1); }
         public void EventPlayerJoin2() { RecvEventPlayerJoin(2); }
         public void EventPlayerJoin3() { RecvEventPlayerJoin(3); }
@@ -310,12 +304,7 @@ namespace XZDice
 
                 // We do not need to do the playerjoin event in this special
                 // case. The oyachange thing takes its place.
-                
-                /*
-                // Need to wait a bit to make sure oyachange event gets around
-                // TODO: should really wait on OnPostSerialization
-                SendPlayerJoinEventDelayedSeconds(iAmPlayer, 1.0f);
-                */
+
             } else {
                 SendPlayerJoinEvent(iAmPlayer);
             }
