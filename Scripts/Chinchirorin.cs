@@ -779,9 +779,7 @@ namespace XZDice
         private readonly int STATE_PREPARE_THROWS = 20;
         private readonly int STATE_PREPARE_THROW = 21;
         private readonly int STATE_THROW = 22;
-        private readonly int STATE_PREPARE_BALANCE = 30;
         private readonly int STATE_BALANCE = 31; // "Normal" round with individual results for everybody
-        private readonly int STATE_PREPARE_OYAPAYOUT = 40;
         private readonly int STATE_OYAPAYOUT = 41; // Oya failed and must pay everybody, followed by switching
 
         private void PrepareRecvThrow()
@@ -893,7 +891,7 @@ namespace XZDice
                         return; // Wait on throw result
                     } else {
                         oyaPayoutMultiplier = 1;
-                        state = STATE_PREPARE_OYAPAYOUT;
+                        state = STATE_OYAPAYOUT;
                         continue;
                     }
                 } else if (state == STATE_PREPARE_THROWS) {
@@ -914,7 +912,7 @@ namespace XZDice
                     GameLogDebug(string.Format("state = STATE_THROW, currentPlayer={0}", currentPlayer));
 
                     if (currentPlayer > MAX_PLAYERS) {
-                        state = STATE_PREPARE_BALANCE;
+                        state = STATE_BALANCE;
                         continue;
                     }
 
@@ -936,63 +934,38 @@ namespace XZDice
                         state = STATE_PREPARE_THROW;
                         continue;
                     }
-                } else if (state == STATE_PREPARE_BALANCE) {
-                    GameLogDebug("state = STATE_PREPARE_BALANCE");
-                    currentPlayer = 1;
-                    state = STATE_BALANCE;
-                    continue;
                 } else if (state == STATE_BALANCE) {
-                    GameLogDebug(string.Format("state = STATE_BALANCE, currentPlayer={0}", currentPlayer));
+                    GameLogDebug("state = STATE_BALANCE");
 
-                    int i = currentPlayer - 1;
-                    if (i < MAX_PLAYERS) {
+                    for (int i = 0; i < MAX_PLAYERS; ++i) {
                         if (i + 1 != oya && playerActive[i]) {
                             float amount = bets[i]*betMultiplier[i];
                             GameLogDebug(string.Format("amount={1}, bets[{0}]={2}, betMultiplier[{0}]={3}",
                                                        i, amount, bets[i], betMultiplier[i]));
                             udonChips.money -= amount;
                             Broadcast(mkop_balance(i+1, amount));
-
-                            ++currentPlayer;
-                            continue;
-                        } else {
-                            ++currentPlayer;
-                            continue;
                         }
-                    } else {
-                        // Round is done. Start over from the top
-                        state = STATE_FIRST;
-                        SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 3);
-                        return;
                     }
-                } else if (state == STATE_PREPARE_OYAPAYOUT) {
-                    GameLogDebug("state = STATE_PREPARE_OYAPAYOUT");
-                    currentPlayer = 1;
-                    state = STATE_OYAPAYOUT;
-                    continue;
-                } else if (state == STATE_OYAPAYOUT) {
-                    GameLogDebug(string.Format("state = STATE_OYAPAYOUT, currentPlayer={0}", currentPlayer));
 
-                    int i = currentPlayer - 1;
-                    if (i < MAX_PLAYERS) {
+                    // Round is done. Start over from the top
+                    state = STATE_FIRST;
+                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 3);
+                    return;
+                } else if (state == STATE_OYAPAYOUT) {
+                    GameLogDebug("state = STATE_OYAPAYOUT");
+
+                    for (int i = 0; i < MAX_PLAYERS; ++i) {
                         // payout based on oyaPayoutMultiplier here
                         if (i + 1 != oya && playerActive[i]) {
                             float amount = oyaPayoutMultiplier*bets[i];
                             udonChips.money -= amount; // Remove from ourselves
                             Broadcast(mkop_balance(i+1, amount)); // Increase on remote player
-
-                            ++currentPlayer;
-                            continue;
-                        } else {
-                            ++currentPlayer;
-                            continue;
                         }
-                    } else {
-                        // We failed. All gets reset and oya gets passed on
-
-                        SendCustomEventDelayedSeconds(nameof(_ToNextOya), 3);
-                        return; // We are no longer oya, so we no longer run the state machine
                     }
+
+                    // We failed. All gets reset and oya gets passed on
+                    SendCustomEventDelayedSeconds(nameof(_ToNextOya), 3);
+                    return; // We are no longer oya, so we no longer run the state machine
                 }
             }
         }
@@ -1194,7 +1167,7 @@ namespace XZDice
                 if (throw_type == THROW_SHONBEN) {
                     // Shonben insta-fail, pay-out and oya-switch
                     oyaPayoutMultiplier = 1;
-                    state = STATE_PREPARE_OYAPAYOUT;
+                    state = STATE_OYAPAYOUT;
                     _OyaStateMachine();
                     return;
                 }
@@ -1202,7 +1175,7 @@ namespace XZDice
                 if (throw_type == THROW_1 || throw_type == THROW_123) {
                     // Insta-fail and payout to everybody (different multiplier)
                     oyaPayoutMultiplier = (throw_type == THROW_123) ? 2 : 1;
-                    state = STATE_PREPARE_OYAPAYOUT;
+                    state = STATE_OYAPAYOUT;
                     _OyaStateMachine();
                     return;
                 }
@@ -1214,7 +1187,7 @@ namespace XZDice
                     for (int i = 0; i < MAX_PLAYERS; ++i) {
                         betMultiplier[i] = mult;
                     }
-                    state = STATE_PREPARE_BALANCE;
+                    state = STATE_BALANCE;
                     _OyaStateMachine();
                     return;
                 }
