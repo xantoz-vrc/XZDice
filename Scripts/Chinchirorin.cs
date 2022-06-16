@@ -542,7 +542,7 @@ namespace XZDice
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
-            if (player != null && Networking.IsOwner(player, gameObject)) {
+            if (Networking.IsOwner(gameObject)) {
                 // If we were explicitly instructed to become oya, iAmPlayer
                 // should equal oya for the owner of the object. If this is not
                 // the case, this means the oya left the instance.
