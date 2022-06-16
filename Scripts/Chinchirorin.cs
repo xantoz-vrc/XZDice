@@ -113,24 +113,24 @@ namespace XZDice
         private void GameLog(string message)
         {
             if (gameLog != null) {
-                gameLog.Log(message);
+                gameLog._Log(message);
             }
             if (gameLogDebug != null) {
-                gameLogDebug.Log(message);
+                gameLogDebug._Log(message);
             }
         }
 
         private void GameLogDebug(string message)
         {
             if (DEBUG && gameLogDebug != null) {
-                gameLogDebug.Log("<color=\"grey\">" + message + "</color>");
+                gameLogDebug._Log("<color=\"grey\">" + message + "</color>");
             }
         }
 
         private void GameLogWarn(string message)
         {
             if (DEBUG && gameLogDebug != null) {
-                gameLogDebug.Log("<color=\"yellow\">WARN: " + message + "</color>");
+                gameLogDebug._Log("<color=\"yellow\">WARN: " + message + "</color>");
             }
         }
 
@@ -748,7 +748,11 @@ namespace XZDice
                 }
             } else if (op_getop(arg0) == OPCODE_NOOYA) {
                 // reset various things like text displays, betting screens etc.
-                GameLogDebug("Table is empty");
+
+                // clear non-debug GameLog
+                gameLog._Clear();
+
+                GameLog("Table is empty");
                 ResetTable();
                 ResetServerVariables();
                 opqueue_Reset();

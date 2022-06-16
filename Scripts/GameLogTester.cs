@@ -6,6 +6,7 @@ using VRC.Udon;
 
 namespace XZDice
 {
+    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GameLogTester : UdonSharpBehaviour
     {
         [SerializeField] private GameLog log;
@@ -18,7 +19,7 @@ namespace XZDice
         private uint cntr = 0;
         public void Derp()
         {
-            log.Log(cntr.ToString() + "Derp");
+            log._Log(cntr.ToString() + "Derp");
             cntr++;
             SendCustomEventDelayedSeconds("Derp", 2);
         }

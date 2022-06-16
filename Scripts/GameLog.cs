@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 namespace XZDice
 {
+    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GameLog : UdonSharpBehaviour
     {
         [SerializeField] private int numlines = 20;
@@ -21,13 +22,21 @@ namespace XZDice
 
         private void Start()
         {
+            _Clear();
+        }
+
+        public void _Clear()
+        {
             lines = new string[numlines];
             foreach (Text t in screens) {
                 t.text = "";
             }
+            insertPos = 0;
+            startPos = 0;
+            totalLines = 0;
         }
 
-        public void Log(string message)
+        public void _Log(string message)
         {
             lines[insertPos] = message;
             insertPos = (insertPos + 1) % numlines;
