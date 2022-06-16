@@ -127,6 +127,13 @@ namespace XZDice
             }
         }
 
+        private void GameLogWarn(string message)
+        {
+            if (DEBUG && gameLogDebug != null) {
+                gameLogDebug.Log("<color=\"yellow\">WARN: " + message + "</color>");
+            }
+        }
+
         private void GameLogError(string message)
         {
             GameLog("<color=\"red\">ERR: " + message + "</color>");
@@ -730,7 +737,8 @@ namespace XZDice
                         Networking.SetOwner(Networking.LocalPlayer, gameObject);
 
                     ResetServerVariables();
-                    opqueue_Reset();
+                    if (fromPlayer > 0)
+                        opqueue_Reset();
                     // Set playerActive based on what previous oya told us
                     playerActive = pa;
 
@@ -1650,6 +1658,8 @@ namespace XZDice
 
         #region opqueue
         private bool serializing = false;
+        private float serialization_timeout_time = float.NaN;
+        private readonly float SERIALIZATION_TIMEOUT = 1.0f;
 
         private readonly int OPQUEUE_LENGTH = 32; // This should be more than large enough that normal play won't see lost commands
         private uint[] outgoing_ops;
@@ -1664,12 +1674,15 @@ namespace XZDice
 
         private void opqueue_Reset()
         {
+            GameLogDebug("opqueue_Reset");
+
             outgoing_ops = new uint[OPQUEUE_LENGTH];
             outgoing_ops_pending = 0;
             outgoing_ops_insert = 0;
             outgoing_ops_read = 0;
 
             serializing = false;
+            serialization_timeout_time = float.NaN;
         }
 
         private void opqueue_Queue(uint op)
@@ -1718,22 +1731,42 @@ namespace XZDice
             if (opqueue_Pending() && !serializing) {
                 arg0 = opqueue_Peek();
                 GameLogDebug(string.Format("Serializing arg0=0x{0:X} ...", arg0));
+                serializing = true;
+
+                // Prepare the timeout function. Note that we still need to use a timestamp, since
+                // there is no way to cancel an event pending with SendCustomEventDelayedSeconds.
+                serialization_timeout_time = Time.time + SERIALIZATION_TIMEOUT;
+                SendCustomEventDelayedSeconds(nameof(_SerializationTimeout), SERIALIZATION_TIMEOUT + 0.1f);
+
                 RequestSerialization();
                 OnDeserialization();
-                serializing = true;
             }
         }
 
         public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result)
         {
-            GameLogDebug(string.Format("OnPostSerialization, success={0}, byteCount={1}",
-                                       result.success, result.byteCount));
+            GameLogDebug(string.Format("OnPostSerialization, serializing={0}, success={1}, byteCount={2}",
+                                       serializing, result.success, result.byteCount));
 
             if (serializing && result.success) {
                 opqueue_Dequeue();
             }
 
             serializing = false;
+            serialization_timeout_time = float.NaN;
+        }
+
+        public void _SerializationTimeout()
+        {
+            GameLogDebug(string.Format("_SerializationTimeout, Time.time={0}, serializing={1}, serialization_timeout_time={2}",
+                                       Time.time, serializing, serialization_timeout_time));
+
+            if (serializing && Time.time > serialization_timeout_time) {
+                GameLogWarn(string.Format("Serializing 0x{0:X} timed out...", opqueue_Peek()));
+                opqueue_Dequeue();
+                serializing = false;
+                serialization_timeout_time = float.NaN;
+            }
         }
         #endregion
     }
