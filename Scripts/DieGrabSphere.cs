@@ -34,10 +34,6 @@ namespace XZDice
         public void _BecomeOwner()
         {
             if (!Networking.IsOwner(gameObject)) {
-                VRC_Pickup p = (VRC_Pickup)GetComponent(typeof(VRC_Pickup));
-                if (p != null && p.currentPlayer.playerId != Networking.LocalPlayer.playerId)
-                    p.Drop();
-
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
         }
@@ -98,10 +94,6 @@ namespace XZDice
 
         public void _TeleportTo(Transform tf)
         {
-            VRC_Pickup p = (VRC_Pickup)GetComponent(typeof(VRC_Pickup));
-            if (p != null)
-                p.Drop();
-
             VRCObjectSync os = (VRCObjectSync)GetComponent(typeof(VRCObjectSync));
             if (os != null)
                 os.FlagDiscontinuity();
