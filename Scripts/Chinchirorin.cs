@@ -1052,8 +1052,7 @@ namespace XZDice
                     _OyaStateMachine();
                 } else {
                     // Handle leaving during certain states etc.
-                    if (state == STATE_PREPARE_THROW || state == STATE_THROW ||
-                        state == STATE_BALANCE || state == STATE_OYAPAYOUT) {
+                    if ((state == STATE_PREPARE_THROW || state == STATE_THROW) && player == currentPlayer) {
                         ++currentPlayer;
                         _OyaStateMachine();
                     }
