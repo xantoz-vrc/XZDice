@@ -547,7 +547,7 @@ namespace XZDice
                 // should equal oya for the owner of the object. If this is not
                 // the case, this means the oya left the instance.
 
-                if (iAmPlayer != oya) {
+                if (iAmPlayer <= 0 || iAmPlayer != oya) {
                     GameLog("Oya disappeared: Game reset");
                     Broadcast(mkop_nooya());
                 }
@@ -796,7 +796,9 @@ namespace XZDice
             int idx = iAmPlayer - 1;
             for (int i = 0; i < MAX_PLAYERS; ++i) {
                 if ((idx % MAX_PLAYERS) + 1 != iAmPlayer && playerActive[idx % MAX_PLAYERS]) {
-                    Broadcast(mkop_oyachange(iAmPlayer, (idx % MAX_PLAYERS) + 1, playerActive));
+                    int newOya = (idx % MAX_PLAYERS) + 1;
+                    oya = newOya; // Set this already here so OnOwnershipTransferred knows this wasn't the oya leaving the instance
+                    Broadcast(mkop_oyachange(iAmPlayer, newOya, playerActive));
                     ResetServerVariables();
                     return true;
                 }
