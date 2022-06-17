@@ -37,10 +37,6 @@ namespace XZDice
     {
         [SerializeField]
         private DieGrabSphere dieGrabSphere;
-        private Die[] dice;  // Simply set to dieGrabSphere.dice in Start
-
-        [SerializeField]
-        private Collider insideBowlCollider;
 
         [SerializeField]
         private GameObject[] joinButtons;
@@ -85,7 +81,6 @@ namespace XZDice
         private int iAmPlayer = -1;
         private int oya = -1;
         private float totalBet = 0.0f;
-        private bool[] dieReadResult;
 
         private bool[] playerActive; // Used frequently by both, but client side
                                      // is just a cached version of server
@@ -153,14 +148,10 @@ namespace XZDice
 
         private void Start()
         {
-            if (dieGrabSphere.dice.Length != 3)
+            if (dieGrabSphere._GetLength() != 3)
                 Debug.LogError("Must be three dice");
 
-            // Get the dice from dieGrabSphere
-            dice = new Die[dieGrabSphere.dice.Length];
-            for (int i = 0; i < dieGrabSphere.dice.Length; ++i) {
-                dice[i] = (Die)dieGrabSphere.dice[i].GetComponent(typeof(UdonBehaviour));
-            }
+            dieGrabSphere._AddListener(this);
             dieGrabSphere.hideOnThrow = true; // Ensure hideOnThrow is set
 
             if (joinButtons.Length != MAX_PLAYERS)
@@ -171,11 +162,6 @@ namespace XZDice
 
             if (diceSpawns.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("diceSpawns must be {0} long", MAX_PLAYERS));
-
-
-            foreach (Die die in dice) {
-                die._AddListener(this);
-            }
 
             udonChips = GameObject.Find("UdonChips").GetComponent<UdonChips>();
 
@@ -203,7 +189,6 @@ namespace XZDice
 
         private void ResetClientVariables()
         {
-            dieReadResult = new bool[dice.Length];
             totalBet = 0.0f;
             // Below is left out on purpose
             // oya = -1;
@@ -211,9 +196,9 @@ namespace XZDice
 
         private void ResetServerVariables()
         {
-            recvResult = new int[dice.Length];
+            recvResult = new int[dieGrabSphere._GetLength()];
             recvResult_cntr = 0;
-            oyaResult = new int[dice.Length];
+            oyaResult = new int[dieGrabSphere._GetLength()];
             oyaThrowType = THROW_INVALID;
             rethrowCount = 0;
             currentPlayer = -1;
@@ -455,55 +440,36 @@ namespace XZDice
             return Networking.IsOwner(gameObject);
         }
 
+        // DiGrabSphereListener
         public void _SetThrown()
         {
             // Do nothing
         }
 
-        // DiceListener
+        // DieGrabSphereListener
         public void _SetHeld()
         {
             // Do nothing
         }
 
-        // DiceListener
-        public void _DiceResult()
-        {
-            GameLogDebug("DiceResult");
-
-            // Actually I think this would all probably be easier if we just handled the dice directly instead of being a listener of it...
-            for (int i = 0; i < dice.Length; ++i) {
-                Die die = dice[i];
-                if (!dieReadResult[i] && die._GetResult() != -1) {
-                    dieReadResult[i] = true;
-                    int result = die._GetResult();
-                    if (!insideBowlCollider.bounds.Contains(die.transform.position)) { // TODO: Or should we use the rigidbody position?
-                        result = 0; // 0 is used to indicate outside
-                    }
-                    SendDiceResultEvent(result);
-                }
-            }
-        }
+        // DieGrabSphereListener
+        public void _DiceResult0() { SendDiceResultEvent(0); }
+        public void _DiceResult1() { SendDiceResultEvent(1); }
+        public void _DiceResult2() { SendDiceResultEvent(2); }
+        public void _DiceResult3() { SendDiceResultEvent(3); }
+        public void _DiceResult4() { SendDiceResultEvent(4); }
+        public void _DiceResult5() { SendDiceResultEvent(5); }
+        public void _DiceResult6() { SendDiceResultEvent(6); }
 
         private void SendDiceResultEvent(int result)
         {
-            switch (result) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-                // Sends a single dice result to Oya (owner)
-                string fnname = "EventDiceResult" + result.ToString();
-                SendToOya(fnname);
-                break;
-            default:
-                Debug.LogError("Invalid dice result: " + result.ToString());
-                GameLogError("Invalid dice result: " + result.ToString());
-                break;
-            }
+            // TODO: Have different EventDiceResult for every player, so that we can tell if the
+            // result came from the correct player, and reject it otherwise. This is going to become
+            // important when we add timeouts.
+
+            // Sends a single dice result to Oya (owner)
+            string fnname = "EventDiceResult" + result.ToString();
+            SendToOya(fnname);
         }
 
         private string formatChips(float amount)
@@ -654,9 +620,6 @@ namespace XZDice
             } else if (op_getop(arg0) == OPCODE_YOURTHROW) {
                 int player = opyourthrow_player(arg0);
                 int rethrow = opyourthrow_rethrow(arg0);
-
-                for (int i = 0; i < dieReadResult.Length; ++i)
-                    dieReadResult[i] = false;
 
                 if (iAmPlayer == player) {
                     dieGrabSphere._BecomeOwner();
@@ -1256,12 +1219,14 @@ namespace XZDice
                     return;
                 }
 
-                if (!(recvResult_cntr < dice.Length))
+                int length = dieGrabSphere._GetLength();
+
+                if (!(recvResult_cntr < length))
                     return;
 
                 recvResult[recvResult_cntr++] = result;
 
-                if (recvResult_cntr == dice.Length) {
+                if (recvResult_cntr == length) {
                     ProcessDiceResult();
                 }
             }

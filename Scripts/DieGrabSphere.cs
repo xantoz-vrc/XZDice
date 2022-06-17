@@ -10,30 +10,90 @@ namespace XZDice
     //[UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class DieGrabSphere : UdonSharpBehaviour
     {
-        public GameObject[] dice;
+        [SerializeField]
+        private GameObject[] dice;
 
         [Tooltip("When set DieGrabSphere will hide and become ungrabbable after being released")]
         public bool hideOnThrow = false;
 
-        //[SerializeField]
-        //private DiceGroup dicegroup;
-
         private VRC_Pickup pickup;
         private Rigidbody rigidbody;
-        //private Transform transform;
-        //private GameObject parent;
 
+        // Toggled on when FixedUpdate should make the dice follow the Sphere
         private bool diceFollow = false;
+
+        [SerializeField]
+        private Collider insideBowlCollider = null;
+        private bool[] dieReadResult;
+
+        private UdonSharpBehaviour[] listeners;
 
         private void Start()
         {
             pickup = (VRC_Pickup)gameObject.GetComponent(typeof(VRC_Pickup));
             rigidbody = gameObject.GetComponent<Rigidbody>();
+
+            listeners = new UdonSharpBehaviour[0];
+            dieReadResult = new bool[dice.Length];
+            foreach (GameObject die in dice) {
+                Die d = (Die)die.GetComponent(typeof(UdonBehaviour));
+                if (d != null)
+                    d._AddListener(this);
+            }
+        }
+
+        public void _AddListener(UdonSharpBehaviour newlistener)
+        {
+            if (listeners == null)
+                listeners = new UdonSharpBehaviour[0];
+            int newlength = listeners.Length + 1;
+            UdonSharpBehaviour[] newlisteners = new UdonSharpBehaviour[newlength];
+            listeners.CopyTo(newlisteners, 0);
+            newlisteners[newlength - 1] = newlistener;
+            listeners = newlisteners;
+        }
+
+        public int _GetLength()
+        {
+            return dice.Length;
+        }
+
+        public void _SetThrown()
+        {
+            // Do nothing
+        }
+
+        // DiceListener
+        public void _SetHeld()
+        {
+            // Do nothing
+        }
+
+        // DiceListener
+        public void _DiceResult()
+        {
+            // Actually I think this would all probably be easier if we just handled the dice directly instead of being a listener of it...
+            for (int i = 0; i < dice.Length; ++i) {
+                GameObject die = dice[i];
+                Die d = (Die)die.GetComponent(typeof(UdonBehaviour));
+                if (!dieReadResult[i] && d._GetResult() != -1) {
+                    dieReadResult[i] = true;
+                    int result = d._GetResult();
+                    if (insideBowlCollider != null &&
+                        !insideBowlCollider.bounds.Contains(die.transform.position)) {
+                        result = 0; // 0 is used to indicate outside
+                    }
+                    string fnname = "_DiceResult" + result.ToString();
+                    foreach (UdonSharpBehaviour lis in listeners) {
+                        lis.SendCustomEvent(fnname);
+                    }
+                }
+            }
         }
 
         public void _BecomeOwner()
         {
-            if (!Networking.IsOwner(gameObject)) {
+            if (Utilities.IsValid(Networking.LocalPlayer) && !Networking.IsOwner(gameObject)) {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
         }
@@ -106,7 +166,7 @@ namespace XZDice
         // Use when presenting the dice to be thrown to a player
         public void _ParkDice()
         {
-            int i = 0;
+            int idx = 0;
             foreach (GameObject die in dice) {
                 VRC_Pickup p = (VRC_Pickup)die.GetComponent(typeof(VRC_Pickup));
                 if (p != null) {
@@ -115,7 +175,7 @@ namespace XZDice
                 }
 
                 Rigidbody rb = die.GetComponent<Rigidbody>();
-                rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(i - dice.Length/2), 0.0f, 0.0f));
+                rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f));
                 rb.useGravity = false;
                 rb.rotation = Random.rotation;
 
@@ -126,30 +186,35 @@ namespace XZDice
                 if (os != null)
                     os.FlagDiscontinuity();
 
-                ++i;
+                ++idx;
             }
         }
 
         // TODO: replace with parentconstraint usage
         private void FixedUpdate()
         {
-            int i = 0;
+            int idx = 0;
             if (diceFollow) {
                 foreach (GameObject die in dice) {
                     Rigidbody rb = die.GetComponent<Rigidbody>();
-                    rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(i - dice.Length/2), 0.0f, 0.0f));
+                    rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f));
                     rb.useGravity = false;
                     rb.rotation = Random.rotation;
-                    ++i;
+                    ++idx;
                 }
             }
         }
 
         public override void OnPickup()
         {
-            int i = 0;
+            // Reset dieReadResult
+            for (int i = 0; i < dieReadResult.Length; ++i) {
+                dieReadResult[i] = false;
+            }
+
+            int idx = 0;
             foreach (GameObject die in dice) {
-                if (!Networking.IsOwner(die))
+                if (Utilities.IsValid(Networking.LocalPlayer) && !Networking.IsOwner(die))
                     Networking.SetOwner(Networking.LocalPlayer, die);
 
                 VRC_Pickup p = (VRC_Pickup)die.GetComponent(typeof(VRC_Pickup));
@@ -162,7 +227,7 @@ namespace XZDice
                 c.enabled = false;
 
                 Rigidbody rb = die.GetComponent<Rigidbody>();
-                rb.position = rigidbody.position + new Vector3(0.03f*(i - dice.Length/2), 0.0f, 0.0f);
+                rb.position = rigidbody.position + new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f);
                 rb.useGravity = false;
 
                 VRCObjectSync os = (VRCObjectSync)die.GetComponent(typeof(VRCObjectSync));
@@ -173,17 +238,22 @@ namespace XZDice
                 if (d != null)
                     d._SetHeld();
 
-                ++i;
+                ++idx;
             }
 
             diceFollow = true;
+
+            // Send _SetHeld to all listeners
+            foreach (UdonSharpBehaviour lis in listeners) {
+                lis.SendCustomEvent("_SetHeld");
+            }
         }
 
         public override void OnDrop()
         {
             int i = 0;
             foreach (GameObject die in dice) {
-                if (!Networking.IsOwner(die))
+                if (Utilities.IsValid(Networking.LocalPlayer) && !Networking.IsOwner(die))
                     Networking.SetOwner(Networking.LocalPlayer, die);
 
                 VRC_Pickup p = (VRC_Pickup)die.GetComponent(typeof(VRC_Pickup));
@@ -217,6 +287,10 @@ namespace XZDice
 
             if (hideOnThrow) {
                 SendCustomNetworkEvent(NetworkEventTarget.All, nameof(HideGlobal));
+            }
+
+            foreach (UdonSharpBehaviour lis in listeners) {
+                lis.SendCustomEvent("_SetThrown");
             }
         }
     }
