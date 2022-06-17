@@ -174,7 +174,7 @@ namespace XZDice
 
 
             foreach (Die die in dice) {
-                die.AddListener(this);
+                die._AddListener(this);
             }
 
             udonChips = GameObject.Find("UdonChips").GetComponent<UdonChips>();
@@ -455,28 +455,28 @@ namespace XZDice
             return Networking.IsOwner(gameObject);
         }
 
-        public void SetThrown()
+        public void _SetThrown()
         {
             // Do nothing
         }
 
         // DiceListener
-        public void SetHeld()
+        public void _SetHeld()
         {
             // Do nothing
         }
 
         // DiceListener
-        public void DiceResult()
+        public void _DiceResult()
         {
             GameLogDebug("DiceResult");
 
             // Actually I think this would all probably be easier if we just handled the dice directly instead of being a listener of it...
             for (int i = 0; i < dice.Length; ++i) {
                 Die die = dice[i];
-                if (!dieReadResult[i] && die.GetResult() != -1) {
+                if (!dieReadResult[i] && die._GetResult() != -1) {
                     dieReadResult[i] = true;
-                    int result = die.GetResult();
+                    int result = die._GetResult();
                     if (!insideBowlCollider.bounds.Contains(die.transform.position)) { // TODO: Or should we use the rigidbody position?
                         result = 0; // 0 is used to indicate outside
                     }

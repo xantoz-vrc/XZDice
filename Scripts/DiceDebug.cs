@@ -33,25 +33,27 @@ namespace XZDice
             }
 
             foreach (Die die in dice) {
-                die.AddListener(this);
+                die._AddListener(this);
             }
 
             if (Networking.IsOwner(gameObject))
                 UpdateText("Start");
         }
 
-        // TODO: use underscore, perhaps
-        public void SetThrown()
+        // DiceListener
+        public void _SetThrown()
         {
             UpdateText("SetThrown");
         }
 
-        public void SetHeld()
+        // DiceListener
+        public void _SetHeld()
         {
             UpdateText("SetHeld");
         }
 
-        public void DiceResult()
+        // DiceListener
+        public void _DiceResult()
         {
             UpdateText("DiceResult");
         }
@@ -80,7 +82,7 @@ namespace XZDice
             string playerName = (Networking.LocalPlayer != null) ? Networking.LocalPlayer.displayName : "";
             output = extra + "\n" + "Thrower: " + playerName + "\n";
             foreach (Die die in dice) {
-                output += die.name + " " + die.GetResult().ToString() + " " + die.GetThrown().ToString() + "\n";
+                output += die.name + " " + die._GetResult().ToString() + " " + die._GetThrown().ToString() + "\n";
             }
 
             ApplyText();

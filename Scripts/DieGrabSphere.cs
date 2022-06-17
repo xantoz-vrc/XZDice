@@ -171,7 +171,7 @@ namespace XZDice
 
                 Die d = (Die)die.GetComponent(typeof(UdonBehaviour));
                 if (d != null)
-                    d.SetHeld();
+                    d._SetHeld();
 
                 ++i;
             }
@@ -202,7 +202,7 @@ namespace XZDice
 
                 Die d = (Die)die.GetComponent(typeof(UdonBehaviour));
                 if (d != null) {
-                    d.SetThrown();
+                    d._SetThrown();
                 }
                 if (d == null || !d.onlyPhysicsWhenThrown) {
                     rb.isKinematic = false;

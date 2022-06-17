@@ -69,7 +69,7 @@ namespace XZDice
                         rigidbody.isKinematic = true;
                     if (listeners != null) {
                         foreach (UdonSharpBehaviour lis in listeners) {
-                            lis.SendCustomEvent("DiceResult");
+                            lis.SendCustomEvent("_DiceResult");
                         }
                     }
                 }
@@ -77,7 +77,7 @@ namespace XZDice
             firstFixedUpdate = false;
         }
 
-        public void SetThrown()
+        public void _SetThrown()
         {
             if (onlyPhysicsWhenThrown) {
                 rigidbody.isKinematic = false;
@@ -90,11 +90,11 @@ namespace XZDice
             if (listeners == null)
                 return;
             foreach (UdonSharpBehaviour lis in listeners) {
-                lis.SendCustomEvent("SetThrown");
+                lis.SendCustomEvent("_SetThrown");
             }
         }
 
-        public void SetHeld()
+        public void _SetHeld()
         {
             if (onlyPhysicsWhenThrown)
                 rigidbody.isKinematic = true;
@@ -104,21 +104,21 @@ namespace XZDice
             if (listeners == null)
                 return;
             foreach (UdonSharpBehaviour lis in listeners) {
-                lis.SendCustomEvent("SetHeld");
+                lis.SendCustomEvent("_SetHeld");
             }
         }
 
         public override void OnDrop()
         {
-            SetThrown();
+            _SetThrown();
         }
 
         public override void OnPickup()
         {
-            SetHeld();
+            _SetHeld();
         }
 
-        public void AddListener(UdonSharpBehaviour newlistener)
+        public void _AddListener(UdonSharpBehaviour newlistener)
         {
             if (listeners == null)
                 listeners = new UdonSharpBehaviour[0];
@@ -129,12 +129,12 @@ namespace XZDice
             listeners = newlisteners;
         }
 
-        public int GetResult()
+        public int _GetResult()
         {
             return result;
         }
 
-        public bool GetThrown()
+        public bool _GetThrown()
         {
             return thrown;
         }
