@@ -97,7 +97,7 @@ namespace XZDice
         private int[] recvResult; // Used only by owner
         int recvResult_cntr = 0; // Used only by owner
         private int rethrowCount = 0; // Used only by owner
-        private int currentPlayer = -1; //
+        private int currentPlayer = -1; // Used only by owner
 
         private int state = -1; // Used only by owner (drives the oya statemachine)
 
@@ -453,22 +453,28 @@ namespace XZDice
         }
 
         // DieGrabSphereListener
-        public void _DiceResult0() { SendDiceResultEvent(0); }
-        public void _DiceResult1() { SendDiceResultEvent(1); }
-        public void _DiceResult2() { SendDiceResultEvent(2); }
-        public void _DiceResult3() { SendDiceResultEvent(3); }
-        public void _DiceResult4() { SendDiceResultEvent(4); }
-        public void _DiceResult5() { SendDiceResultEvent(5); }
-        public void _DiceResult6() { SendDiceResultEvent(6); }
+        public void _DiceResult0() { SendDiceResultEvent(0, iAmPlayer); }
+        public void _DiceResult1() { SendDiceResultEvent(1, iAmPlayer); }
+        public void _DiceResult2() { SendDiceResultEvent(2, iAmPlayer); }
+        public void _DiceResult3() { SendDiceResultEvent(3, iAmPlayer); }
+        public void _DiceResult4() { SendDiceResultEvent(4, iAmPlayer); }
+        public void _DiceResult5() { SendDiceResultEvent(5, iAmPlayer); }
+        public void _DiceResult6() { SendDiceResultEvent(6, iAmPlayer); }
 
-        private void SendDiceResultEvent(int result)
+        // We have unique network events per player so the server can tel if the result we got was
+        // from the player we expected results for.
+        private void SendDiceResultEvent(int result, int player)
         {
-            // TODO: Have different EventDiceResult for every player, so that we can tell if the
-            // result came from the correct player, and reject it otherwise. This is going to become
-            // important when we add timeouts.
+            if (player < 1 || player > MAX_PLAYERS) {
+                string str = string.Format("SendDiceResultEvent({0},{1}): invalid player number",
+                                           result, player);
+                Debug.LogError(str);
+                GameLogError(str);
+                return;
+            }
 
             // Sends a single dice result to Oya (owner)
-            string fnname = "EventDiceResult" + result.ToString();
+            string fnname = string.Format("EventDiceResult{0}Player{1}", result, player);
             SendToOya(fnname);
         }
 
@@ -477,14 +483,38 @@ namespace XZDice
             return string.Format(udonChips.format, amount);
         }
 
-        // EventDiceResultX
-        public void EventDiceResult0() { RecvEventDiceResult(0); }
-        public void EventDiceResult1() { RecvEventDiceResult(1); }
-        public void EventDiceResult2() { RecvEventDiceResult(2); }
-        public void EventDiceResult3() { RecvEventDiceResult(3); }
-        public void EventDiceResult4() { RecvEventDiceResult(4); }
-        public void EventDiceResult5() { RecvEventDiceResult(5); }
-        public void EventDiceResult6() { RecvEventDiceResult(6); }
+        // EventDiceResultXPlayerY
+        public void EventDiceResult0Player1() { RecvEventDiceResult(0, 1); }
+        public void EventDiceResult1Player1() { RecvEventDiceResult(1, 1); }
+        public void EventDiceResult2Player1() { RecvEventDiceResult(2, 1); }
+        public void EventDiceResult3Player1() { RecvEventDiceResult(3, 1); }
+        public void EventDiceResult4Player1() { RecvEventDiceResult(4, 1); }
+        public void EventDiceResult5Player1() { RecvEventDiceResult(5, 1); }
+        public void EventDiceResult6Player1() { RecvEventDiceResult(6, 1); }
+
+        public void EventDiceResult0Player2() { RecvEventDiceResult(0, 2); }
+        public void EventDiceResult1Player2() { RecvEventDiceResult(1, 2); }
+        public void EventDiceResult2Player2() { RecvEventDiceResult(2, 2); }
+        public void EventDiceResult3Player2() { RecvEventDiceResult(3, 2); }
+        public void EventDiceResult4Player2() { RecvEventDiceResult(4, 2); }
+        public void EventDiceResult5Player2() { RecvEventDiceResult(5, 2); }
+        public void EventDiceResult6Player2() { RecvEventDiceResult(6, 2); }
+
+        public void EventDiceResult0Player3() { RecvEventDiceResult(0, 3); }
+        public void EventDiceResult1Player3() { RecvEventDiceResult(1, 3); }
+        public void EventDiceResult2Player3() { RecvEventDiceResult(2, 3); }
+        public void EventDiceResult3Player3() { RecvEventDiceResult(3, 3); }
+        public void EventDiceResult4Player3() { RecvEventDiceResult(4, 3); }
+        public void EventDiceResult5Player3() { RecvEventDiceResult(5, 3); }
+        public void EventDiceResult6Player3() { RecvEventDiceResult(6, 3); }
+
+        public void EventDiceResult0Player4() { RecvEventDiceResult(0, 4); }
+        public void EventDiceResult1Player4() { RecvEventDiceResult(1, 4); }
+        public void EventDiceResult2Player4() { RecvEventDiceResult(2, 4); }
+        public void EventDiceResult3Player4() { RecvEventDiceResult(3, 4); }
+        public void EventDiceResult4Player4() { RecvEventDiceResult(4, 4); }
+        public void EventDiceResult5Player4() { RecvEventDiceResult(5, 4); }
+        public void EventDiceResult6Player4() { RecvEventDiceResult(6, 4); }
 
         private void SetButtonText(GameObject btn, string str)
         {
@@ -887,6 +917,7 @@ namespace XZDice
                     GameLogDebug(string.Format("state = STATE_THROW, currentPlayer={0}", currentPlayer));
 
                     if (currentPlayer > MAX_PLAYERS) {
+                        currentPlayer = -1; // Reset this so we get obvious errors if this gets used in the wrong place
                         state = STATE_BALANCE;
                         continue;
                     }
@@ -1208,10 +1239,24 @@ namespace XZDice
             }
         }
 
-        private void RecvEventDiceResult(int result)
+        private void RecvEventDiceResult(int result, int player)
         {
-            GameLogDebug("RecvEventDiceResult");
+            GameLogDebug(string.Format("RecvEventDiceResult({0}, {1})", result, player));
             
+            // Ignore the result if we got a result, but not for the player we expected (can happen
+            // if a throw times out at a very inopportune moment)
+            if (state == STATE_OYATHROW) {
+                if (player != oya) {
+                    GameLogDebug(string.Format("Ignore result: Expected from P{0} (oya) but got from P{1}", oya, player));
+                    return;
+                }
+            } else if (state == STATE_THROW) {
+                if (player != currentPlayer) {
+                    GameLogDebug(string.Format("Ignore result: Expected from P{0} but got from P{1}", currentPlayer, player));
+                    return;
+                }
+            }
+
             if (state == STATE_OYATHROW || state == STATE_THROW) {
                 if (result < 0 || result > 6) { // 0 is "valid" in that it represents being outside
                     Debug.LogError("Invalid dice result: " + result.ToString());
