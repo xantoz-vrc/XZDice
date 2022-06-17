@@ -650,7 +650,7 @@ namespace XZDice
                                       player, pa[0], pa[1], pa[2], pa[3]));
                 if (iAmPlayer == player)
                     iAmPlayer = -1;
-                UpdateJoinButtons(pa);
+                UpdateJoinButtons(pa); // TODO: need to get an indication from server whether to show buttons or not
             } else if (op_getop(arg0) == OPCODE_YOURTHROW) {
                 int player = opyourthrow_player(arg0);
                 int rethrow = opyourthrow_rethrow(arg0);
@@ -1469,7 +1469,7 @@ namespace XZDice
             return OPCODE_BETDONE | playerpart << 8 | totalpart << 16;
         }
 
-        private uint mkop_betreject(int player, float total)
+        private uint mkop_betreject(int player, float total) // TODO: also inform about max bet? (requires switch to ulong)
         {
             uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
             uint totalpart = (uint)total & 0xFFFFu;  // 16 bit
