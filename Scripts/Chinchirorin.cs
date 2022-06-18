@@ -912,6 +912,7 @@ namespace XZDice
                         Broadcast(mkop_yourthrow(oya, rethrowCount));
                         return; // Wait on throw result
                     } else {
+                        oyaLost = true;
                         for (int i = 0; i < betMultiplier.Length; ++i)
                             betMultiplier[i] = 1;
                         state = STATE_BALANCE;
