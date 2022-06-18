@@ -21,6 +21,9 @@
 //         it's not possible to control how fast players might press the bet button
 //       * alternatively if we make the state machine 100% event driven with a queue for incoming events instead (but how to handle the outgoing bet opcodes is still tricky)
 
+
+// TODO: throw people out when they have too little money
+
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -862,10 +865,10 @@ namespace XZDice
                     }
                     betDone[oya - 1] = true; // Oya doesn't bet, so they're "done"
 
-                    Broadcast(mkop_enable_bet());
                     // TODO: a clearer indication?
                     GameLog("<color=yellow>Waiting for players to bet...</color>");
 
+                    Broadcast(mkop_enable_bet()); // TODO: send over oyas max bet
                     state = STATE_WAITINGFORBETS;
                     continue;
                 } else if (state == STATE_WAITINGFORBETS) {
