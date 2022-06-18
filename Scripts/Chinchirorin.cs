@@ -90,7 +90,6 @@ namespace XZDice
         private float[] bets; // Used only by owner
         private bool[] betDone; // Used only by owner
         private int[] betMultiplier;
-        private int oyaPayoutMultiplier;
 
         private int[] oyaResult; // Use only by owner
         private uint oyaThrowType; // Use only by owner
@@ -98,6 +97,7 @@ namespace XZDice
         int recvResult_cntr = 0; // Used only by owner
         private int rethrowCount = 0; // Used only by owner
         private int currentPlayer = -1; // Used only by owner
+        private bool oyaLost = false;
 
         private int state = -1; // Used only by owner (drives the oya statemachine)
 
@@ -206,7 +206,7 @@ namespace XZDice
             bets = new float[MAX_PLAYERS];
             betDone = new bool[MAX_PLAYERS];
             betMultiplier = new int[MAX_PLAYERS];
-            oyaPayoutMultiplier = 0;
+            oyaLost = false;
             state = -1;
         }
 
@@ -784,8 +784,7 @@ namespace XZDice
         private readonly int STATE_PREPARE_THROWS = 20;
         private readonly int STATE_PREPARE_THROW = 21;
         private readonly int STATE_THROW = 22;
-        private readonly int STATE_BALANCE = 31; // "Normal" round with individual results for everybody
-        private readonly int STATE_OYAPAYOUT = 41; // Oya failed and must pay everybody, followed by switching
+        private readonly int STATE_BALANCE = 31;
 
         private void PrepareRecvThrow()
         {
@@ -831,6 +830,8 @@ namespace XZDice
             while (true) {
                 if (state == STATE_OYAREPORT) {
                     GameLogDebug("state = STATE_OYAREPORT");
+                    oyaLost = false;
+
                     Broadcast(mkop_oyareport(iAmPlayer, playerActive));
 
                     state = STATE_WAITINGFORPLAYERS;
@@ -858,7 +859,6 @@ namespace XZDice
                         betMultiplier[i] = 0;
                     }
                     betDone[oya - 1] = true; // Oya doesn't bet, so they're "done"
-                    oyaPayoutMultiplier = 0;
 
                     Broadcast(mkop_enable_bet());
 
@@ -881,10 +881,7 @@ namespace XZDice
                     }
                 } else if (state == STATE_PREPARE_OYATHROW) {
                     GameLogDebug("state = STATE_PREPARE_OYATHROW");
-
                     rethrowCount = 0;
-                    oyaPayoutMultiplier = 0;
-
                     state = STATE_OYATHROW;
                     continue;
                 } else if (state == STATE_OYATHROW) {
@@ -895,16 +892,16 @@ namespace XZDice
                         Broadcast(mkop_yourthrow(oya, rethrowCount));
                         return; // Wait on throw result
                     } else {
-                        oyaPayoutMultiplier = 1;
-                        state = STATE_OYAPAYOUT;
+                        for (int i = 0; i < betMultiplier.Length; ++i)
+                            betMultiplier[i] = 1;
+                        state = STATE_BALANCE;
                         continue;
                     }
                 } else if (state == STATE_PREPARE_THROWS) {
                     GameLogDebug("state = STATE_PREPARE_THROWS");
 
-                    for (int i = 0; i < MAX_PLAYERS; ++i) {
+                    for (int i = 0; i < betMultiplier.Length; ++i)
                         betMultiplier[i] = 0;
-                    }
                     currentPlayer = 1;
                     state = STATE_PREPARE_THROW;
                     continue;
@@ -953,25 +950,18 @@ namespace XZDice
                         }
                     }
 
-                    // Round is done. Start over from the top
-                    state = STATE_FIRST;
-                    SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 3);
-                    return;
-                } else if (state == STATE_OYAPAYOUT) {
-                    GameLogDebug("state = STATE_OYAPAYOUT");
-
-                    for (int i = 0; i < MAX_PLAYERS; ++i) {
-                        // payout based on oyaPayoutMultiplier here
-                        if (i + 1 != oya && playerActive[i]) {
-                            float amount = oyaPayoutMultiplier*bets[i];
-                            udonChips.money -= amount; // Remove from ourselves
-                            Broadcast(mkop_balance(i+1, amount)); // Increase on remote player
-                        }
+                    if (oyaLost) {
+                        // We failed. All gets reset and oya gets passed on
+                        // TODO: Better indication that oya lost to everyone (display and sound effect?)
+                        SendCustomEventDelayedSeconds(nameof(_ToNextOya), 3);
+                        // After the above gets to run we are no longer oya, and no longer run the
+                        // state machine
+                    } else {
+                        // Round is done. Start over from the top
+                        state = STATE_FIRST;
+                        SendCustomEventDelayedSeconds(nameof(_OyaStateMachine), 3);
                     }
-
-                    // We failed. All gets reset and oya gets passed on
-                    SendCustomEventDelayedSeconds(nameof(_ToNextOya), 3);
-                    return; // We are no longer oya, so we no longer run the state machine
+                    return;
                 }
             }
         }
@@ -1172,16 +1162,21 @@ namespace XZDice
 
                 if (throw_type == THROW_SHONBEN) {
                     // Shonben insta-fail, pay-out and oya-switch
-                    oyaPayoutMultiplier = 1;
-                    state = STATE_OYAPAYOUT;
+                    oyaLost = true;
+                    for (int i = 0; i < betMultiplier.Length; ++i)
+                        betMultiplier[i] = 1;
+                    state = STATE_BALANCE;
                     _OyaStateMachine();
                     return;
                 }
 
                 if (throw_type == THROW_1 || throw_type == THROW_123) {
                     // Insta-fail and payout to everybody (different multiplier)
-                    oyaPayoutMultiplier = (throw_type == THROW_123) ? 2 : 1;
-                    state = STATE_OYAPAYOUT;
+                    oyaLost = true;
+                    int mult = (throw_type == THROW_123) ? 2 : 1;
+                    for (int i = 0; i < betMultiplier.Length; ++i)
+                        betMultiplier[i] = mult;
+                    state = STATE_BALANCE;
                     _OyaStateMachine();
                     return;
                 }
@@ -1190,9 +1185,8 @@ namespace XZDice
                 if (throw_type == THROW_6 || throw_type == THROW_456 || throw_type == THROW_ZOROME) {
                     int mult = (throw_type == THROW_456)    ? -2 :
                                (throw_type == THROW_ZOROME) ? -3 : -1;
-                    for (int i = 0; i < MAX_PLAYERS; ++i) {
+                    for (int i = 0; i < betMultiplier.Length; ++i)
                         betMultiplier[i] = mult;
-                    }
                     state = STATE_BALANCE;
                     _OyaStateMachine();
                     return;
@@ -1214,16 +1208,20 @@ namespace XZDice
                 if (throw_type == THROW_SHONBEN) {
                     betMultiplier[player-1] = -1;
                 } else if (throw_type == THROW_6) {
+                    oyaLost = true;
                     betMultiplier[player-1] = 1;
                 } else if (throw_type == THROW_456) {
+                    oyaLost = true;
                     betMultiplier[player-1] = 2;
                 } else if (throw_type == THROW_ZOROME) {
+                    oyaLost = true;
                     betMultiplier[player-1] = 3;
                 } else if (throw_type == THROW_123) {
                     betMultiplier[player-1] = -2;
                 } else if (throw_type == THROW_1) {
                     betMultiplier[player-1] = -1;
                 } else if (throw_type > oyaThrowType) {
+                    oyaLost = true;
                     betMultiplier[player-1] = 1;
                 } else if (throw_type < oyaThrowType) {
                     betMultiplier[player-1] = -1;
