@@ -843,7 +843,9 @@ namespace XZDice
                         state = STATE_WAITINGFORROUNDSTART;
                         continue;
                     }
-                    // TODO: here a way to indicate to everyone (or at least oya) that we need more players
+
+                    // TODO: A clearer way to indicate this?
+                    GameLog("<color=yellow>Waiting for players to join...</color>");
                     return; // Wait for players to increase
                 } else if (state == STATE_WAITINGFORROUNDSTART) {
                     GameLogDebug("state = STATE_WAITINGFORROUNDSTART");
@@ -861,6 +863,8 @@ namespace XZDice
                     betDone[oya - 1] = true; // Oya doesn't bet, so they're "done"
 
                     Broadcast(mkop_enable_bet());
+                    // TODO: a clearer indication?
+                    GameLog("<color=yellow>Waiting for players to bet...</color>");
 
                     state = STATE_WAITINGFORBETS;
                     continue;
