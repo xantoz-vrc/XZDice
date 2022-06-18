@@ -59,6 +59,10 @@ namespace XZDice
         private GameObject[] startRoundButtons;
 
         [SerializeField]
+        [Tooltip("Timeout displays that count locally to indicate to the player they're on a timeout")]
+        private GameObject[] timeoutDisplays;
+
+        [SerializeField]
         private GameLog gameLog = null;
 
         [SerializeField]
@@ -162,6 +166,9 @@ namespace XZDice
 
             if (betScreens.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("betScreens must be {0} long", MAX_PLAYERS));
+
+            if (timeoutDisplays.Length != MAX_PLAYERS)
+                Debug.LogError(string.Format("timeoutDisplays must be {0} long", MAX_PLAYERS));
 
             if (diceSpawns.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("diceSpawns must be {0} long", MAX_PLAYERS));
@@ -662,6 +669,7 @@ namespace XZDice
                     dieGrabSphere._SetPickupable(true);
                 }
 
+                timeoutDisplays[player-1].SetActive(true); // Show the timeout display to everyone
                 dieGrabSphere._Show();
 
                 if (rethrow > 0) {
@@ -681,7 +689,9 @@ namespace XZDice
                     GameLog(string.Format("P{0} threw {1} {2} {3}: {4}",
                                           player, result[0], result[1], result[2],
                                           formatThrowType(throw_type)));
+
                 // TODO: specific display for the result
+                timeoutDisplays[player - 1].SetActive(false);
             } else if (op_getop(arg0) == OPCODE_OYATHROWRESULT) {
                 int player = opthrow_player(arg0);
                 int[] result = opthrow_result(arg0);
@@ -692,7 +702,9 @@ namespace XZDice
                     GameLog(string.Format("P{0} (oya) threw {1} {2} {3}: {4}",
                                           player, result[0], result[1], result[2],
                                           formatThrowType(throw_type)));
+
                 // TODO: specific display for the result
+                timeoutDisplays[player - 1].SetActive(false);
             } else if (op_getop(arg0) == OPCODE_BALANCE) {
                 int player = opbalance_player(arg0);
                 float amount = opbalance_amount(arg0);
@@ -764,6 +776,7 @@ namespace XZDice
             for (int i = 0; i < MAX_PLAYERS; ++i) {
                 betScreens[i].SetActive(false);
                 startRoundButtons[i].SetActive(false);
+                timeoutDisplays[i].SetActive(false);
 
                 // Join  buttons handled separately
                 //  joinButtons[i].SetActive(true);
