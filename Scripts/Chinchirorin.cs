@@ -283,6 +283,9 @@ namespace XZDice
 
         private void JoinGame(int player)
         {
+            // TODO: do not set this here, but instead set it after we get confirmation from owner
+            //       that we can actually join. This would require some sort of two-step thing so we
+            //       can still identify ourselves in OnDeserialization
             iAmPlayer = player;
 
             // First person joining when table is empty is oya
