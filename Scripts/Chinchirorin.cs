@@ -444,7 +444,7 @@ namespace XZDice
 
         private bool isOya()
         {
-            return iAmPlayer == oya;
+            return iAmPlayer > 0 && iAmPlayer <= MAX_PLAYERS && iAmPlayer == oya;
         }
 
         private bool isOwner()
