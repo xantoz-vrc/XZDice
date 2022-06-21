@@ -649,17 +649,26 @@ namespace XZDice
                 int player = opplayer_player(arg0);
                 oya = opplayerjoin_oya(arg0); // Syncs up this variable in case we don't have it
                 bool[] pa = opplayer_playerActive(arg0);
+                bool showbuttons = opplayer_showbuttons(arg0);
                 GameLog(string.Format("P{0} entered the game (playerActive: {1},{2},{3},{4})",
                                       player, pa[0], pa[1], pa[2], pa[3]));
-                UpdateJoinButtons(pa);
+                if (showbuttons)
+                    UpdateJoinButtons(pa);
             } else if (op_getop(arg0) == OPCODE_PLAYERLEAVE) {
                 int player = opplayer_player(arg0);
                 bool[] pa = opplayer_playerActive(arg0);
+                bool showbuttons = opplayer_showbuttons(arg0);
                 GameLog(string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
                                       player, pa[0], pa[1], pa[2], pa[3]));
                 if (iAmPlayer == player)
                     iAmPlayer = -1;
                 UpdateJoinButtons(pa); // TODO: need to get an indication from server whether to show buttons or not
+                if (showbuttons)
+                    UpdateJoinButtons(pa); // TODO: need to get an indication from server whether to show buttons or not
+
+                if (!showbuttons && iAmPlayer == player) {
+                    joinButtons[player - 1].SetActive(false);
+                }
             } else if (op_getop(arg0) == OPCODE_YOURTHROW) {
                 int player = opyourthrow_player(arg0);
                 int rethrow = opyourthrow_rethrow(arg0);
@@ -994,7 +1003,8 @@ namespace XZDice
         private void RecvEventPlayerJoin(int player)
         {
             playerActive[player - 1] = true;
-            Broadcast(mkop_playerjoin(player, oya, playerActive));
+            bool showbuttons = (state == STATE_WAITINGFORPLAYERS);
+            Broadcast(mkop_playerjoin(player, oya, playerActive, showButtons));
 
             // TODO: fire of opcodes that will update all state (bet labels etc.), in case the newly
             // joining player joined the instance late?
@@ -1037,7 +1047,8 @@ namespace XZDice
                     Broadcast(mkop_nooya());
                 }
             } else {
-                Broadcast(mkop_playerleave(player, playerActive));
+                bool showButtons = (state == STATE_WAITINGFORPLAYERS)
+                Broadcast(mkop_playerleave(player, playerActive, showButtons));
 
                 if (getActivePlayerCount() < 2) {
                     // Too few to play. We have to go back to STATE_FIRST
@@ -1518,12 +1529,13 @@ namespace XZDice
             return (float)((op >> 16) & 0xFFFFu);
         }
 
-        private uint mkop_playerjoin(int player, int oya, bool[] playerActive)
+        private uint mkop_playerjoin(int player, int oya, bool[] playerActive, bool showbuttons)
         {
             uint playerpart = (uint)player & 0b111u;
             uint oyapart = (uint)oya & 0b111u;
             uint playerActivePart = _mk_playerActivePart(playerActive);
-            return OPCODE_PLAYERJOIN | playerpart << 8 | oyapart << 11 | playerActivePart << 14;
+            uint showbuttonspart = (showbuttons) ? 1u : 0u;
+            return OPCODE_PLAYERJOIN | playerpart << 8 | oyapart << 11 | playerActivePart << 14 | showbuttonspart << 18;
         }
 
         private int opplayerjoin_oya(uint op)
@@ -1531,11 +1543,12 @@ namespace XZDice
             return (int)((op >> 11) & 0b111u);
         }
 
-        private uint mkop_playerleave(int player, bool[] playerActive)
+        private uint mkop_playerleave(int player, bool[] playerActive, bool showbuttons)
         {
             uint playerpart = (uint)player & 0b111u;
             uint playerActivePart = _mk_playerActivePart(playerActive);
-            return OPCODE_PLAYERLEAVE | playerpart << 8 | playerActivePart << 14;
+            uint showbuttonspart = (showbuttons) ? 1u : 0u;
+            return OPCODE_PLAYERLEAVE | playerpart << 8 | playerActivePart << 14 | showbuttonspart << 18;
         }
 
         private int opplayer_player(uint op)
@@ -1546,6 +1559,11 @@ namespace XZDice
         private bool[] opplayer_playerActive(uint op)
         {
             return _get_playerActive(op, 14);
+        }
+
+        private bool opplayer_showbuttons(uint op)
+        {
+            return ((op >> 18) & 0x1u) == 0x1u;
         }
 
         private uint mkop_yourthrow(int player, int rethrow)
