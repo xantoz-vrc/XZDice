@@ -90,12 +90,11 @@ namespace XZDice
         private float totalBet = 0.0f;
         private float oyaMaxBet = 0.0f;
 
-        private bool[] playerActive; // Used frequently by both, but client side
-                                     // is just a cached version of server
-                                     // (TODO: consider syncing this)
+        // Used mainly on server, but some use also in client
+        private float[] bets;
+        private bool[] playerActive;
 
         // Server variables (only used on server)
-        private float[] bets; // Used only by owner
         private bool[] betDone; // Used only by owner
         private int[] betMultiplier;
 
@@ -763,7 +762,7 @@ namespace XZDice
                 int player = opbalance_player(arg0);
                 float amount = opbalance_amount(arg0);
                 if (iAmPlayer > 0 && player == iAmPlayer)
-                    udonChips.money += amount;  // TODO: handle no negative
+                    udonChips.money += amount;
 
                 if (amount >= 0.0f)
                     GameLog(string.Format("P{0} won {1}", player, formatChips(Mathf.Abs(amount))));
@@ -857,7 +856,6 @@ namespace XZDice
         private readonly int STATE_WAITINGFORPLAYERS = 5;
         private readonly int STATE_WAITINGFORROUNDSTART = 6;
         private readonly int STATE_WAITINGFORBETS = 8;
-        private readonly int STATE_KICK_NO_BETTERS = 9;
         private readonly int STATE_PREPARE_OYATHROW = 10;
         private readonly int STATE_OYATHROW = 11;
         private readonly int STATE_PREPARE_THROWS = 20;
@@ -911,15 +909,6 @@ namespace XZDice
                     GameLogDebug("state = STATE_OYAREPORT");
                     oyaLost = false;
 
-                    // // Kick everyone except oya out
-                    // for (int i = 0; i < MAX_PLAYERS; ++i) {
-                    //     if ((oya - 1) != i && playerActive[i]) {
-                    //         playerActive[i] = false;
-                    //         // Don't show buttons on the playerleave, because the oyareport opcode
-                    //         // coming up will also update buttons
-                    //         Broadcast(mkop_playerleave(i + 1, playerActive, false));
-                    //     }
-                    // }
 
                     Broadcast(mkop_oyareport(iAmPlayer, playerActive));
 
@@ -957,11 +946,6 @@ namespace XZDice
                     // joined. Thus need to make sure this button dissappears.
                     startRoundButtons[oya - 1].SetActive(false);
 
-                    // bool anybetin = false;
-                    // for (int i = 0; i < MAX_PLAYERS; ++i)
-                    //     if (playerActive[i] && betDone[i] && bets[i] > 0.0f)
-                    //         anybetin = true;
-
                     bool allbetsin = true;
                     for (int i = 0; i < MAX_PLAYERS; ++i)
                         if (playerActive[i] && !betDone[i])
@@ -980,20 +964,6 @@ namespace XZDice
 
                     Broadcast(mkop_waitingforroundstart(oya));
                     return; // Wait for button press / any additional joins coming through
-                } else if (state == STATE_KICK_NO_BETTERS) { // TODO: REMOVEME: I think this state is effectively a do-nothing now
-                    GameLogDebug("state = STATE_KICK_NO_BETTERS");
-
-                    for (int i = 0; i < MAX_PLAYERS; ++i) {
-                        if ((oya - 1) != i && playerActive[i] && !betDone[i]) {
-                            playerActive[i] = false;
-                            bets[i] = 0.0f;
-                            betDone[i] = false;
-                            Broadcast(mkop_playerleave(i + 1, playerActive, false));
-                        }
-                    }
-
-                    state = STATE_PREPARE_OYATHROW;
-                    continue;
                 } else if (state == STATE_PREPARE_OYATHROW) {
                     GameLogDebug("state = STATE_PREPARE_OYATHROW");
                     rethrowCount = 0;
@@ -1187,7 +1157,7 @@ namespace XZDice
                 // Disable join/leave buttons everywhere
                 Broadcast(mkop_disablejoinbuttons());
                 
-                state = STATE_KICK_NO_BETTERS;
+                state = STATE_PREPARE_OYATHROW;
                 _OyaStateMachine();
             }
         }
