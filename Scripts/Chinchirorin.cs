@@ -88,6 +88,7 @@ namespace XZDice
         private int iAmPlayer = -1;
         private int oya = -1;
         private float totalBet = 0.0f;
+        private float oyaMaxBet = 0.0f;
 
         private bool[] playerActive; // Used frequently by both, but client side
                                      // is just a cached version of server
@@ -200,6 +201,7 @@ namespace XZDice
         private void ResetClientVariables()
         {
             totalBet = 0.0f;
+            oyaMaxBet = 0.0f;
             // Below is left out on purpose
             // oya = -1;
         }
@@ -340,13 +342,21 @@ namespace XZDice
         public void _BtnJoinPlayer3() { JoinPlayerBtn(3); }
         public void _BtnJoinPlayer4() { JoinPlayerBtn(4); }
 
-        private void SetBetScreenButtons(GameObject bs, bool val)
+        private void SetBetScreenButtons(GameObject bs, bool val, bool enableDone)
         {
             Button[] buttons = bs.GetComponentsInChildren<Button>();
 
             foreach (Button btn in buttons) {
                 btn.interactable = val;
             }
+
+            // TODO: actually toggle the done buton
+        }
+
+        private void UpdateBetScreens()
+        {
+            // TODO: update the maxbet displayed on betscreens based on oyaMaxbet minus all the bets
+            //       in the bets array, except for your own
         }
 
         private void SendBetEvent(int player, int bet)
@@ -363,7 +373,7 @@ namespace XZDice
 
             // Temporarily disable betscreen buttons here until we get a
             // message back from the owner to avoid double-presses.
-            SetBetScreenButtons(betScreens[player - 1], false);
+            SetBetScreenButtons(betScreens[player - 1], false, false);
 
             string fnname = string.Format("EventPlayer{0}Bet{1}", player, bet);
             SendToOya(fnname);
@@ -371,7 +381,7 @@ namespace XZDice
 
         private void SendBetUndoEvent(int player)
         {
-            SetBetScreenButtons(betScreens[player - 1], false);
+            SetBetScreenButtons(betScreens[player - 1], false, false);
 
             string fnname = string.Format("EventPlayer{0}BetUndo", player);
             SendToOya(fnname);
@@ -379,7 +389,7 @@ namespace XZDice
 
         private void SendBetDoneEvent(int player)
         {
-            SetBetScreenButtons(betScreens[player - 1], false);
+            SetBetScreenButtons(betScreens[player - 1], false, false);
 
             string fnname = string.Format("EventPlayer{0}BetDone", player);
             SendToOya(fnname);
@@ -576,7 +586,7 @@ namespace XZDice
                 int player = opoyareport_oya(arg0);
                 ResetTable(); // Reset the bet displays and such
                 ResetClientVariables();
-                
+
                 oya = player;
                 bool[] pa = opoyareport_playerActive(arg0);
                 GameLog(string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
@@ -590,21 +600,21 @@ namespace XZDice
                     oya = opwaitingforroundstart_oya(arg0);
                 }
             } else if (op_getop(arg0) == OPCODE_ENABLE_BET) {
-                if (!isOya() && iAmPlayer > 0 && iAmPlayer <= MAX_PLAYERS) {
-                    // For now we only enable the bet screen locally. In the
-                    // future maybe we should enable them globally as a way to
-                    // indicate to everyone that someone is betting.
-                    // TODO: the above is possible by smart application of SetBetScreenButtons!
-                    GameObject bs = betScreens[iAmPlayer - 1];
-                    bs.SetActive(true);
-                    SetBetScreenButtons(bs, true);
-                }
+                int player = openable_bet_getplayer(arg0);
+                float maxbet = openable_bet_getoyamaxbet(arg0);
+                GameLogDebug(string.Format("Bet screen enabled for P{0} (maxbet={1})",
+                                           player, formatChips(maxbet)));
 
-                totalBet = 0.0f;
-                
-                // Disallow anyone from leaving/joining
-                foreach (GameObject btn in joinButtons)
-                    btn.SetActive(false);
+                GameObject bs = betScreens[player - 1];
+                bs.SetActive(true);
+                SetBetScreenButtons(bs, false, false);
+                if (iAmPlayer == player) {
+                    oyaMaxBet = maxbet;
+                    SetBetScreenButtons(bs, true, false);
+                    totalBet = 0.0f;
+                }
+                timeoutDisplays[player - 1].SetActive(true);
+                UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_BET) {
                 int player = opbet_getplayer(arg0);
                 float total = opbet_gettotal(arg0);
@@ -613,8 +623,12 @@ namespace XZDice
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
                     totalBet = total;
-                    SetBetScreenButtons(betScreens[player - 1], true);
+                    SetBetScreenButtons(betScreens[player - 1], true, total > 0.0f);
                 }
+                if (!isOya()) {
+                    bets[player - 1] = total;
+                }
+                UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_BETUNDO) {
                 int player = opbet_getplayer(arg0);
                 GameLogDebug(string.Format("P{0} reset their bet", player));
@@ -622,18 +636,29 @@ namespace XZDice
                 SetBetLabel(player, 0.0f);
                 if (iAmPlayer == player) {
                     totalBet = 0.0f;
-                    SetBetScreenButtons(betScreens[player - 1], true);
+                    SetBetScreenButtons(betScreens[player - 1], true, false);
                 }
+                if (!isOya()) {
+                    bets[player - 1] = 0.0f;
+                }
+                UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_BETDONE) {
                 int player = opbet_getplayer(arg0);
                 float total = opbet_gettotal(arg0);
-                betScreens[player - 1].SetActive(false);
+                GameObject bs = betScreens[player - 1];
+                bs.SetActive(false);
                 GameLog(string.Format("P{0} bet {1}", player, formatChips(total)));
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
                     totalBet = total;
-                    SetBetScreenButtons(betScreens[player - 1], false);
+                    SetBetScreenButtons(bs, false, false);
                 }
+                if (!isOya()) {
+                    bets[player - 1] = total;
+                }
+                timeoutDisplays[player - 1].SetActive(false);
+                joinButtons[player - 1].SetActive(false); // Disable leave button at this time (apply globally just in case)
+                UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_BETREJECT) {
                 int player = opbet_getplayer(arg0);
                 float total = opbet_gettotal(arg0);
@@ -643,8 +668,13 @@ namespace XZDice
                     totalBet = total;
                     // TODO: local error sound effect and more obvious display than GameLog
                     GameLog("<color=\"red\">Oya rejected bet as too big</color>");
-                    SetBetScreenButtons(betScreens[player - 1], true);
+                    GameObject bs = betScreens[player - 1];
+                    SetBetScreenButtons(bs, true, total > 0.0f);
                 }
+                if (!isOya()) {
+                    bets[player - 1] = total;
+                }
+                UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_PLAYERJOIN) {
                 int player = opplayer_player(arg0);
                 oya = opplayerjoin_oya(arg0); // Syncs up this variable in case we don't have it
@@ -660,14 +690,26 @@ namespace XZDice
                 bool showbuttons = opplayer_showbuttons(arg0);
                 GameLog(string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
                                       player, pa[0], pa[1], pa[2], pa[3]));
+                if (!isOya()) {
+                    bets[player - 1] = 0.0f;
+                }
+                SetBetLabel(player, 0.0f);
+                GameObject bs = betScreens[player - 1];
+                bs.SetActive(false);
+                UpdateBetScreens();
+
                 if (iAmPlayer == player)
                     iAmPlayer = -1;
-                UpdateJoinButtons(pa); // TODO: need to get an indication from server whether to show buttons or not
                 if (showbuttons)
                     UpdateJoinButtons(pa); // TODO: need to get an indication from server whether to show buttons or not
 
                 if (!showbuttons && iAmPlayer == player) {
                     joinButtons[player - 1].SetActive(false);
+                }
+            } else if (op_getop(arg0) == OPCODE_DISABLE_JOINBUTTONS) {
+                GameLogDebug("Disable join buttons");
+                foreach (GameObject btn in joinButtons) {
+                    btn.SetActive(false);
                 }
             } else if (op_getop(arg0) == OPCODE_YOURTHROW) {
                 int player = opyourthrow_player(arg0);
@@ -751,6 +793,12 @@ namespace XZDice
                 foreach (GameObject btn in joinButtons)
                     btn.SetActive(false);
 
+                SetBetLabel(toPlayer, 0.0f);
+                GameObject bs = betScreens[toPlayer - 1];
+                bs.SetActive(false);
+                bets[toPlayer - 1] = 0.0f;
+                UpdateBetScreens();
+
                 if (iAmPlayer > 0 && toPlayer == iAmPlayer) {
                     // Become owner/oya
                     if (!Networking.IsOwner(gameObject))
@@ -773,12 +821,13 @@ namespace XZDice
                 gameLog._Clear();
 
                 GameLog("Table is empty");
-                ResetTable();
                 ResetServerVariables();
                 opqueue_Reset();
                 ResetClientVariables();
                 oya = -1;
                 iAmPlayer = -1;
+
+                ResetTable();
                 UpdateJoinButtons(playerActive);
             }
         }
@@ -789,6 +838,8 @@ namespace XZDice
                 betScreens[i].SetActive(false);
                 startRoundButtons[i].SetActive(false);
                 timeoutDisplays[i].SetActive(false);
+
+                bets[i] = 0.0f;
 
                 // Join  buttons handled separately
                 //  joinButtons[i].SetActive(true);
@@ -805,8 +856,8 @@ namespace XZDice
         private readonly int STATE_OYAREPORT = 1;
         private readonly int STATE_WAITINGFORPLAYERS = 5;
         private readonly int STATE_WAITINGFORROUNDSTART = 6;
-        private readonly int STATE_PREPAREBETS = 7;
         private readonly int STATE_WAITINGFORBETS = 8;
+        private readonly int STATE_KICK_NO_BETTERS = 9;
         private readonly int STATE_PREPARE_OYATHROW = 10;
         private readonly int STATE_OYATHROW = 11;
         private readonly int STATE_PREPARE_THROWS = 20;
@@ -860,7 +911,24 @@ namespace XZDice
                     GameLogDebug("state = STATE_OYAREPORT");
                     oyaLost = false;
 
+                    // // Kick everyone except oya out
+                    // for (int i = 0; i < MAX_PLAYERS; ++i) {
+                    //     if ((oya - 1) != i && playerActive[i]) {
+                    //         playerActive[i] = false;
+                    //         // Don't show buttons on the playerleave, because the oyareport opcode
+                    //         // coming up will also update buttons
+                    //         Broadcast(mkop_playerleave(i + 1, playerActive, false));
+                    //     }
+                    // }
+
                     Broadcast(mkop_oyareport(iAmPlayer, playerActive));
+
+                    // Show betscreen to everyone except oya
+                    for (int i = 0; i < MAX_PLAYERS; ++i) {
+                        if ((oya - 1) != i && playerActive[i]) {
+                            Broadcast(mkop_enable_bet(i + 1, getOyaMaxBet()));
+                        }
+                    }
 
                     state = STATE_WAITINGFORPLAYERS;
                     continue;
@@ -868,36 +936,31 @@ namespace XZDice
                     GameLogDebug("state = STATE_WAITINGFORPLAYERS");
 
                     if (getActivePlayerCount() >= 2) {
-                        state = STATE_WAITINGFORROUNDSTART;
+                        for (int i = 0; i < MAX_PLAYERS; ++i) {
+                            bets[i] = 0.0f;
+                            betDone[i] = false;
+                            betMultiplier[i] = 0;
+                        }
+                        betDone[oya - 1] = true; // Oya doesn't bet, so they're "done"
+
+                        state = STATE_WAITINGFORBETS;
                         continue;
                     }
 
                     // TODO: A clearer way to indicate this?
                     GameLog("<color=yellow>Waiting for players to join...</color>");
                     return; // Wait for players to increase
-                } else if (state == STATE_WAITINGFORROUNDSTART) {
-                    GameLogDebug("state = STATE_WAITINGFORROUNDSTART");
-
-                    Broadcast(mkop_waitingforroundstart(oya));
-                    return; // Wait for button press + playerjoin events during STATE_WAITINGFORPLAYERS percolate through
-                } else if (state == STATE_PREPAREBETS) {
-                    GameLogDebug("state = STATE_PREPAREBETS");
-
-                    for (int i = 0; i < MAX_PLAYERS; ++i) {
-                        bets[i] = 0.0f;
-                        betDone[i] = false;
-                        betMultiplier[i] = 0;
-                    }
-                    betDone[oya - 1] = true; // Oya doesn't bet, so they're "done"
-
-                    // TODO: a clearer indication?
-                    GameLog("<color=yellow>Waiting for players to bet...</color>");
-
-                    Broadcast(mkop_enable_bet()); // TODO: send over oyas max bet
-                    state = STATE_WAITINGFORBETS;
-                    continue;
                 } else if (state == STATE_WAITINGFORBETS) {
                     GameLogDebug("state = STATE_WAITINGFORBETS");
+
+                    // We might come in here from STATE_WAITINGFORROUNDSTART in case a new player
+                    // joined. Thus need to make sure this button dissappears.
+                    startRoundButtons[oya - 1].SetActive(false);
+
+                    // bool anybetin = false;
+                    // for (int i = 0; i < MAX_PLAYERS; ++i)
+                    //     if (playerActive[i] && betDone[i] && bets[i] > 0.0f)
+                    //         anybetin = true;
 
                     bool allbetsin = true;
                     for (int i = 0; i < MAX_PLAYERS; ++i)
@@ -905,12 +968,32 @@ namespace XZDice
                             allbetsin = false;
 
                     if (allbetsin) {
-                        GameLogDebug(string.Format("bets=[{0},{1},{2},{3}]", bets[0], bets[1], bets[2], bets[3]));
-                        state = STATE_PREPARE_OYATHROW;
+                        state = STATE_WAITINGFORROUNDSTART;
                         continue;
                     } else {
+                        // TODO: a clearer indication?
+                        GameLog("<color=yellow>Waiting for players to bet...</color>");
                         return; // Wait for bets
                     }
+                } else if (state == STATE_WAITINGFORROUNDSTART) {
+                    GameLogDebug("state = STATE_WAITINGFORROUNDSTART");
+
+                    Broadcast(mkop_waitingforroundstart(oya));
+                    return; // Wait for button press / any additional joins coming through
+                } else if (state == STATE_KICK_NO_BETTERS) { // TODO: REMOVEME: I think this state is effectively a do-nothing now
+                    GameLogDebug("state = STATE_KICK_NO_BETTERS");
+
+                    for (int i = 0; i < MAX_PLAYERS; ++i) {
+                        if ((oya - 1) != i && playerActive[i] && !betDone[i]) {
+                            playerActive[i] = false;
+                            bets[i] = 0.0f;
+                            betDone[i] = false;
+                            Broadcast(mkop_playerleave(i + 1, playerActive, false));
+                        }
+                    }
+
+                    state = STATE_PREPARE_OYATHROW;
+                    continue;
                 } else if (state == STATE_PREPARE_OYATHROW) {
                     GameLogDebug("state = STATE_PREPARE_OYATHROW");
                     rethrowCount = 0;
@@ -999,17 +1082,41 @@ namespace XZDice
             }
         }
 
-        // TODO: perhaps limit the states during which a player can join?
+        private float getOyaMaxBet()
+        {
+            return System.Math.Min(udonChips.money/3, MAXBET);
+        }
+
+        // TODO: perhaps limit the states during which a player can join? (would require a way to
+        // communicate to a joining player that they couldn't join)
         private void RecvEventPlayerJoin(int player)
         {
+            // Nominally takes place during any of STATE_WAITINGFORPLAYERS, STATE_WAITINGFORBETS or STATE_WAITINGFORROUNDSTART
+
+            GameLogDebug(string.Format("RecvEventPlayerJoin({0}), state={1}", player, state));
+
+            if (player < 1 || player > MAX_PLAYERS) {
+                Debug.LogError("invalid player variable");
+                GameLogError("invalid player variable");
+                return;
+            }
+
             playerActive[player - 1] = true;
-            bool showbuttons = (state == STATE_WAITINGFORPLAYERS);
+            bool showButtons = (state == STATE_WAITINGFORPLAYERS ||
+                                state == STATE_WAITINGFORBETS ||
+                                state == STATE_WAITINGFORROUNDSTART);
             Broadcast(mkop_playerjoin(player, oya, playerActive, showButtons));
 
-            // TODO: fire of opcodes that will update all state (bet labels etc.), in case the newly
-            // joining player joined the instance late?
+            // Open the bet screen for the player, also tell them how much money oya has (can
+            // display max bet locally)
+            Broadcast(mkop_enable_bet(player, getOyaMaxBet()));
 
+            // State waitingforplayers needs this here to be able to proceed to the next state
             if (state == STATE_WAITINGFORPLAYERS) {
+                _OyaStateMachine();
+            } else if (state == STATE_WAITINGFORROUNDSTART) {
+                // Player joined before oya started round. We need to go back a bit and wait for them to bet.
+                state = STATE_WAITINGFORBETS;
                 _OyaStateMachine();
             }
         }
@@ -1019,7 +1126,10 @@ namespace XZDice
         // handle tricky things like this inline in OyaStateMachine
         private void RecvEventPlayerLeave(int player)
         {
-            GameLogDebug(string.Format("RecvEventPlayerLeave({0})", player));
+            // Nominally takes place during any of STATE_WAITINGFORPLAYERS, STATE_WAITINGFORBETS or
+            // STATE_WAITINGFORROUNDSTART, but could potentially happen elsewhere when shenanigans abound.
+
+            GameLogDebug(string.Format("RecvEventPlayerLeave({0}), state={1}", player, state));
 
             if (player < 1 || player > MAX_PLAYERS) {
                 Debug.LogError("invalid player variable");
@@ -1035,6 +1145,8 @@ namespace XZDice
             // If oya left
             // If not set up arg0 so that the game is obviously unoccupied
             if (player == oya && player == iAmPlayer) {
+                startRoundButtons[oya - 1].SetActive(false); // Disable this button early, in case it was enabled
+
                 // TODO: opcode/event that informs everyone that the oya is cowardly fleeing?
 
                 // We try to transfer to next player (we can't transfer to the
@@ -1047,7 +1159,9 @@ namespace XZDice
                     Broadcast(mkop_nooya());
                 }
             } else {
-                bool showButtons = (state == STATE_WAITINGFORPLAYERS)
+                bool showButtons = (state == STATE_WAITINGFORPLAYERS ||
+                                    state == STATE_WAITINGFORBETS ||
+                                    state == STATE_WAITINGFORROUNDSTART);
                 Broadcast(mkop_playerleave(player, playerActive, showButtons));
 
                 if (getActivePlayerCount() < 2) {
@@ -1069,8 +1183,11 @@ namespace XZDice
         {
             if (state == STATE_WAITINGFORROUNDSTART) {
                 startRoundButtons[oya - 1].SetActive(false);
+
+                // Disable join/leave buttons everywhere
+                Broadcast(mkop_disablejoinbuttons());
                 
-                state = STATE_PREPAREBETS;
+                state = STATE_KICK_NO_BETTERS;
                 _OyaStateMachine();
             }
         }
@@ -1116,6 +1233,8 @@ namespace XZDice
         private void RecvBetDoneEvent(int player)
         {
             GameLogDebug("RecvBetDoneEvent");
+
+            // TODO: reject if players bet is too small (0.0f)
 
             if (state == STATE_WAITINGFORBETS) {
                 betDone[player - 1] = true;
@@ -1463,6 +1582,7 @@ namespace XZDice
         private readonly uint OPCODE_OYAREPORT = 0xF0u; // update the oya variable &c.
         private readonly uint OPCODE_PLAYERJOIN = 0x10u; // A player has joined: Switch their join button to leave, and make it so only that player can press it
         private readonly uint OPCODE_PLAYERLEAVE = 0x11u;
+        private readonly uint OPCODE_DISABLE_JOINBUTTONS = 0x12u;
         private readonly uint OPCODE_YOURTHROW = 0x20u; // This enables the dice for one particular player, but disables them (pickup disabled) for everyone else (if player nbr is 0 just disable)
         private readonly uint OPCODE_THROWRESULT = 0x21u;
         private readonly uint OPCODE_OYATHROWRESULT = 0x22u;
@@ -1487,9 +1607,21 @@ namespace XZDice
             return (int)((op >> 8) & 0b111u);
         }
 
-        private uint mkop_enable_bet()
+        private uint mkop_enable_bet(int player, float oyamaxbet)
         {
-            return OPCODE_ENABLE_BET;
+            uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
+            uint oyamaxbetpart = (uint)oyamaxbet & 0xFFFFu;  // 16 bit
+            return OPCODE_ENABLE_BET | playerpart << 8 | oyamaxbetpart << 16;
+        }
+
+        private int openable_bet_getplayer(uint op)
+        {
+            return (int)((op >> 8) & 0b111u);
+        }
+
+        private float openable_bet_getoyamaxbet(uint op)
+        {
+            return (float)((op >> 16) & 0xFFFFu);
         }
 
         private uint mkop_bet(int player, float total)
@@ -1564,6 +1696,11 @@ namespace XZDice
         private bool opplayer_showbuttons(uint op)
         {
             return ((op >> 18) & 0x1u) == 0x1u;
+        }
+
+        private uint mkop_disablejoinbuttons()
+        {
+            return OPCODE_DISABLE_JOINBUTTONS;
         }
 
         private uint mkop_yourthrow(int player, int rethrow)
@@ -1812,8 +1949,8 @@ namespace XZDice
 
         public void _SerializationTimeout()
         {
-            GameLogDebug(string.Format("_SerializationTimeout, Time.time={0}, serializing={1}, serialization_timeout_time={2}",
-                                       Time.time, serializing, serialization_timeout_time));
+            // GameLogDebug(string.Format("_SerializationTimeout, Time.time={0}, serializing={1}, serialization_timeout_time={2}",
+            //                            Time.time, serializing, serialization_timeout_time));
 
             if (serializing && Time.time > serialization_timeout_time) {
                 GameLogWarn(string.Format("Serializing 0x{0:X} timed out...", opqueue_Peek()));

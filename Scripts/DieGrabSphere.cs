@@ -178,6 +178,7 @@ namespace XZDice
                 rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f));
                 rb.useGravity = false;
                 rb.rotation = Random.rotation;
+                rb.isKinematic = true;
 
                 Collider c = die.GetComponent<Collider>();
                 c.enabled = false;
