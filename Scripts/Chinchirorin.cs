@@ -73,6 +73,7 @@ namespace XZDice
         [Tooltip("Enable debugging (also make sure to set gameLogDebug)")]
         private bool DEBUG = true;
 
+        private readonly bool SPAM = true; // Enable spam level debug logs
 
         private UdonChips udonChips = null;
 
@@ -83,6 +84,7 @@ namespace XZDice
         private readonly float MAXBET = 20000.0f;
         private readonly int MAX_PLAYERS = 4;
         private readonly int MAX_RETHROWS = 3;
+        private readonly int TIMEOUT_SECS = 30;
 
         // Client variables (also used on server)
         private int iAmPlayer = -1;
@@ -105,6 +107,8 @@ namespace XZDice
         private int rethrowCount = 0; // Used only by owner
         private int currentPlayer = -1; // Used only by owner
         private bool oyaLost = false;
+        private float[] timeoutTime;
+        private float timeoutTimeOya;
 
         private int state = -1; // Used only by owner (drives the oya statemachine)
 
@@ -126,6 +130,12 @@ namespace XZDice
         {
             if (DEBUG && gameLogDebug != null) {
                 gameLogDebug._Log("<color=\"grey\">" + message + "</color>");
+            }
+        }
+
+        private void GameLogSpam(string message) {
+            if (DEBUG && SPAM && gameLogDebug != null) {
+                gameLogDebug._Log("<color=#404040ff>" + message + "</color>");
             }
         }
 
@@ -218,6 +228,10 @@ namespace XZDice
             betDone = new bool[MAX_PLAYERS];
             betMultiplier = new int[MAX_PLAYERS];
             oyaLost = false;
+            timeoutTime = new float[MAX_PLAYERS];
+            for (int i = 0; i < MAX_PLAYERS; ++i)
+                timeoutTime[i] = float.NaN;
+            timeoutTimeOya = float.NaN;
             state = -1;
         }
 
@@ -244,10 +258,10 @@ namespace XZDice
             SendToOya(fnname);
         }
 
-        public void EventPlayerLeave1() { RecvEventPlayerLeave(1); }
-        public void EventPlayerLeave2() { RecvEventPlayerLeave(2); }
-        public void EventPlayerLeave3() { RecvEventPlayerLeave(3); }
-        public void EventPlayerLeave4() { RecvEventPlayerLeave(4); }
+        public void EventPlayerLeave1() { RecvEventPlayerLeave(1, false); }
+        public void EventPlayerLeave2() { RecvEventPlayerLeave(2, false); }
+        public void EventPlayerLeave3() { RecvEventPlayerLeave(3, false); }
+        public void EventPlayerLeave4() { RecvEventPlayerLeave(4, false); }
 
         private void SendPlayerJoinEvent(int player)
         {
@@ -689,8 +703,16 @@ namespace XZDice
                 int player = opplayer_player(arg0);
                 bool[] pa = opplayer_playerActive(arg0);
                 bool showbuttons = opplayer_showbuttons(arg0);
-                GameLog(string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
-                                      player, pa[0], pa[1], pa[2], pa[3]));
+                bool timeout = opplayerleave_timeout(arg0);
+
+                if (timeout) {
+                    GameLog(string.Format("P{0} timed out and left the game (playerActive: {1},{2},{3},{4})",
+                                          player, pa[0], pa[1], pa[2], pa[3]));
+                } else {
+                    GameLog(string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
+                                          player, pa[0], pa[1], pa[2], pa[3]));
+                }
+
                 if (!isOya()) {
                     bets[player - 1] = 0.0f;
                 }
@@ -892,6 +914,100 @@ namespace XZDice
             return false;
         }
 
+        private void DisarmTimeouts()
+        {
+            for (int i = 0; i < MAX_PLAYERS; ++i)
+                timeoutTime[i] = float.NaN;
+            timeoutTimeOya = float.NaN;
+        }
+
+        private void DisarmTimeout(int player)
+        {
+            timeoutTime[player - 1] = float.NaN;
+        }
+
+        private void DisarmTimeoutOya()
+        {
+            timeoutTimeOya = float.NaN;
+        }
+
+        private void ArmBetTimeout(int player)
+        {
+            timeoutTime[player - 1] = Time.time + TIMEOUT_SECS;
+            SendCustomEventDelayedSeconds(string.Format("_BetTimeoutPlayer{0}", player), TIMEOUT_SECS + 1.0f);
+        }
+
+        public void _BetTimeoutPlayer1() { RecvBetTimeout(1); }
+        public void _BetTimeoutPlayer2() { RecvBetTimeout(2); }
+        public void _BetTimeoutPlayer3() { RecvBetTimeout(3); }
+        public void _BetTimeoutPlayer4() { RecvBetTimeout(4); }
+
+        private void RecvBetTimeout(int player)
+        {
+            GameLogSpam(string.Format("RecvBetTimeout({0}), Time.time={1}, timeoutTime[{2}]={3}",
+                                      player, Time.time, player - 1, timeoutTime[player - 1]));
+
+            if (!(Time.time > timeoutTime[player - 1]))
+                return;
+
+            timeoutTime[player - 1] = float.NaN;
+
+            if (state == STATE_OYAREPORT ||
+                state == STATE_WAITINGFORPLAYERS || state == STATE_WAITINGFORBETS) {
+                GameLogDebug(string.Format("Timed out waiting for bet done from P{0}", player));
+                RecvEventPlayerLeave(player, true);
+            }
+        }
+
+        private void ArmOyaThrowTimeout()
+        {
+            timeoutTimeOya = Time.time + TIMEOUT_SECS;
+            SendCustomEventDelayedSeconds(nameof(_OyaThrowTimeout), TIMEOUT_SECS + 1.0f);
+        }
+
+        public void _OyaThrowTimeout()
+        {
+            GameLogSpam(string.Format("_OyaThrowTimeOut(), Time.time={0}, timeoutTimeOya={1}",
+                                       Time.time, timeoutTimeOya));
+
+            if (!(Time.time > timeoutTimeOya))
+                return;
+
+            timeoutTimeOya = float.NaN;
+
+            if (state == STATE_OYATHROW) {
+                GameLogDebug("Oya timed out during throw");
+                RecvEventPlayerLeave(oya, true);
+            }
+        }
+
+        private void ArmThrowTimeout(int player)
+        {
+            timeoutTime[player - 1] = Time.time + TIMEOUT_SECS;
+            SendCustomEventDelayedSeconds(string.Format("_ThrowTimeoutPlayer{0}", player), TIMEOUT_SECS + 1.0f);
+        }
+
+        public void _ThrowTimeoutPlayer1() { RecvThrowTimeout(1); }
+        public void _ThrowTimeoutPlayer2() { RecvThrowTimeout(2); }
+        public void _ThrowTimeoutPlayer3() { RecvThrowTimeout(3); }
+        public void _ThrowTimeoutPlayer4() { RecvThrowTimeout(4); }
+
+        private void RecvThrowTimeout(int player)
+        {
+            GameLogSpam(string.Format("RecvThrowTimeout({0}), currentPlayer={1}, Time.time={2}, timeoutTime[{3}]={4}",
+                                      player, currentPlayer, Time.time, player - 1, timeoutTime[player - 1]));
+
+            if (!(Time.time > timeoutTime[player - 1]))
+                return;
+
+            timeoutTime[player - 1] = float.NaN;
+
+            if (state == STATE_THROW && currentPlayer == player) {
+                GameLogDebug(string.Format("P{0} timed out during throw", player));
+                RecvEventPlayerLeave(player, true);
+            }
+        }
+
         public void _OyaStateMachine()
         {
             if (!Networking.IsOwner(gameObject)) {
@@ -900,7 +1016,7 @@ namespace XZDice
                 return;
             }
 
-            if (iAmPlayer != oya) {
+            if (!isOya()) {
                 Debug.LogError("OyaStateMachine called by non-oya");
                 GameLogError("OyaStateMachine called by non-oya");
                 return;
@@ -920,6 +1036,7 @@ namespace XZDice
                     // Show betscreen to everyone except oya
                     for (int i = 0; i < MAX_PLAYERS; ++i) {
                         if ((oya - 1) != i && playerActive[i]) {
+                            ArmBetTimeout(i + 1);
                             Broadcast(mkop_enable_bet(i + 1, getOyaMaxBet()));
                         }
                     }
@@ -967,6 +1084,8 @@ namespace XZDice
                 } else if (state == STATE_WAITINGFORROUNDSTART) {
                     GameLogDebug("state = STATE_WAITINGFORROUNDSTART");
 
+                    DisarmTimeouts();
+
                     Broadcast(mkop_waitingforroundstart(oya));
                     return; // Wait for button press / any additional joins coming through
                 } else if (state == STATE_PREPARE_OYATHROW) {
@@ -979,9 +1098,12 @@ namespace XZDice
 
                     if (rethrowCount < MAX_RETHROWS) {
                         PrepareRecvThrow();
+                        DisarmTimeoutOya();
+                        ArmOyaThrowTimeout();
                         Broadcast(mkop_yourthrow(oya, rethrowCount));
                         return; // Wait on throw result
                     } else {
+                        DisarmTimeoutOya();
                         oyaLost = true;
                         for (int i = 0; i < betMultiplier.Length; ++i)
                             betMultiplier[i] = 1;
@@ -991,6 +1113,7 @@ namespace XZDice
                 } else if (state == STATE_PREPARE_THROWS) {
                     GameLogDebug("state = STATE_PREPARE_THROWS");
 
+                    DisarmTimeouts(); // Just in case
                     for (int i = 0; i < betMultiplier.Length; ++i)
                         betMultiplier[i] = 0;
                     currentPlayer = 1;
@@ -1019,9 +1142,12 @@ namespace XZDice
 
                     if (rethrowCount < MAX_RETHROWS) {
                         PrepareRecvThrow();
+                        DisarmTimeout(currentPlayer);
+                        ArmThrowTimeout(currentPlayer);
                         Broadcast(mkop_yourthrow(currentPlayer, rethrowCount));
                         return; // Wait on throw result
                     } else {
+                        DisarmTimeout(currentPlayer);
                         betMultiplier[currentPlayer - 1] = -1;
                         // TODO: event/opcode to inform everyone about the fail? Maybe a sound effect? Throwresult?
                         ++currentPlayer;
@@ -1084,6 +1210,7 @@ namespace XZDice
 
             // Open the bet screen for the player, also tell them how much money oya has (can
             // display max bet locally)
+            ArmBetTimeout(player);
             Broadcast(mkop_enable_bet(player, getOyaMaxBet()));
 
             // State waitingforplayers needs this here to be able to proceed to the next state
@@ -1099,7 +1226,7 @@ namespace XZDice
         // TODO: perhaps it would make sense to switch to state machine function
         // that as arguments takes event and event arguments. Then we could
         // handle tricky things like this inline in OyaStateMachine
-        private void RecvEventPlayerLeave(int player)
+        private void RecvEventPlayerLeave(int player, bool timeout)
         {
             // Nominally takes place during any of STATE_WAITINGFORPLAYERS, STATE_WAITINGFORBETS or
             // STATE_WAITINGFORROUNDSTART, but could potentially happen elsewhere when shenanigans abound.
@@ -1116,17 +1243,20 @@ namespace XZDice
             bets[player - 1] = 0.0f;
             betMultiplier[player - 1] = 0;
             betDone[player - 1] = false;
+            DisarmTimeout(player);
 
             // If oya left
             // If not set up arg0 so that the game is obviously unoccupied
             if (player == oya && player == iAmPlayer) {
+                DisarmTimeoutOya();
+
                 startRoundButtons[oya - 1].SetActive(false); // Disable this button early, in case it was enabled
 
                 // TODO: opcode/event that informs everyone that the oya is cowardly fleeing?
 
                 // We try to transfer to next player (we can't transfer to the
                 // leaving player by virtue of having removed them from playerActive)
-                bool found = _ToNextOya();
+                bool found = _ToNextOya(); // TODO: timeout parameter in the oyachange so we can tell everyone what happened
                 // If we didn't find another player to transfer to we are
                 // obviously the last person leaving, and the game should be
                 // reset so that the first person to join becomes owner
@@ -1137,7 +1267,7 @@ namespace XZDice
                 bool showButtons = (state == STATE_WAITINGFORPLAYERS ||
                                     state == STATE_WAITINGFORBETS ||
                                     state == STATE_WAITINGFORROUNDSTART);
-                Broadcast(mkop_playerleave(player, playerActive, showButtons));
+                Broadcast(mkop_playerleave(player, playerActive, showButtons, timeout));
 
                 if (getActivePlayerCount() < 2) {
                     // Too few to play. We have to go back to STATE_FIRST
@@ -1251,6 +1381,8 @@ namespace XZDice
             uint op;
             if (state == STATE_OYATHROW) {
                 GameLogDebug("ProcessDiceResult, STATE_OYATHROW");
+                DisarmTimeoutOya();
+
                 player = oya;
                 op = mkop_oyathrowresult(oya, recvResult, throw_type);
                 for (int i = 0; i < oyaResult.Length; ++i) {
@@ -1261,6 +1393,7 @@ namespace XZDice
             } else {
                 GameLogDebug(string.Format("ProcessDiceResult, STATE_THROW, currentPlayer={0}", currentPlayer));
                 player = currentPlayer;
+                DisarmTimeout(player);
                 op = mkop_throwresult(player, recvResult, throw_type);
             }
             Broadcast(op);
@@ -1374,7 +1507,7 @@ namespace XZDice
             GameLogDebug(string.Format("RecvEventDiceResult({0}, {1})", result, player));
             
             // Ignore the result if we got a result, but not for the player we expected (can happen
-            // if a throw times out at a very inopportune moment)
+            // if a thrower times out at a very inopportune moment, such as when their dice are in mid-air)
             if (state == STATE_OYATHROW) {
                 if (player != oya) {
                     GameLogDebug(string.Format("Ignore result: Expected from P{0} (oya) but got from P{1}", oya, player));
@@ -1653,12 +1786,17 @@ namespace XZDice
             return (int)((op >> 11) & 0b111u);
         }
 
-        private uint mkop_playerleave(int player, bool[] playerActive, bool showbuttons)
+        // player: player who left/was kicked
+        // playerActive: active player bitmask: for informing clients
+        // showbuttons: whether join buttons should be updated or not on reception of this
+        // timeout: true when player was kicked due to timeout, false usually means player left of their own accord
+        private uint mkop_playerleave(int player, bool[] playerActive, bool showbuttons, bool timeout)
         {
             uint playerpart = (uint)player & 0b111u;
             uint playerActivePart = _mk_playerActivePart(playerActive);
             uint showbuttonspart = (showbuttons) ? 1u : 0u;
-            return OPCODE_PLAYERLEAVE | playerpart << 8 | playerActivePart << 14 | showbuttonspart << 18;
+            uint timeoutpart = (timeout) ? 1u : 0u;
+            return OPCODE_PLAYERLEAVE | playerpart << 8 | playerActivePart << 14 | showbuttonspart << 18 | timeoutpart << 19;
         }
 
         private int opplayer_player(uint op)
@@ -1674,6 +1812,11 @@ namespace XZDice
         private bool opplayer_showbuttons(uint op)
         {
             return ((op >> 18) & 0x1u) == 0x1u;
+        }
+
+        private bool opplayerleave_timeout(uint op)
+        {
+            return ((op >> 19) & 0x1u) == 0x1u;
         }
 
         private uint mkop_disablejoinbuttons()
@@ -1927,8 +2070,8 @@ namespace XZDice
 
         public void _SerializationTimeout()
         {
-            // GameLogDebug(string.Format("_SerializationTimeout, Time.time={0}, serializing={1}, serialization_timeout_time={2}",
-            //                            Time.time, serializing, serialization_timeout_time));
+            GameLogSpam(string.Format("_SerializationTimeout, Time.time={0}, serializing={1}, serialization_timeout_time={2}",
+                                      Time.time, serializing, serialization_timeout_time));
 
             if (serializing && Time.time > serialization_timeout_time) {
                 GameLogWarn(string.Format("Serializing 0x{0:X} timed out...", opqueue_Peek()));
