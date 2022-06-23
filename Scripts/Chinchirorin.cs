@@ -346,10 +346,12 @@ namespace XZDice
             Button[] buttons = bs.GetComponentsInChildren<Button>();
 
             foreach (Button btn in buttons) {
-                btn.interactable = val;
+                if (btn.name == "DoneButton") { // Simply match by name
+                    btn.interactable = val && enableDone;
+                } else {
+                    btn.interactable = val;
+                }
             }
-
-            // TODO: actually toggle the done buton
         }
 
         private void UpdateBetScreens()
