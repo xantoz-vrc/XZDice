@@ -1145,6 +1145,9 @@ namespace XZDice
                     if ((state == STATE_PREPARE_THROW || state == STATE_THROW) && player == currentPlayer) {
                         ++currentPlayer;
                         _OyaStateMachine();
+                    } else if (state == STATE_WAITINGFORBETS) {
+                        // One player that hasn't betted leaving means we might be able to go to STATE_WAITINGFORROUNDSTART
+                        _OyaStateMachine();
                     }
                 }
             }
