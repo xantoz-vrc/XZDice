@@ -996,7 +996,7 @@ namespace XZDice
 
         public void _OyaThrowTimeout()
         {
-            GameLogSpam(string.Format("_OyaThrowTimeOut(), Time.time={0}, timeoutTimeOya={1}",
+            GameLogSpam(string.Format("_OyaThrowTimeout(), Time.time={0}, timeoutTimeOya={1}",
                                        Time.time, timeoutTimeOya));
 
             if (!(Time.time > timeoutTimeOya))
