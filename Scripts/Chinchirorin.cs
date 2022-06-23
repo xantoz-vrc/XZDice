@@ -701,6 +701,9 @@ namespace XZDice
 
                 if (iAmPlayer == player)
                     iAmPlayer = -1;
+
+                timeoutDisplays[player - 1].SetActive(false);
+
                 if (showbuttons)
                     UpdateJoinButtons(pa); // TODO: need to get an indication from server whether to show buttons or not
 
