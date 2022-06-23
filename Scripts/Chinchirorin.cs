@@ -614,6 +614,7 @@ namespace XZDice
                 } else {
                     oya = opwaitingforroundstart_oya(arg0);
                 }
+                timeoutDisplays[oya - 1].SetActive(true);
             } else if (op_getop(arg0) == OPCODE_ENABLE_BET) {
                 int player = openable_bet_getplayer(arg0);
                 float maxbet = openable_bet_getoyamaxbet(arg0);
@@ -747,6 +748,12 @@ namespace XZDice
                     dieGrabSphere._ParkDice();
                     // Make it pickupable only for the player whose turn it is
                     dieGrabSphere._SetPickupable(true);
+                }
+
+                // Since there is only ever one timeout active during throw, start by disabling all
+                // others (also helps disable the start round timeout)
+                for (int i = 0; i < MAX_PLAYERS; ++i) {
+                    timeoutDisplays[i].SetActive(false);
                 }
 
                 timeoutDisplays[player-1].SetActive(true); // Show the timeout display to everyone
@@ -959,6 +966,28 @@ namespace XZDice
             }
         }
 
+        private void ArmOyaRoundStartTimeout()
+        {
+            timeoutTimeOya = Time.time + TIMEOUT_SECS;
+            SendCustomEventDelayedSeconds(nameof(_OyaRoundStartTimeout), TIMEOUT_SECS + 1.0f);
+        }
+
+        public void _OyaRoundStartTimeout()
+        {
+            GameLogSpam(string.Format("_OyaRoundstartTimeout(), Time.time={0}, timeoutTimeOya={1}",
+                                       Time.time, timeoutTimeOya));
+
+            if (!(Time.time > timeoutTimeOya))
+                return;
+
+            timeoutTimeOya = float.NaN;
+
+            if (state == STATE_WAITINGFORROUNDSTART) {
+                GameLogDebug("Did oya forget to press \"Start Round\"? Doing it for them...");
+                _BtnStartRound();
+            }
+        }
+
         private void ArmOyaThrowTimeout()
         {
             timeoutTimeOya = Time.time + TIMEOUT_SECS;
@@ -1086,10 +1115,12 @@ namespace XZDice
 
                     DisarmTimeouts();
 
+                    ArmOyaRoundStartTimeout();
                     Broadcast(mkop_waitingforroundstart(oya));
                     return; // Wait for button press / any additional joins coming through
                 } else if (state == STATE_PREPARE_OYATHROW) {
                     GameLogDebug("state = STATE_PREPARE_OYATHROW");
+                    DisarmTimeoutOya();
                     rethrowCount = 0;
                     state = STATE_OYATHROW;
                     continue;
@@ -1218,6 +1249,7 @@ namespace XZDice
                 _OyaStateMachine();
             } else if (state == STATE_WAITINGFORROUNDSTART) {
                 // Player joined before oya started round. We need to go back a bit and wait for them to bet.
+                DisarmTimeoutOya(); // Disarm the timeout that would autostart new round
                 state = STATE_WAITINGFORBETS;
                 _OyaStateMachine();
             }
