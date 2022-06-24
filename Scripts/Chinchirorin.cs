@@ -608,7 +608,7 @@ namespace XZDice
                                       oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
             } else if (op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
-                GameLog("Waiting for players to join...");
+                // TODO: a clearer indication?
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(false);
                 } else {
@@ -616,6 +616,7 @@ namespace XZDice
                 }
                 timeoutDisplays[oya - 1].SetActive(true);
             } else if (op_getop(arg0) == OPCODE_WAITINGFORBETS) {
+                // TODO: a clearer indication?
                 GameLog("Waiting on bets...");
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(false);
@@ -624,6 +625,7 @@ namespace XZDice
                 }
                 timeoutDisplays[oya - 1].SetActive(false);
             } else if (op_getop(arg0) == OPCODE_WAITINGFORROUNDSTART) {
+                // TODO: a clearer indication?
                 GameLog("Waiting for oya to start the round...");
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(true);
@@ -1128,9 +1130,6 @@ namespace XZDice
 
                     ArmOyaWaitingForPlayersTimeout();
                     Broadcast(mkop_waitingforplayers(oya));
-
-                    // TODO: A clearer way to indicate this?
-                    GameLog("<color=yellow>Waiting for players to join...</color>");
                     return; // Wait for players to increase
                 } else if (state == STATE_WAITINGFORBETS) {
                     GameLogDebug("state = STATE_WAITINGFORBETS");
@@ -1149,10 +1148,7 @@ namespace XZDice
                         state = STATE_WAITINGFORROUNDSTART;
                         continue;
                     } else {
-                        // TODO: a clearer indication?
-
                         Broadcast(mkop_waitingforbets(oya));
-                        GameLog("<color=yellow>Waiting for players to bet...</color>");
                         return; // Wait for bets
                     }
                 } else if (state == STATE_WAITINGFORROUNDSTART) {
