@@ -607,12 +607,28 @@ namespace XZDice
                 GameLog(string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
                                       oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
+            } else if (op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
+                GameLog("Waiting for players to join...");
+                if (isOya()) {
+                    startRoundButtons[oya - 1].SetActive(false);
+                } else {
+                    oya = opwaiting_oya(arg0);
+                }
+                timeoutDisplays[oya - 1].SetActive(true);
+            } else if (op_getop(arg0) == OPCODE_WAITINGFORBETS) {
+                GameLog("Waiting on bets...");
+                if (isOya()) {
+                    startRoundButtons[oya - 1].SetActive(false);
+                } else {
+                    oya = opwaiting_oya(arg0);
+                }
+                timeoutDisplays[oya - 1].SetActive(false);
             } else if (op_getop(arg0) == OPCODE_WAITINGFORROUNDSTART) {
                 GameLog("Waiting for oya to start the round...");
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(true);
                 } else {
-                    oya = opwaitingforroundstart_oya(arg0);
+                    oya = opwaiting_oya(arg0);
                 }
                 timeoutDisplays[oya - 1].SetActive(true);
             } else if (op_getop(arg0) == OPCODE_ENABLE_BET) {
@@ -966,6 +982,28 @@ namespace XZDice
             }
         }
 
+        private void ArmOyaWaitingForPlayersTimeout()
+        {
+            timeoutTimeOya = Time.time + TIMEOUT_SECS;
+            SendCustomEventDelayedSeconds(nameof(_OyaWaitingForPlayersTimeout), TIMEOUT_SECS + 1.0f);
+        }
+
+        public void _OyaWaitingForPlayersTimeout()
+        {
+            GameLogSpam(string.Format("_OyaWaitingForPlayersTimeout(), Time.time={0}, timeoutTimeOya={1}",
+                                       Time.time, timeoutTimeOya));
+
+            if (!(Time.time > timeoutTimeOya))
+                return;
+
+            timeoutTimeOya = float.NaN;
+
+            if (state == STATE_WAITINGFORPLAYERS) {
+                GameLogDebug("No one joined the game. Leaving automatically.");
+                RecvEventPlayerLeave(oya, true);
+            }
+        }
+
         private void ArmOyaRoundStartTimeout()
         {
             timeoutTimeOya = Time.time + TIMEOUT_SECS;
@@ -1083,9 +1121,13 @@ namespace XZDice
                         }
                         betDone[oya - 1] = true; // Oya doesn't bet, so they're "done"
 
+                        DisarmTimeoutOya();
                         state = STATE_WAITINGFORBETS;
                         continue;
                     }
+
+                    ArmOyaWaitingForPlayersTimeout();
+                    Broadcast(mkop_waitingforplayers(oya));
 
                     // TODO: A clearer way to indicate this?
                     GameLog("<color=yellow>Waiting for players to join...</color>");
@@ -1094,7 +1136,8 @@ namespace XZDice
                     GameLogDebug("state = STATE_WAITINGFORBETS");
 
                     // We might come in here from STATE_WAITINGFORROUNDSTART in case a new player
-                    // joined. Thus need to make sure this button dissappears.
+                    // joined. Thus need to make sure this button dissappears (and preferrably as
+                    // early as possible, which is why to do it here and not only on OPCODE_WAITINGFORBETS)
                     startRoundButtons[oya - 1].SetActive(false);
 
                     bool allbetsin = true;
@@ -1107,6 +1150,8 @@ namespace XZDice
                         continue;
                     } else {
                         // TODO: a clearer indication?
+
+                        Broadcast(mkop_waitingforbets(oya));
                         GameLog("<color=yellow>Waiting for players to bet...</color>");
                         return; // Wait for bets
                     }
@@ -1716,7 +1761,9 @@ namespace XZDice
 
         #region opcodes
         // Opcodes for all broadcasts from Oya to everyone else. sent in arg0
-        private readonly uint OPCODE_WAITINGFORROUNDSTART = 0x1u;
+        private readonly uint OPCODE_WAITINGFORPLAYERS = 0x40u;
+        private readonly uint OPCODE_WAITINGFORBETS = 0x41u;
+        private readonly uint OPCODE_WAITINGFORROUNDSTART = 0x42u;
         private readonly uint OPCODE_ENABLE_BET = 0x2u; // Enable bet panels everywhere
         private readonly uint OPCODE_BET = 0x3u;
         private readonly uint OPCODE_BETUNDO = 0x4u;
@@ -1739,13 +1786,25 @@ namespace XZDice
             return op & 0xFFu;
         }
 
+        private uint mkop_waitingforplayers(int oya)
+        {
+            uint oyapart = (uint)oya & 0b111u;
+            return OPCODE_WAITINGFORPLAYERS | oyapart << 8;
+        }
+
+        private uint mkop_waitingforbets(int oya)
+        {
+            uint oyapart = (uint)oya & 0b111u;
+            return OPCODE_WAITINGFORBETS | oyapart << 8;
+        }
+
         private uint mkop_waitingforroundstart(int oya)
         {
             uint oyapart = (uint)oya & 0b111u;
             return OPCODE_WAITINGFORROUNDSTART | oyapart << 8;
         }
 
-        private int opwaitingforroundstart_oya(uint op)
+        private int opwaiting_oya(uint op)
         {
             return (int)((op >> 8) & 0b111u);
         }
