@@ -586,7 +586,12 @@ namespace XZDice
             text.text = message;
         }
 
-        private void ClearWaitingText()
+        private void ClearWaitingText(int player)
+        {
+            waitingTexts[player - 1].gameObject.SetActive(false);
+        }
+
+        private void ClearAllWaitingTexts()
         {
             foreach (var text in waitingTexts) {
                 text.gameObject.SetActive(false);
@@ -626,6 +631,7 @@ namespace XZDice
                 int player = opoyareport_oya(arg0);
                 ResetTable(); // Reset the bet displays and such
                 ResetClientVariables();
+                ClearAllWaitingTexts();
 
                 oya = player;
                 bool[] pa = opoyareport_playerActive(arg0);
@@ -639,7 +645,7 @@ namespace XZDice
                     oya = opwaiting_oya(arg0);
                 }
                 timeoutDisplays[oya - 1].SetActive(true);
-                ClearWaitingText();
+                ClearAllWaitingTexts();
                 SetWaitingText(oya, _jp("Waiting for players to join..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORBETS) {
                 GameLog("Waiting on bets...");
@@ -649,7 +655,7 @@ namespace XZDice
                     oya = opwaiting_oya(arg0);
                 }
                 timeoutDisplays[oya - 1].SetActive(false);
-                ClearWaitingText();
+                ClearAllWaitingTexts();
                 SetWaitingText(oya, _jp("Waiting on bets..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORROUNDSTART) {
                 GameLog("Waiting for oya to start the round...");
@@ -661,10 +667,10 @@ namespace XZDice
                 }
 
                 timeoutDisplays[oya - 1].SetActive(true);
-                ClearWaitingText();
+                ClearAllWaitingTexts();
                 for (int i = 1; i <= MAX_PLAYERS; ++i) {
                     if (validPlayer(iAmPlayer) && iAmPlayer != oya)
-                        SetWaitingText(iAmPlayer, _jp("Waiting on round start..."));
+                        SetWaitingText(i + 1, _jp("Waiting on round start..."));
                 }
             } else if (op_getop(arg0) == OPCODE_ENABLE_BET) {
                 int player = openable_bet_getplayer(arg0);
@@ -776,6 +782,7 @@ namespace XZDice
                 if (iAmPlayer == player)
                     iAmPlayer = -1;
 
+                ClearWaitingText(player);
                 timeoutDisplays[player - 1].SetActive(false);
 
                 if (showbuttons)
@@ -879,6 +886,8 @@ namespace XZDice
                 foreach (GameObject btn in joinButtons)
                     btn.SetActive(false);
 
+                ClearAllWaitingTexts();
+
                 SetBetLabel(toPlayer, 0.0f);
                 GameObject bs = betScreens[toPlayer - 1];
                 bs.SetActive(false);
@@ -913,6 +922,7 @@ namespace XZDice
                 oya = -1;
                 iAmPlayer = -1;
 
+                ClearAllWaitingTexts();
                 ResetTable();
                 UpdateJoinButtons(playerActive);
             }
