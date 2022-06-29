@@ -63,6 +63,9 @@ namespace XZDice
         private GameObject[] timeoutDisplays;
 
         [SerializeField]
+        private TextMeshProUGUI[] waitingTexts;
+
+        [SerializeField]
         private GameLog gameLog = null;
 
         [SerializeField]
@@ -179,6 +182,9 @@ namespace XZDice
 
             if (timeoutDisplays.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("timeoutDisplays must be {0} long", MAX_PLAYERS));
+
+            if (waitingTexts.Length != MAX_PLAYERS)
+                Debug.LogError(string.Format("waitingTexts must be {0} long", MAX_PLAYERS));
 
             if (diceSpawns.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("diceSpawns must be {0} long", MAX_PLAYERS));
@@ -467,9 +473,14 @@ namespace XZDice
         public void EventPlayer4BetUndo() { RecvBetUndoEvent(4); }
         public void EventPlayer4BetDone() { RecvBetDoneEvent(4); }
 
+        private bool validPlayer(int player)
+        {
+            return player > 0 && player <= MAX_PLAYERS;
+        }
+
         private bool isOya()
         {
-            return iAmPlayer > 0 && iAmPlayer <= MAX_PLAYERS && iAmPlayer == oya;
+            return validPlayer(iAmPlayer) && iAmPlayer == oya;
         }
 
         private bool isOwner()
@@ -568,6 +579,20 @@ namespace XZDice
                 string.Format("Player {0}\nBet: {1}", player, formatChips(amount));
         }
 
+        private void SetWaitingText(int player, string message)
+        {
+            var text = waitingTexts[player - 1];
+            text.gameObject.SetActive(true);
+            text.text = message;
+        }
+
+        private void ClearWaitingText()
+        {
+            foreach (var text in waitingTexts) {
+                text.gameObject.SetActive(false);
+            }
+        }
+
         private void UpdateJoinButtons(bool[] pa)
         {
             for (int i = 0; i < MAX_PLAYERS; ++i) {
@@ -608,15 +633,15 @@ namespace XZDice
                                       oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
             } else if (op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
-                // TODO: a clearer indication?
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(false);
                 } else {
                     oya = opwaiting_oya(arg0);
                 }
                 timeoutDisplays[oya - 1].SetActive(true);
+                ClearWaitingText();
+                SetWaitingText(oya, _jp("Waiting for players to join..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORBETS) {
-                // TODO: a clearer indication?
                 GameLog("Waiting on bets...");
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(false);
@@ -624,15 +649,23 @@ namespace XZDice
                     oya = opwaiting_oya(arg0);
                 }
                 timeoutDisplays[oya - 1].SetActive(false);
+                ClearWaitingText();
+                SetWaitingText(oya, _jp("Waiting on bets..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORROUNDSTART) {
-                // TODO: a clearer indication?
                 GameLog("Waiting for oya to start the round...");
+
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(true);
                 } else {
                     oya = opwaiting_oya(arg0);
                 }
+
                 timeoutDisplays[oya - 1].SetActive(true);
+                ClearWaitingText();
+                for (int i = 1; i <= MAX_PLAYERS; ++i) {
+                    if (validPlayer(iAmPlayer) && iAmPlayer != oya)
+                        SetWaitingText(iAmPlayer, _jp("Waiting on round start..."));
+                }
             } else if (op_getop(arg0) == OPCODE_ENABLE_BET) {
                 int player = openable_bet_getplayer(arg0);
                 float maxbet = openable_bet_getoyamaxbet(arg0);
@@ -746,7 +779,7 @@ namespace XZDice
                 timeoutDisplays[player - 1].SetActive(false);
 
                 if (showbuttons)
-                    UpdateJoinButtons(pa); // TODO: need to get an indication from server whether to show buttons or not
+                    UpdateJoinButtons(pa);
 
                 if (!showbuttons && iAmPlayer == player) {
                     joinButtons[player - 1].SetActive(false);
@@ -757,6 +790,8 @@ namespace XZDice
                     btn.SetActive(false);
                 }
             } else if (op_getop(arg0) == OPCODE_YOURTHROW) {
+                ClearWaitingText();
+
                 int player = opyourthrow_player(arg0);
                 int rethrow = opyourthrow_rethrow(arg0);
 
