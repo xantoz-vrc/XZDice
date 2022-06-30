@@ -473,14 +473,14 @@ namespace XZDice
         public void EventPlayer4BetUndo() { RecvBetUndoEvent(4); }
         public void EventPlayer4BetDone() { RecvBetDoneEvent(4); }
 
-        private bool validPlayer(int player)
+        private bool isValidPlayer(int player)
         {
             return player > 0 && player <= MAX_PLAYERS;
         }
 
         private bool isOya()
         {
-            return validPlayer(iAmPlayer) && iAmPlayer == oya;
+            return isValidPlayer(iAmPlayer) && iAmPlayer == oya;
         }
 
         private bool isOwner()
@@ -581,6 +581,9 @@ namespace XZDice
 
         private void SetWaitingText(int player, string message)
         {
+            if (!isValidPlayer(player))
+                return;
+
             var text = waitingTexts[player - 1];
             text.gameObject.SetActive(true);
             text.text = message;
@@ -588,6 +591,9 @@ namespace XZDice
 
         private void ClearWaitingText(int player)
         {
+            if (!isValidPlayer(player))
+                return;
+
             waitingTexts[player - 1].gameObject.SetActive(false);
         }
 
@@ -668,9 +674,13 @@ namespace XZDice
 
                 timeoutDisplays[oya - 1].SetActive(true);
                 ClearAllWaitingTexts();
-                for (int i = 1; i <= MAX_PLAYERS; ++i) {
-                    if (validPlayer(iAmPlayer) && iAmPlayer != oya)
-                        SetWaitingText(i + 1, _jp("Waiting on round start..."));
+                if (isValidPlayer(iAmPlayer)) {
+                    bool[] pa = opwaitingforroundstart_playeractive(arg0);
+                    for (int i = 0; i < MAX_PLAYERS; ++i) {
+                        if (pa[i] && i + 1 != oya) {
+                            SetWaitingText(i + 1, _jp("Waiting on round start..."));
+                        }
+                    }
                 }
             } else if (op_getop(arg0) == OPCODE_ENABLE_BET) {
                 int player = openable_bet_getplayer(arg0);
@@ -797,7 +807,7 @@ namespace XZDice
                     btn.SetActive(false);
                 }
             } else if (op_getop(arg0) == OPCODE_YOURTHROW) {
-                ClearWaitingText();
+                ClearAllWaitingTexts();
 
                 int player = opyourthrow_player(arg0);
                 int rethrow = opyourthrow_rethrow(arg0);
@@ -1202,7 +1212,7 @@ namespace XZDice
                     DisarmTimeouts();
 
                     ArmOyaRoundStartTimeout();
-                    Broadcast(mkop_waitingforroundstart(oya));
+                    Broadcast(mkop_waitingforroundstart(oya, playerActive));
                     return; // Wait for button press / any additional joins coming through
                 } else if (state == STATE_PREPARE_OYATHROW) {
                     GameLogDebug("state = STATE_PREPARE_OYATHROW");
@@ -1839,15 +1849,21 @@ namespace XZDice
             return OPCODE_WAITINGFORBETS | oyapart << 8;
         }
 
-        private uint mkop_waitingforroundstart(int oya)
+        private uint mkop_waitingforroundstart(int oya, bool[] pa)
         {
             uint oyapart = (uint)oya & 0b111u;
-            return OPCODE_WAITINGFORROUNDSTART | oyapart << 8;
+            uint playerActivePart = _mk_playerActivePart(pa);
+            return OPCODE_WAITINGFORROUNDSTART | oyapart << 8 | playerActivePart << 14;
         }
 
         private int opwaiting_oya(uint op)
         {
             return (int)((op >> 8) & 0b111u);
+        }
+
+        private bool[] opwaitingforroundstart_playeractive(uint op)
+        {
+            return _get_playerActive(op, 14);
         }
 
         private uint mkop_enable_bet(int player, float oyamaxbet)
