@@ -93,11 +93,8 @@ namespace XZDice
         private int iAmPlayer = -1;
         private int oya = -1;
         private float totalBet = 0.0f;
-        private float oyaMaxBet = 0.0f;
-
-        // Used mainly on server, but some use also in client
-        private float[] bets;
-        private bool[] playerActive;
+        private float oyaMaxBet = float.NaN;
+        private float[] c_bets;
 
         // Server variables (only used on server)
         private bool[] betDone; // Used only by owner
@@ -112,7 +109,8 @@ namespace XZDice
         private bool oyaLost = false;
         private float[] timeoutTime;
         private float timeoutTimeOya;
-
+        private float[] bets;
+        private bool[] playerActive;
         private int state = -1; // Used only by owner (drives the oya statemachine)
 
         // These variables are used when the oya sends messages to other players.
@@ -216,7 +214,8 @@ namespace XZDice
         private void ResetClientVariables()
         {
             totalBet = 0.0f;
-            oyaMaxBet = 0.0f;
+            oyaMaxBet = float.NaN;
+            c_bets = new float[MAX_PLAYERS];
             // Below is left out on purpose
             // oya = -1;
         }
@@ -279,28 +278,6 @@ namespace XZDice
         public void EventPlayerJoin2() { RecvEventPlayerJoin(2); }
         public void EventPlayerJoin3() { RecvEventPlayerJoin(3); }
         public void EventPlayerJoin4() { RecvEventPlayerJoin(4); }
-
-        private int getActivePlayerCount()
-        {
-            int result = 0;
-
-            foreach (bool b in playerActive)
-                if (b)
-                    result++;
-
-            return result;
-        }
-
-        private float getTotalBets()
-        {
-            float result = 0.0f;
-            for (int i = 0; i < MAX_PLAYERS; ++i) {
-                if (playerActive[i])
-                    result += bets[i];
-            }
-
-            return result;
-        }
 
         private void JoinGame(int player)
         {
@@ -376,8 +353,26 @@ namespace XZDice
 
         private void UpdateBetScreens()
         {
-            // TODO: update the maxbet displayed on betscreens based on oyaMaxbet minus all the bets
-            //       in the bets array, except for your own
+            // Update the maxbet displayed on betscreens based on oyaMaxbet minus all the bets in
+            // the bets array, except for your own. This code assumes the bets array has been
+            // properly initialized.
+            for (int i = 0; i < MAX_PLAYERS; ++i) {
+                TextMeshProUGUI text = betScreens[i].GetComponentInChildren<TextMeshProUGUI>();
+
+                if (float.IsNaN(oyaMaxBet)) {
+                    text.text = string.Format("Player {0}", i + 1);
+                } else {
+                    float maxbet = oyaMaxBet;
+                    for (int j = 0; j < MAX_PLAYERS; ++j) {
+                        if (j != i) {
+                            maxbet -= c_bets[j];
+                        }
+                    }
+                    maxbet = System.Math.Min(maxbet, udonChips.money/3);
+
+                    text.text = string.Format("Player {0}\nMax Bet: {1}", i + 1, formatChips(maxbet));
+                }
+            }
         }
 
         private void SendBetEvent(int player, int bet)
@@ -658,7 +653,7 @@ namespace XZDice
                 } else {
                     oya = opwaiting_oya(arg0);
                 }
-                timeoutDisplays[oya - 1].SetActive(true);
+                SetTimeoutDisplay(oya, true);
                 ClearAllWaitingTexts();
                 SetWaitingText(oya, _jp("Waiting for players to join..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORBETS) {
@@ -717,7 +712,7 @@ namespace XZDice
                     SetBetScreenButtons(betScreens[player - 1], true, total > 0.0f);
                 }
                 if (!isOya()) {
-                    bets[player - 1] = total;
+                    c_bets[player - 1] = total;
                 }
                 UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_BETUNDO) {
@@ -729,8 +724,9 @@ namespace XZDice
                     totalBet = 0.0f;
                     SetBetScreenButtons(betScreens[player - 1], true, false);
                 }
+
                 if (!isOya()) {
-                    bets[player - 1] = 0.0f;
+                    c_bets[player - 1] = 0.0f;
                 }
                 UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_BETDONE) {
@@ -745,7 +741,7 @@ namespace XZDice
                     SetBetScreenButtons(bs, false, false);
                 }
                 if (!isOya()) {
-                    bets[player - 1] = total;
+                    c_bets[player - 1] = total;
                 }
                 SetTimeoutDisplay(player, false);
                 joinButtons[player - 1].SetActive(false); // Disable leave button at this time (apply globally just in case)
@@ -763,7 +759,7 @@ namespace XZDice
                     SetBetScreenButtons(bs, true, total > 0.0f);
                 }
                 if (!isOya()) {
-                    bets[player - 1] = total;
+                    c_bets[player - 1] = total;
                 }
                 UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_PLAYERJOIN) {
@@ -790,7 +786,7 @@ namespace XZDice
                 }
 
                 if (!isOya()) {
-                    bets[player - 1] = 0.0f;
+                    c_bets[player - 1] = 0.0f;
                 }
                 SetBetLabel(player, 0.0f);
                 GameObject bs = betScreens[player - 1];
@@ -909,6 +905,7 @@ namespace XZDice
                 SetBetLabel(toPlayer, 0.0f);
                 GameObject bs = betScreens[toPlayer - 1];
                 bs.SetActive(false);
+                c_bets[toPlayer - 1] = 0.0f;
                 bets[toPlayer - 1] = 0.0f;
                 UpdateBetScreens();
 
@@ -977,6 +974,28 @@ namespace XZDice
         private readonly int STATE_PREPARE_THROW = 21;
         private readonly int STATE_THROW = 22;
         private readonly int STATE_BALANCE = 31;
+
+        private int getActivePlayerCount()
+        {
+            int result = 0;
+
+            foreach (bool b in playerActive)
+                if (b)
+                    result++;
+
+            return result;
+        }
+
+        private float getTotalBets()
+        {
+            float result = 0.0f;
+            for (int i = 0; i < MAX_PLAYERS; ++i) {
+                if (playerActive[i])
+                    result += bets[i];
+            }
+
+            return result;
+        }
 
         private void PrepareRecvThrow()
         {
