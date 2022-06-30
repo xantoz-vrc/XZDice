@@ -127,6 +127,16 @@ namespace XZDice
             }
         }
 
+        private void GameLog2(string message1, string message2)
+        {
+            if (gameLog != null) {
+                gameLog._Log(message1);
+            }
+            if (gameLogDebug != null) {
+                gameLogDebug._Log((DEBUG) ? message2 : message1);
+            }
+        }
+
         private void GameLogDebug(string message)
         {
             if (DEBUG && gameLogDebug != null) {
@@ -644,8 +654,9 @@ namespace XZDice
 
                 oya = player;
                 bool[] pa = opoyareport_playerActive(arg0);
-                GameLog(string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
-                                      oya, pa[0], pa[1], pa[2], pa[3]));
+                GameLog2(string.Format("P{0} is oya", oya),
+                         string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
+                                       oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
             } else if (op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
                 if (isOya()) {
@@ -767,8 +778,9 @@ namespace XZDice
                 oya = opplayerjoin_oya(arg0); // Syncs up this variable in case we don't have it
                 bool[] pa = opplayer_playerActive(arg0);
                 bool showbuttons = opplayer_showbuttons(arg0);
-                GameLog(string.Format("P{0} entered the game (playerActive: {1},{2},{3},{4})",
-                                      player, pa[0], pa[1], pa[2], pa[3]));
+                GameLog2(string.Format("P{0} entered the game", player),
+                         string.Format("P{0} entered the game (playerActive: {1},{2},{3},{4})",
+                                       player, pa[0], pa[1], pa[2], pa[3]));
                 if (showbuttons)
                     UpdateJoinButtons(pa);
             } else if (op_getop(arg0) == OPCODE_PLAYERLEAVE) {
@@ -778,11 +790,13 @@ namespace XZDice
                 bool timeout = opplayerleave_timeout(arg0);
 
                 if (timeout) {
-                    GameLog(string.Format("P{0} timed out and left the game (playerActive: {1},{2},{3},{4})",
-                                          player, pa[0], pa[1], pa[2], pa[3]));
+                    GameLog2(string.Format("P{0} timed out and left the game", player),
+                             string.Format("P{0} timed out and left the game (playerActive: {1},{2},{3},{4})",
+                                           player, pa[0], pa[1], pa[2], pa[3]));
                 } else {
-                    GameLog(string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
-                                          player, pa[0], pa[1], pa[2], pa[3]));
+                    GameLog2(string.Format("P{0} left the game", player),
+                             string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
+                                           player, pa[0], pa[1], pa[2], pa[3]));
                 }
 
                 if (!isOya()) {
@@ -886,11 +900,13 @@ namespace XZDice
 
                 // TODO: display clearly who is oya (change playerlabel?)
                 if (fromPlayer <= 0)
-                    GameLog(string.Format("P{0} became oya (playerActive: {1},{2},{3},{4})",
-                                          toPlayer, pa[0], pa[1], pa[2], pa[3]));
+                    GameLog2(string.Format("P{0} became oya", toPlayer),
+                             string.Format("P{0} became oya (playerActive: {1},{2},{3},{4})",
+                                           toPlayer, pa[0], pa[1], pa[2], pa[3]));
                 else
-                    GameLog(string.Format("Oya P{0} -> P{1} (playerActive: {2},{3},{4},{5})",
-                                          fromPlayer, toPlayer, pa[0], pa[1], pa[2], pa[3]));
+                    GameLog2(string.Format("Oya P{0} -> P{1}", fromPlayer, toPlayer),
+                             string.Format("Oya P{0} -> P{1} (playerActive: {2},{3},{4},{5})",
+                                           fromPlayer, toPlayer, pa[0], pa[1], pa[2], pa[3]));
 
                 // Nobody gets to leave or join until oyareport, because it can
                 // break the state machine and cause an infinite loop (TODO:
