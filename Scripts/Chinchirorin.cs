@@ -617,6 +617,14 @@ namespace XZDice
             }
         }
 
+        public void SetTimeoutDisplay(int player, bool enable)
+        {
+            if (!isValidPlayer(player))
+                return;
+
+            timeoutDisplays[player - 1].SetActive(enable);
+        }
+
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             if (Networking.IsOwner(gameObject)) {
@@ -660,7 +668,7 @@ namespace XZDice
                 } else {
                     oya = opwaiting_oya(arg0);
                 }
-                timeoutDisplays[oya - 1].SetActive(false);
+                SetTimeoutDisplay(oya, false);
                 ClearAllWaitingTexts();
                 SetWaitingText(oya, _jp("Waiting on bets..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORROUNDSTART) {
@@ -672,7 +680,7 @@ namespace XZDice
                     oya = opwaiting_oya(arg0);
                 }
 
-                timeoutDisplays[oya - 1].SetActive(true);
+                SetTimeoutDisplay(oya, true);
                 ClearAllWaitingTexts();
                 if (isValidPlayer(iAmPlayer)) {
                     bool[] pa = opwaitingforroundstart_playeractive(arg0);
@@ -696,7 +704,7 @@ namespace XZDice
                     SetBetScreenButtons(bs, true, false);
                     totalBet = 0.0f;
                 }
-                timeoutDisplays[player - 1].SetActive(true);
+                SetTimeoutDisplay(player, true);
                 UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_BET) {
                 int player = opbet_getplayer(arg0);
@@ -739,7 +747,7 @@ namespace XZDice
                 if (!isOya()) {
                     bets[player - 1] = total;
                 }
-                timeoutDisplays[player - 1].SetActive(false);
+                SetTimeoutDisplay(player, false);
                 joinButtons[player - 1].SetActive(false); // Disable leave button at this time (apply globally just in case)
                 UpdateBetScreens();
             } else if (op_getop(arg0) == OPCODE_BETREJECT) {
@@ -793,7 +801,7 @@ namespace XZDice
                     iAmPlayer = -1;
 
                 ClearWaitingText(player);
-                timeoutDisplays[player - 1].SetActive(false);
+                SetTimeoutDisplay(player, false);
 
                 if (showbuttons)
                     UpdateJoinButtons(pa);
@@ -823,10 +831,10 @@ namespace XZDice
                 // Since there is only ever one timeout active during throw, start by disabling all
                 // others (also helps disable the start round timeout)
                 for (int i = 0; i < MAX_PLAYERS; ++i) {
-                    timeoutDisplays[i].SetActive(false);
+                    SetTimeoutDisplay(i + 1, false);
                 }
+                SetTimeoutDisplay(player, true); // Show the timeout display to everyone
 
-                timeoutDisplays[player-1].SetActive(true); // Show the timeout display to everyone
                 dieGrabSphere._Show();
 
                 if (rethrow > 0) {
@@ -848,7 +856,7 @@ namespace XZDice
                                           formatThrowType(throw_type)));
 
                 // TODO: specific display for the result
-                timeoutDisplays[player - 1].SetActive(false);
+                SetTimeoutDisplay(player, false);
             } else if (op_getop(arg0) == OPCODE_OYATHROWRESULT) {
                 int player = opthrow_player(arg0);
                 int[] result = opthrow_result(arg0);
@@ -861,7 +869,7 @@ namespace XZDice
                                           formatThrowType(throw_type)));
 
                 // TODO: specific display for the result
-                timeoutDisplays[player - 1].SetActive(false);
+                SetTimeoutDisplay(player, false);
             } else if (op_getop(arg0) == OPCODE_BALANCE) {
                 int player = opbalance_player(arg0);
                 float amount = opbalance_amount(arg0);
