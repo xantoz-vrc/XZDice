@@ -495,7 +495,7 @@ namespace XZDice
         // from the player we expected results for.
         private void SendDiceResultEvent(int result, int player)
         {
-            if (player < 1 || player > MAX_PLAYERS) {
+            if (!isValidPlayer(player)) {
                 string str = string.Format("SendDiceResultEvent({0},{1}): invalid player number",
                                            result, player);
                 Debug.LogError(str);
@@ -588,7 +588,7 @@ namespace XZDice
         private void UpdateJoinButtons(bool[] pa)
         {
             for (int i = 0; i < MAX_PLAYERS; ++i) {
-                if (iAmPlayer <= 0) {
+                if (!isValidPlayer(iAmPlayer)) {
                     joinButtons[i].SetActive(!pa[i]);
                     SetButtonText(joinButtons[i], "Join");
                 } else {
@@ -613,7 +613,7 @@ namespace XZDice
                 // should equal oya for the owner of the object. If this is not
                 // the case, this means the oya left the instance.
 
-                if (iAmPlayer <= 0 || iAmPlayer != oya) {
+                if (!isValidPlayer(iAmPlayer) || iAmPlayer != oya) {
                     GameLog("Oya disappeared: Game reset");
                     Broadcast(mkop_nooya());
                 }
@@ -859,7 +859,7 @@ namespace XZDice
             } else if (op_getop(arg0) == OPCODE_BALANCE) {
                 int player = opbalance_player(arg0);
                 float amount = opbalance_amount(arg0);
-                if (iAmPlayer > 0 && player == iAmPlayer)
+                if (isValidPlayer(iAmPlayer) && player == iAmPlayer)
                     udonChips.money += amount;
 
                 if (amount >= 0.0f)
@@ -875,7 +875,7 @@ namespace XZDice
                 // TODO: some sort of sound-effect or other clearly easy-to-understand thing to inform everyone
 
                 // TODO: display clearly who is oya (change playerlabel?)
-                if (fromPlayer <= 0)
+                if (!isValidPlayer(fromPlayer))
                     GameLog2(string.Format("P{0} became oya", toPlayer),
                              string.Format("P{0} became oya (playerActive: {1},{2},{3},{4})",
                                            toPlayer, pa[0], pa[1], pa[2], pa[3]));
@@ -901,7 +901,7 @@ namespace XZDice
                 bets[toPlayer - 1] = 0.0f;
                 UpdateBetScreens();
 
-                if (iAmPlayer > 0 && toPlayer == iAmPlayer) {
+                if (isValidPlayer(iAmPlayer) && toPlayer == iAmPlayer) {
                     // Become owner/oya
                     if (!Networking.IsOwner(gameObject))
                         Networking.SetOwner(Networking.LocalPlayer, gameObject);
@@ -1342,7 +1342,7 @@ namespace XZDice
 
             GameLogDebug(string.Format("RecvEventPlayerJoin({0}), state={1}", player, state));
 
-            if (player < 1 || player > MAX_PLAYERS) {
+            if (!isValidPlayer(player)) {
                 Debug.LogError("invalid player variable");
                 GameLogError("invalid player variable");
                 return;
@@ -1380,7 +1380,7 @@ namespace XZDice
 
             GameLogDebug(string.Format("RecvEventPlayerLeave({0}), state={1}", player, state));
 
-            if (player < 1 || player > MAX_PLAYERS) {
+            if (!isValidPlayer(player)) {
                 Debug.LogError("invalid player variable");
                 GameLogError("invalid player variable");
                 return;
