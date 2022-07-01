@@ -46,7 +46,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 12
-      Data: 90
+      Data: 91
     - Name: 
       Entry: 7
       Data: 
@@ -4808,7 +4808,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_OYACHANGE
+      Data: OPCODE_OYABALANCE
     - Name: $v
       Entry: 7
       Data: 269|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4829,10 +4829,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_OYACHANGE
+      Data: OPCODE_OYABALANCE
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_OYACHANGE
+      Data: OPCODE_OYABALANCE
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4866,7 +4866,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_NOOYA
+      Data: OPCODE_OYACHANGE
     - Name: $v
       Entry: 7
       Data: 272|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4887,10 +4887,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_NOOYA
+      Data: OPCODE_OYACHANGE
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_NOOYA
+      Data: OPCODE_OYACHANGE
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4924,7 +4924,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPCODE_NOOP
+      Data: OPCODE_NOOYA
     - Name: $v
       Entry: 7
       Data: 275|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4945,10 +4945,10 @@ MonoBehaviour:
       Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPCODE_NOOP
+      Data: OPCODE_NOOYA
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPCODE_NOOP
+      Data: OPCODE_NOOYA
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -4982,7 +4982,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: serializing
+      Data: OPCODE_NOOP
     - Name: $v
       Entry: 7
       Data: 278|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -4991,22 +4991,22 @@ MonoBehaviour:
       Data: 279|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
     - Name: internalType
       Entry: 9
-      Data: 53
+      Data: 110
     - Name: declarationType
       Entry: 3
-      Data: 2
+      Data: 258
     - Name: syncMode
       Entry: 3
       Data: 0
     - Name: symbolResolvedTypeName
       Entry: 1
-      Data: SystemBoolean
+      Data: SystemUInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: serializing
+      Data: OPCODE_NOOP
     - Name: symbolUniqueName
       Entry: 1
-      Data: serializing
+      Data: OPCODE_NOOP
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -5040,7 +5040,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: serialization_timeout_time
+      Data: serializing
     - Name: $v
       Entry: 7
       Data: 281|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -5049,7 +5049,7 @@ MonoBehaviour:
       Data: 282|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
     - Name: internalType
       Entry: 9
-      Data: 69
+      Data: 53
     - Name: declarationType
       Entry: 3
       Data: 2
@@ -5058,13 +5058,13 @@ MonoBehaviour:
       Data: 0
     - Name: symbolResolvedTypeName
       Entry: 1
-      Data: SystemSingle
+      Data: SystemBoolean
     - Name: symbolOriginalName
       Entry: 1
-      Data: serialization_timeout_time
+      Data: serializing
     - Name: symbolUniqueName
       Entry: 1
-      Data: serialization_timeout_time
+      Data: serializing
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -5098,7 +5098,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: SERIALIZATION_TIMEOUT
+      Data: serialization_timeout_time
     - Name: $v
       Entry: 7
       Data: 284|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -5110,7 +5110,7 @@ MonoBehaviour:
       Data: 69
     - Name: declarationType
       Entry: 3
-      Data: 258
+      Data: 2
     - Name: syncMode
       Entry: 3
       Data: 0
@@ -5119,10 +5119,10 @@ MonoBehaviour:
       Data: SystemSingle
     - Name: symbolOriginalName
       Entry: 1
-      Data: SERIALIZATION_TIMEOUT
+      Data: serialization_timeout_time
     - Name: symbolUniqueName
       Entry: 1
-      Data: SERIALIZATION_TIMEOUT
+      Data: serialization_timeout_time
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -5156,7 +5156,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: OPQUEUE_LENGTH
+      Data: SERIALIZATION_TIMEOUT
     - Name: $v
       Entry: 7
       Data: 287|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -5165,7 +5165,7 @@ MonoBehaviour:
       Data: 288|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
     - Name: internalType
       Entry: 9
-      Data: 73
+      Data: 69
     - Name: declarationType
       Entry: 3
       Data: 258
@@ -5174,13 +5174,13 @@ MonoBehaviour:
       Data: 0
     - Name: symbolResolvedTypeName
       Entry: 1
-      Data: SystemInt32
+      Data: SystemSingle
     - Name: symbolOriginalName
       Entry: 1
-      Data: OPQUEUE_LENGTH
+      Data: SERIALIZATION_TIMEOUT
     - Name: symbolUniqueName
       Entry: 1
-      Data: OPQUEUE_LENGTH
+      Data: SERIALIZATION_TIMEOUT
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -5214,7 +5214,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: outgoing_ops
+      Data: OPQUEUE_LENGTH
     - Name: $v
       Entry: 7
       Data: 290|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -5222,29 +5222,23 @@ MonoBehaviour:
       Entry: 7
       Data: 291|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
     - Name: internalType
-      Entry: 7
-      Data: 292|System.RuntimeType, mscorlib
-    - Name: 
-      Entry: 1
-      Data: System.UInt32[], mscorlib
-    - Name: 
-      Entry: 8
-      Data: 
+      Entry: 9
+      Data: 73
     - Name: declarationType
       Entry: 3
-      Data: 2
+      Data: 258
     - Name: syncMode
       Entry: 3
       Data: 0
     - Name: symbolResolvedTypeName
       Entry: 1
-      Data: SystemUInt32Array
+      Data: SystemInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: outgoing_ops
+      Data: OPQUEUE_LENGTH
     - Name: symbolUniqueName
       Entry: 1
-      Data: outgoing_ops
+      Data: OPQUEUE_LENGTH
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -5253,7 +5247,7 @@ MonoBehaviour:
       Data: 
     - Name: fieldAttributes
       Entry: 7
-      Data: 293|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
+      Data: 292|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
         mscorlib
     - Name: 
       Entry: 12
@@ -5278,16 +5272,22 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: outgoing_ops_pending
+      Data: outgoing_ops
     - Name: $v
       Entry: 7
-      Data: 294|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
+      Data: 293|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: fieldSymbol
       Entry: 7
-      Data: 295|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
+      Data: 294|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
     - Name: internalType
-      Entry: 9
-      Data: 73
+      Entry: 7
+      Data: 295|System.RuntimeType, mscorlib
+    - Name: 
+      Entry: 1
+      Data: System.UInt32[], mscorlib
+    - Name: 
+      Entry: 8
+      Data: 
     - Name: declarationType
       Entry: 3
       Data: 2
@@ -5296,13 +5296,13 @@ MonoBehaviour:
       Data: 0
     - Name: symbolResolvedTypeName
       Entry: 1
-      Data: SystemInt32
+      Data: SystemUInt32Array
     - Name: symbolOriginalName
       Entry: 1
-      Data: outgoing_ops_pending
+      Data: outgoing_ops
     - Name: symbolUniqueName
       Entry: 1
-      Data: outgoing_ops_pending
+      Data: outgoing_ops
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -5336,7 +5336,7 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: outgoing_ops_insert
+      Data: outgoing_ops_pending
     - Name: $v
       Entry: 7
       Data: 297|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
@@ -5357,10 +5357,10 @@ MonoBehaviour:
       Data: SystemInt32
     - Name: symbolOriginalName
       Entry: 1
-      Data: outgoing_ops_insert
+      Data: outgoing_ops_pending
     - Name: symbolUniqueName
       Entry: 1
-      Data: outgoing_ops_insert
+      Data: outgoing_ops_pending
     - Name: symbolDefaultValue
       Entry: 6
       Data: 
@@ -5394,13 +5394,71 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: outgoing_ops_read
+      Data: outgoing_ops_insert
     - Name: $v
       Entry: 7
       Data: 300|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: fieldSymbol
       Entry: 7
       Data: 301|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
+    - Name: internalType
+      Entry: 9
+      Data: 73
+    - Name: declarationType
+      Entry: 3
+      Data: 2
+    - Name: syncMode
+      Entry: 3
+      Data: 0
+    - Name: symbolResolvedTypeName
+      Entry: 1
+      Data: SystemInt32
+    - Name: symbolOriginalName
+      Entry: 1
+      Data: outgoing_ops_insert
+    - Name: symbolUniqueName
+      Entry: 1
+      Data: outgoing_ops_insert
+    - Name: symbolDefaultValue
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: fieldAttributes
+      Entry: 7
+      Data: 302|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: userBehaviourSource
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: outgoing_ops_read
+    - Name: $v
+      Entry: 7
+      Data: 303|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
+    - Name: fieldSymbol
+      Entry: 7
+      Data: 304|UdonSharp.Compiler.SymbolDefinition, UdonSharp.Editor
     - Name: internalType
       Entry: 9
       Data: 73
@@ -5427,7 +5485,7 @@ MonoBehaviour:
       Data: 
     - Name: fieldAttributes
       Entry: 7
-      Data: 302|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
+      Data: 305|System.Collections.Generic.List`1[[System.Attribute, mscorlib]],
         mscorlib
     - Name: 
       Entry: 12
