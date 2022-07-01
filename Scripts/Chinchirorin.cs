@@ -1,28 +1,4 @@
-﻿// TODO: make a queue for opcodes and deal em out whenever state machine goes
-// into wait
-// TODO: in table empty state there should just be a simple start button,
-// different from join buttons?
-
-// TODO: much better than start button: kick everyone except oya out after finished round,
-// everyone has to rejoin. rejoining is the same as placing a bet: press join
-// and the betscreen shows locally, you're considered as when you've entered a
-// bet and press done. oya can press start round whenever there is at least one
-// bet.
-
-// TODO: oya and playerActive needs to be in every message (7 bits). always
-// update buttons?
-
-// TODO: alternative: always disable buttons in OnDeserializatizon, making them
-// only appear when a command explicitly enabling them arrives?
-
-// TODO: oyareport or enable_bet should inform how much money oya has, so we can have better feedback about how much you can bet
-
-// TODO: * we need an outgoing opcode queue. while we can control how fast ops exit the state machine,
-//         it's not possible to control how fast players might press the bet button
-//       * alternatively if we make the state machine 100% event driven with a queue for incoming events instead (but how to handle the outgoing bet opcodes is still tricky)
-
-
-// TODO: throw people out when they have too little money
+﻿// TODO: throw people out when they have too little money
 
 using UdonSharp;
 using UnityEngine;
@@ -1013,6 +989,11 @@ namespace XZDice
             return result;
         }
 
+        private float getOyaMaxBet()
+        {
+            return System.Math.Min(udonChips.money/3, MAXBET);
+        }
+
         private void PrepareRecvThrow()
         {
             for (int i = 0; i < recvResult.Length; ++i)
@@ -1351,11 +1332,6 @@ namespace XZDice
                     return;
                 }
             }
-        }
-
-        private float getOyaMaxBet()
-        {
-            return System.Math.Min(udonChips.money/3, MAXBET);
         }
 
         // TODO: perhaps limit the states during which a player can join? (would require a way to
