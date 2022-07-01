@@ -862,10 +862,12 @@ namespace XZDice
                 if (isValidPlayer(iAmPlayer) && player == iAmPlayer)
                     udonChips.money += amount;
 
-                if (amount >= 0.0f)
-                    GameLog(string.Format("P{0} won {1}", player, formatChips(Mathf.Abs(amount))));
+                if (amount > 0.0f)
+                    GameLog(string.Format("P{0} won <color=\"lime\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                else if (amount < 0.0f)
+                    GameLog(string.Format("P{0} lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
                 else
-                    GameLog(string.Format("P{0} lost {1}", player, formatChips(Mathf.Abs(amount))));
+                    GameLog(string.Format("P{0} <color=\"yellow\">draw</color>", player));
             } else if (op_getop(arg0) == OPCODE_OYACHANGE) {
                 int toPlayer = opoyachange_toplayer(arg0);
                 int fromPlayer = opoyachange_fromplayer(arg0);
