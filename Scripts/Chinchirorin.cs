@@ -556,8 +556,19 @@ namespace XZDice
 
         private void SetBetLabel(int player, float amount)
         {
-            betLabels[player - 1].text =
-                string.Format("Player {0}\nBet: {1}", player, formatChips(amount));
+            if (!isValidPlayer(player))
+                return;
+
+            var label = betLabels[player - 1];
+
+            if (isValidPlayer(iAmPlayer) && player == iAmPlayer) {
+                label.text =
+                    string.Format("Player {0} (you)\nMoney: {1}\nBet: {2}",
+                                  player, formatChips(udonChips.money), formatChips(amount));
+            } else {
+                label.text =
+                    string.Format("Player {0}\nBet: {1}", player, formatChips(amount));
+            }
         }
 
         private void SetWaitingText(int player, string message)
@@ -759,6 +770,7 @@ namespace XZDice
                                        player, pa[0], pa[1], pa[2], pa[3]));
                 if (showbuttons)
                     UpdateJoinButtons(pa);
+                SetBetLabel(player, 0.0f);
             } else if (op_getop(arg0) == OPCODE_PLAYERLEAVE) {
                 int player = opplayer_player(arg0);
                 bool[] pa = opplayer_playerActive(arg0);
@@ -868,6 +880,8 @@ namespace XZDice
                     GameLog(string.Format("P{0} lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
                 else
                     GameLog(string.Format("P{0} <color=\"yellow\">draw</color>", player));
+
+                SetBetLabel(player, 0.0f);
             } else if (op_getop(arg0) == OPCODE_OYABALANCE) {
                 int player = opbalance_player(arg0);
                 float amount = opbalance_amount(arg0);
@@ -878,6 +892,8 @@ namespace XZDice
                     GameLog(string.Format("P{0} (oya) lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
                 else
                     GameLog(string.Format("P{0} (oya) <color=\"yellow\">no change</color>", player));
+
+                SetBetLabel(player, 0.0f);
             } else if (op_getop(arg0) == OPCODE_OYACHANGE) {
                 int toPlayer = opoyachange_toplayer(arg0);
                 int fromPlayer = opoyachange_fromplayer(arg0);
