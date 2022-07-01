@@ -42,6 +42,9 @@ namespace XZDice
         private TextMeshProUGUI[] waitingTexts;
 
         [SerializeField]
+        private TextMeshProUGUI[] kachingLabels;
+
+        [SerializeField]
         private GameLog gameLog = null;
 
         [SerializeField]
@@ -169,6 +172,9 @@ namespace XZDice
 
             if (waitingTexts.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("waitingTexts must be {0} long", MAX_PLAYERS));
+
+            if (kachingLabels.Length != MAX_PLAYERS)
+                Debug.LogError(string.Format("kachingLabels must be {0} long", MAX_PLAYERS));
 
             if (diceSpawns.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("diceSpawns must be {0} long", MAX_PLAYERS));
@@ -596,6 +602,23 @@ namespace XZDice
             }
         }
 
+        private void KachingLabel(int player, float amount)
+        {
+            if (!isValidPlayer(player))
+                return;
+
+            string color =
+                (amount < 0.0f) ? "#ff0000" :
+                (amount > 0.0f) ? "#00ff00" : "#ffff00";
+
+            var label = kachingLabels[player - 1];
+
+            // Toggling the gameobject restarts the animation
+            label.gameObject.SetActive(false);
+            label.text = string.Format("<color={0}>{1}</color>", color, formatChips(amount));
+            label.gameObject.SetActive(true);
+        }
+
         private void UpdateJoinButtons(bool[] pa)
         {
             for (int i = 0; i < MAX_PLAYERS; ++i) {
@@ -881,6 +904,8 @@ namespace XZDice
                 else
                     GameLog(string.Format("P{0} <color=\"yellow\">draw</color>", player));
 
+                KachingLabel(player, amount);
+
                 SetBetLabel(player, 0.0f);
             } else if (op_getop(arg0) == OPCODE_OYABALANCE) {
                 int player = opbalance_player(arg0);
@@ -892,6 +917,8 @@ namespace XZDice
                     GameLog(string.Format("P{0} (oya) lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
                 else
                     GameLog(string.Format("P{0} (oya) <color=\"yellow\">no change</color>", player));
+
+                KachingLabel(player, amount);
 
                 SetBetLabel(player, 0.0f);
             } else if (op_getop(arg0) == OPCODE_OYACHANGE) {
