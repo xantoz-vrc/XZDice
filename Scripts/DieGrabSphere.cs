@@ -79,9 +79,18 @@ namespace XZDice
                 if (!dieReadResult[i] && d._GetResult() != -1) {
                     dieReadResult[i] = true;
                     int result = d._GetResult();
-                    if (insideBowlCollider != null &&
-                        !insideBowlCollider.bounds.Contains(die.transform.position)) {
-                        result = 0; // 0 is used to indicate outside
+                    // if (insideBowlCollider != null &&
+                    //     !insideBowlCollider.bounds.Contains(die.transform.position)) {
+                    if (insideBowlCollider != null) {
+                        bool inside = false;
+                        Collider[] colliders = Physics.OverlapBox(die.transform.position, die.GetComponent<Collider>().bounds.extents);
+                        // Collider[] colliders = Physics.OverlapSphere(die.transform.position, 0.05f);
+                        foreach (Collider col in colliders) {
+                            if (System.Object.ReferenceEquals(insideBowlCollider, col))
+                                inside = true;
+                        }
+                        if (!inside)
+                            result = 0; // 0 is used to indicate outside
                     }
                     string fnname = "_DiceResult" + result.ToString();
                     foreach (UdonSharpBehaviour lis in listeners) {
