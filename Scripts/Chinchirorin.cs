@@ -63,7 +63,7 @@ namespace XZDice
         private readonly float MAXBET = 20000.0f;
         private readonly int MAX_PLAYERS = 4;
         private readonly int MAX_RETHROWS = 3;
-        private readonly int TIMEOUT_SECS = 30;
+        private readonly int TIMEOUT_SECS = 60;
 
         // Client variables (also used on server)
         private int iAmPlayer = -1;
