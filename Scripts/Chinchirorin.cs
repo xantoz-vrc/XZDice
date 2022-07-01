@@ -868,6 +868,16 @@ namespace XZDice
                     GameLog(string.Format("P{0} lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
                 else
                     GameLog(string.Format("P{0} <color=\"yellow\">draw</color>", player));
+            } else if (op_getop(arg0) == OPCODE_OYABALANCE) {
+                int player = opbalance_player(arg0);
+                float amount = opbalance_amount(arg0);
+
+                if (amount > 0.0f)
+                    GameLog(string.Format("P{0} (oya) won <color=\"lime\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                else if (amount < 0.0f)
+                    GameLog(string.Format("P{0} (oya) lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                else
+                    GameLog(string.Format("P{0} (oya) <color=\"yellow\">no change</color>", player));
             } else if (op_getop(arg0) == OPCODE_OYACHANGE) {
                 int toPlayer = opoyachange_toplayer(arg0);
                 int fromPlayer = opoyachange_fromplayer(arg0);
@@ -1310,6 +1320,8 @@ namespace XZDice
                 } else if (state == STATE_BALANCE) {
                     GameLogDebug("state = STATE_BALANCE");
 
+                    float oyaMoneyBefore = udonChips.money;
+
                     for (int i = 0; i < MAX_PLAYERS; ++i) {
                         if (i + 1 != oya && playerActive[i]) {
                             float amount = bets[i]*betMultiplier[i];
@@ -1319,6 +1331,9 @@ namespace XZDice
                             Broadcast(mkop_balance(i+1, amount));
                         }
                     }
+
+                    // Tell everyone how oyas balance changed
+                    Broadcast(mkop_oyabalance(oya, udonChips.money - oyaMoneyBefore));
 
                     if (oyaLost) {
                         // We failed. All gets reset and oya gets passed on
@@ -1849,6 +1864,7 @@ namespace XZDice
         private readonly uint OPCODE_THROWRESULT = 0x21u;
         private readonly uint OPCODE_OYATHROWRESULT = 0x22u;
         private readonly uint OPCODE_BALANCE = 0x30u;   // This applies the change to a particular players udonChips balance (Oya applies changes to own balance on their own)
+        private readonly uint OPCODE_OYABALANCE = 0x31u; // This is sent for display purposes only: to display the difference of oyas balance
         private readonly uint OPCODE_OYACHANGE = 0xF1u; // Requests that another player take over as oya
         private readonly uint OPCODE_NOOYA     = 0x00u; // Sent by the oya when it is the last person leaving, resetting the game. Also the value in arg0 on start
         private readonly uint OPCODE_NOOP      = 0xFFu;
@@ -2057,6 +2073,14 @@ namespace XZDice
             uint signpart = (amount < 0.0f) ? 1u : 0u;
             uint amountpart = (uint)(Mathf.Abs(amount)) & 0xFFFFu;
             return OPCODE_BALANCE | playerpart << 8 | signpart << 15 | amountpart << 16;
+        }
+
+        private uint mkop_oyabalance(int player, float amount)
+        {
+            uint playerpart = (uint)player & 0b111u;
+            uint signpart = (amount < 0.0f) ? 1u : 0u;
+            uint amountpart = (uint)(Mathf.Abs(amount)) & 0xFFFFu;
+            return OPCODE_OYABALANCE | playerpart << 8 | signpart << 15 | amountpart << 16;
         }
 
         private int opbalance_player(uint op)
