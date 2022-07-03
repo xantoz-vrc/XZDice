@@ -1720,8 +1720,8 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 10
-  Far: 10
+  Gain: 30
+  Far: 40
   Near: 0
   VolumetricRadius: 0
   EnableSpatialization: 1
@@ -3662,8 +3662,8 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 10
-  Far: 10
+  Gain: 30
+  Far: 40
   Near: 0
   VolumetricRadius: 0
   EnableSpatialization: 1
@@ -4394,8 +4394,8 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 10
-  Far: 10
+  Gain: 30
+  Far: 40
   Near: 0
   VolumetricRadius: 0
   EnableSpatialization: 1
@@ -4673,8 +4673,8 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 40
-  Far: 10
+  Gain: 50
+  Far: 40
   Near: 0
   VolumetricRadius: 0
   EnableSpatialization: 1
@@ -6081,8 +6081,8 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 10
-  Far: 10
+  Gain: 30
+  Far: 40
   Near: 0
   VolumetricRadius: 0
   EnableSpatialization: 1
