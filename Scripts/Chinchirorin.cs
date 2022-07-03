@@ -1153,6 +1153,7 @@ namespace XZDice
             }
 
             GameLog("Oya disappeared: Game reset");
+            opqueue_Reset();
             BroadcastImmediate(mkop_nooya());
         }
 
