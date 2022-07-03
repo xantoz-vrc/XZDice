@@ -45,6 +45,9 @@ namespace XZDice
         private TextMeshProUGUI[] kachingLabels;
 
         [SerializeField]
+        private TextMeshProUGUI[] resultPopupLabels;
+
+        [SerializeField]
         private AudioSource[] diceSounds;
 
         [SerializeField]
@@ -186,6 +189,9 @@ namespace XZDice
 
             if (kachingLabels.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("kachingLabels must be {0} long", MAX_PLAYERS));
+
+            if (resultPopupLabels.Length != MAX_PLAYERS)
+                Debug.LogError(string.Format("resultPopupLabels must be {0} long", MAX_PLAYERS));
 
             if (diceSpawns.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("diceSpawns must be {0} long", MAX_PLAYERS));
@@ -667,6 +673,48 @@ namespace XZDice
             label.gameObject.SetActive(true);
         }
 
+        private string getThrowTypeColor(uint throw_type)
+        {
+            return
+                (throw_type == THROW_1 || throw_type == THROW_123) ? "#ff0000" :
+                (throw_type == THROW_SHONBEN)                      ? "#ff00ff" :
+                (throw_type == THROW_MENASHI)                      ? "#c0c0c0" : "#00ff00";
+        }
+
+        private void ShowThrowResult(int player, int[] result, uint throw_type, bool oya)
+        {
+            if (result.Length != 3) {
+                Debug.LogError("ShowThrowResult called with bad result array");
+                result = new int[3];
+            }
+
+            string color = getThrowTypeColor(throw_type);
+
+            var label = resultPopupLabels[player - 1];
+
+            // Toggling the gameobject restarts the animation
+            label.gameObject.SetActive(false);
+            label.text = string.Format("<size=40%>{0} {1} {2}</size>\n<color={3}>{4}</color>",
+                                       result[0], result[1], result[2],
+                                       color, formatThrowType(throw_type));
+            label.gameObject.SetActive(true);
+
+            // Show oyas result to everyone
+            if (oya) {
+                for (int i = 0; i < kachingLabels.Length; ++i) {
+                    if (i + 1 != player) {
+                        var lbl = resultPopupLabels[i];
+
+                        // Toggling the gameobject restarts the animation
+                        lbl.gameObject.SetActive(false);
+                        lbl.text = string.Format("<size=40%>{0}</size>\n<color={1}>{2}</color>",
+                                                 _jp("Oya Result"), color, formatThrowType(throw_type));
+                        lbl.gameObject.SetActive(true);
+                    }
+                }
+            }
+        }
+
         private void UpdateJoinButtons(bool[] pa)
         {
             for (int i = 0; i < MAX_PLAYERS; ++i) {
@@ -918,26 +966,28 @@ namespace XZDice
                 int[] result = opthrow_result(arg0);
                 uint throw_type = opthrow_type(arg0);
                 if (throw_type == THROW_SHONBEN)
-                    GameLog(string.Format("P{0} threw outside", player));
+                    GameLog(string.Format("P{0} threw <color={1}>outside</color>",
+                                          player, getThrowTypeColor(throw_type)));
                 else
-                    GameLog(string.Format("P{0} threw {1} {2} {3}: {4}",
+                    GameLog(string.Format("P{0} threw {1} {2} {3}: <color={4}>{5}</color>",
                                           player, result[0], result[1], result[2],
-                                          formatThrowType(throw_type)));
+                                          getThrowTypeColor(throw_type), formatThrowType(throw_type)));
 
-                // TODO: specific display for the result
+                ShowThrowResult(player, result, throw_type, false);
                 SetTimeoutDisplay(player, false);
             } else if (op_getop(arg0) == OPCODE_OYATHROWRESULT) {
                 int player = opthrow_player(arg0);
                 int[] result = opthrow_result(arg0);
                 uint throw_type = opthrow_type(arg0);
                 if (throw_type == THROW_SHONBEN)
-                    GameLog(string.Format("P{0} (oya) threw outside", player));
+                    GameLog(string.Format("P{0} (oya) threw <color={1}>outside</color>",
+                                          player, getThrowTypeColor(throw_type)));
                 else
-                    GameLog(string.Format("P{0} (oya) threw {1} {2} {3}: {4}",
+                    GameLog(string.Format("P{0} (oya) threw {1} {2} {3}: <color={4}>{5}</color>",
                                           player, result[0], result[1], result[2],
-                                          formatThrowType(throw_type)));
+                                          getThrowTypeColor(throw_type), formatThrowType(throw_type)));
 
-                // TODO: specific display for the result
+                ShowThrowResult(player, result, throw_type, true);
                 SetTimeoutDisplay(player, false);
             } else if (op_getop(arg0) == OPCODE_BALANCE) {
                 int player = opbalance_player(arg0);
