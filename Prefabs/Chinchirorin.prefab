@@ -1720,7 +1720,7 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 30
+  Gain: 60
   Far: 40
   Near: 0
   VolumetricRadius: 0
@@ -3662,7 +3662,7 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 30
+  Gain: 40
   Far: 40
   Near: 0
   VolumetricRadius: 0
@@ -4673,7 +4673,7 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 50
+  Gain: 80
   Far: 40
   Near: 0
   VolumetricRadius: 0
@@ -6081,7 +6081,7 @@ MonoBehaviour:
   m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 30
+  Gain: 40
   Far: 40
   Near: 0
   VolumetricRadius: 0
