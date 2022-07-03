@@ -1184,6 +1184,7 @@ namespace XZDice
                     int newOya = (idx % MAX_PLAYERS) + 1;
                     oya = newOya; // Set this already here so OnOwnershipTransferred knows this wasn't the oya leaving the instance
                     Broadcast(mkop_oyachange(iAmPlayer, newOya, playerActive));
+                    SendCustomEventDelayedSeconds(nameof(_ConfirmWeAreNoLongerOwner), 7.42f);
                     ResetServerVariables();
                     return true;
                 }
@@ -1191,6 +1192,21 @@ namespace XZDice
             }
 
             return false;
+        }
+
+        // Paranoia function called a bit after issuing an oyachange. If we are still owner X
+        // seconds after telling someone else to take ower, they've likely left the instance. Our
+        // solution to this is to simply panic and reset the game
+        public void _ConfirmWeAreNoLongerOwner()
+        {
+            GameLogSpam("_ConfirmWeAreNoLongerOwner");
+
+            if (isOwner()) {
+                string message = "Still owner when we expected someone to take over: Reset table";
+                Debug.LogError(message);
+                GameLogError(message);
+                MakeTableEmpty();
+            }
         }
 
         private void DisarmTimeouts()
