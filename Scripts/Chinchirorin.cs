@@ -45,6 +45,15 @@ namespace XZDice
         private TextMeshProUGUI[] kachingLabels;
 
         [SerializeField]
+        private AudioSource[] diceSounds;
+
+        [SerializeField]
+        private AudioSource kachingSound;
+
+        [SerializeField]
+        private AudioSource errorSound;
+
+        [SerializeField]
         private GameLog gameLog = null;
 
         [SerializeField]
@@ -67,6 +76,8 @@ namespace XZDice
         private readonly int MAX_PLAYERS = 4;
         private readonly int MAX_RETHROWS = 3;
         private readonly int TIMEOUT_SECS = 60;
+
+        private bool synced = false;
 
         // Client variables (also used on server)
         private int iAmPlayer = -1;
@@ -248,7 +259,6 @@ namespace XZDice
             opqueue_Queue(op);
         }
 
-
         private void SendPlayerLeaveEvent(int player)
         {
             string fnname = "EventPlayerLeave" + player.ToString();
@@ -373,7 +383,7 @@ namespace XZDice
                                        player, bet, totalBet));
 
             if ((totalBet + bet)*3 > udonChips.money) {
-                // TODO: local error sound effect and more obvious display than GameLog
+                PlayErrorSound();
                 GameLog(string.Format("<color=\"red\">You can at most bet a third of your total ({0})</color>",
                                       formatChips(udonChips.money/3.0f)));
                 return;
@@ -479,7 +489,7 @@ namespace XZDice
         // DiGrabSphereListener
         public void _SetThrown()
         {
-            // Do nothing
+            SendCustomNetworkEvent(NetworkEventTarget.All, nameof(PlayDiceSound));
         }
 
         // DieGrabSphereListener
@@ -496,6 +506,44 @@ namespace XZDice
         public void _DiceResult4() { SendDiceResultEvent(4, iAmPlayer); }
         public void _DiceResult5() { SendDiceResultEvent(5, iAmPlayer); }
         public void _DiceResult6() { SendDiceResultEvent(6, iAmPlayer); }
+
+        private bool diceSoundPlaying = false;
+        public void PlayDiceSound()
+        {
+            if (diceSounds != null && diceSounds.Length > 0 && !diceSoundPlaying) {
+                int idx = Mathf.RoundToInt(Random.Range(0.0f, (float)(diceSounds.Length - 1)));
+                diceSoundPlaying = true;
+                diceSounds[idx].Play();
+                SendCustomEventDelayedSeconds(nameof(_ResetDiceSound), 3.0f);
+            }
+        }
+
+        public void _ResetDiceSound()
+        {
+            diceSoundPlaying = false;
+        }
+
+        private bool kachingSoundPlaying = false;
+        private void PlayKachingSound()
+        {
+            if (kachingSound != null && !kachingSoundPlaying) {
+                kachingSoundPlaying = true;
+                kachingSound.Play();
+                SendCustomEventDelayedSeconds(nameof(_ResetKachingSound), 5.0f);
+            }
+        }
+
+        public void _ResetKachingSound()
+        {
+            kachingSoundPlaying = false;
+        }
+
+        private void PlayErrorSound()
+        {
+            if (errorSound != null) {
+                errorSound.Play();
+            }
+        }
 
         // We have unique network events per player so the server can tel if the result we got was
         // from the player we expected results for.
@@ -774,7 +822,7 @@ namespace XZDice
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
                     totalBet = total;
-                    // TODO: local error sound effect and more obvious display than GameLog
+                    PlayErrorSound();
                     GameLog("<color=\"red\">Oya rejected bet as too big</color>");
                     GameObject bs = betScreens[player - 1];
                     SetBetScreenButtons(bs, true, total > 0.0f);
@@ -904,6 +952,7 @@ namespace XZDice
                 else
                     GameLog(string.Format("P{0} <color=\"yellow\">draw</color>", player));
 
+                PlayKachingSound();
                 KachingLabel(player, amount);
 
                 SetBetLabel(player, 0.0f);
@@ -918,6 +967,7 @@ namespace XZDice
                 else
                     GameLog(string.Format("P{0} (oya) <color=\"yellow\">no change</color>", player));
 
+                PlayKachingSound();
                 KachingLabel(player, amount);
 
                 SetBetLabel(player, 0.0f);
