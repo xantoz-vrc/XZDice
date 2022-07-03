@@ -265,6 +265,12 @@ namespace XZDice
             opqueue_Queue(op);
         }
 
+        private void BroadcastImmediate(uint op)
+        {
+            opqueue_Queue(op);
+            opqueue_Serialize();
+        }
+
         private void SendPlayerLeaveEvent(int player)
         {
             string fnname = "EventPlayerLeave" + player.ToString();
@@ -738,16 +744,7 @@ namespace XZDice
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
-            if (Networking.IsOwner(gameObject)) {
-                // If we were explicitly instructed to become oya, iAmPlayer
-                // should equal oya for the owner of the object. If this is not
-                // the case, this means the oya left the instance.
-
-                if (!isValidPlayer(iAmPlayer) || iAmPlayer != oya) {
-                    GameLog("Oya disappeared: Game reset");
-                    Broadcast(mkop_nooya());
-                }
-            }
+            CheckOwnerIsOya();
         }
 
         public override void OnDeserialization()
@@ -1149,6 +1146,29 @@ namespace XZDice
             return System.Math.Min(udonChips.money/3, MAXBET);
         }
 
+        private void MakeTableEmpty()
+        {
+            if (!Networking.IsOwner(gameObject)) {
+                Networking.SetOwner(Networking.LocalPlayer, gameObject);
+            }
+
+            GameLog("Oya disappeared: Game reset");
+            BroadcastImmediate(mkop_nooya());
+        }
+
+        private void CheckOwnerIsOya()
+        {
+            if (Networking.IsOwner(gameObject)) {
+                // If we were explicitly instructed to become oya, iAmPlayer
+                // should equal oya for the owner of the object. If this is not
+                // the case, this means the oya left the instance.
+
+                if (!isValidPlayer(iAmPlayer) || iAmPlayer != oya) {
+                    MakeTableEmpty();
+                }
+            }
+        }
+
         private void PrepareRecvThrow()
         {
             for (int i = 0; i < recvResult.Length; ++i)
@@ -1206,6 +1226,8 @@ namespace XZDice
             GameLogSpam(string.Format("RecvBetTimeout({0}), Time.time={1}, timeoutTime[{2}]={3}",
                                       player, Time.time, player - 1, timeoutTime[player - 1]));
 
+            CheckOwnerIsOya(); // timeoutTime[player - 1] might have been set NaN by ResetServerVariables, so always check this
+
             if (!(Time.time > timeoutTime[player - 1]))
                 return;
 
@@ -1229,6 +1251,8 @@ namespace XZDice
             GameLogSpam(string.Format("_OyaWaitingForPlayersTimeout(), Time.time={0}, timeoutTimeOya={1}",
                                        Time.time, timeoutTimeOya));
 
+            CheckOwnerIsOya(); // timeoutTimeOya might have been set NaN by ResetServerVariables, so always check this
+
             if (!(Time.time > timeoutTimeOya))
                 return;
 
@@ -1251,6 +1275,8 @@ namespace XZDice
             GameLogSpam(string.Format("_OyaRoundstartTimeout(), Time.time={0}, timeoutTimeOya={1}",
                                        Time.time, timeoutTimeOya));
 
+            CheckOwnerIsOya(); // timeoutTimeOya might have been set NaN by ResetServerVariables, so always check this
+
             if (!(Time.time > timeoutTimeOya))
                 return;
 
@@ -1272,6 +1298,8 @@ namespace XZDice
         {
             GameLogSpam(string.Format("_OyaThrowTimeout(), Time.time={0}, timeoutTimeOya={1}",
                                        Time.time, timeoutTimeOya));
+
+            CheckOwnerIsOya(); // timeoutTimeOya might have been set NaN by ResetServerVariables, so always check this
 
             if (!(Time.time > timeoutTimeOya))
                 return;
@@ -1305,6 +1333,8 @@ namespace XZDice
 
             timeoutTime[player - 1] = float.NaN;
 
+            CheckOwnerIsOya();
+
             if (state == STATE_THROW && currentPlayer == player) {
                 GameLogDebug(string.Format("P{0} timed out during throw", player));
                 RecvEventPlayerLeave(player, true);
@@ -1316,12 +1346,14 @@ namespace XZDice
             if (!Networking.IsOwner(gameObject)) {
                 Debug.LogError("OyaStateMachine called by non-owner");
                 GameLogError("OyaStateMachine called by non-owner");
+                MakeTableEmpty();
                 return;
             }
 
             if (!isOya()) {
                 Debug.LogError("OyaStateMachine called by non-oya");
                 GameLogError("OyaStateMachine called by non-oya");
+                MakeTableEmpty();
                 return;
             }
 
@@ -1332,7 +1364,6 @@ namespace XZDice
                 if (state == STATE_OYAREPORT) {
                     GameLogDebug("state = STATE_OYAREPORT");
                     oyaLost = false;
-
 
                     Broadcast(mkop_oyareport(iAmPlayer, playerActive));
 
@@ -2369,6 +2400,20 @@ namespace XZDice
             return result;
         }
 
+        private void opqueue_Serialize() {
+            arg0 = opqueue_Peek();
+            GameLogDebug(string.Format("Serializing arg0=0x{0:X} ...", arg0));
+            serializing = true;
+
+            // Prepare the timeout function. Note that we still need to use a timestamp, since
+            // there is no way to cancel an event pending with SendCustomEventDelayedSeconds.
+            serialization_timeout_time = Time.time + SERIALIZATION_TIMEOUT;
+            SendCustomEventDelayedSeconds(nameof(_SerializationTimeout), SERIALIZATION_TIMEOUT + 0.1f);
+
+            RequestSerialization();
+            OnDeserialization();
+        }
+
         // TODO: consider just having Broadcast cause a SendCustomEventDelayedSeconds-based thread
         //       do these as some sort of optimization?
         private void Update()
@@ -2377,17 +2422,7 @@ namespace XZDice
                 return;
 
             if (opqueue_Pending() && !serializing) {
-                arg0 = opqueue_Peek();
-                GameLogDebug(string.Format("Serializing arg0=0x{0:X} ...", arg0));
-                serializing = true;
-
-                // Prepare the timeout function. Note that we still need to use a timestamp, since
-                // there is no way to cancel an event pending with SendCustomEventDelayedSeconds.
-                serialization_timeout_time = Time.time + SERIALIZATION_TIMEOUT;
-                SendCustomEventDelayedSeconds(nameof(_SerializationTimeout), SERIALIZATION_TIMEOUT + 0.1f);
-
-                RequestSerialization();
-                OnDeserialization();
+                opqueue_Serialize();
             }
         }
 
