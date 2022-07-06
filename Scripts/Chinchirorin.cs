@@ -216,6 +216,7 @@ namespace XZDice
             // When entering instance, show join buttons if table is currently inactive
             if (op_getop(arg0) == OPCODE_NOOYA)
             {
+                synced = true;
                 UpdateJoinButtons(playerActive);
             }
         }
@@ -333,6 +334,9 @@ namespace XZDice
 
         private void JoinPlayerBtn(int player)
         {
+            if (!synced)
+                return;
+
             // Disable all buttons to prevent double-click events (some buttons
             // might be re-enabled once we get ACKed)
             foreach (GameObject btn in joinButtons) {
@@ -391,9 +395,11 @@ namespace XZDice
 
         private void SendBetEvent(int player, int bet)
         {
+            if (!synced)
+                return;
+
             GameLogDebug(string.Format("SendBetEvent({0}, {1}), totalBet={2}",
                                        player, bet, totalBet));
-
             if ((totalBet + bet)*3 > udonChips.money) {
                 PlayErrorSound();
                 GameLog(string.Format("<color=\"red\">You can at most bet a third of your total ({0})</color>",
@@ -411,6 +417,9 @@ namespace XZDice
 
         private void SendBetUndoEvent(int player)
         {
+            if (!synced)
+                return;
+
             SetBetScreenButtons(betScreens[player - 1], false, false);
 
             string fnname = string.Format("EventPlayer{0}BetUndo", player);
@@ -419,6 +428,9 @@ namespace XZDice
 
         private void SendBetDoneEvent(int player)
         {
+            if (!synced)
+                return;
+
             SetBetScreenButtons(betScreens[player - 1], false, false);
 
             string fnname = string.Format("EventPlayer{0}BetDone", player);
@@ -749,6 +761,15 @@ namespace XZDice
 
         public override void OnDeserialization()
         {
+            if (op_getop(arg0) == OPCODE_NOOYA ||
+                op_getop(arg0) == OPCODE_OYAREPORT ||
+                op_getop(arg0) == OPCODE_OYACHANGE) {
+                synced = true;
+            }
+
+            if (!synced)
+                return;
+
             if (op_getop(arg0) == OPCODE_OYAREPORT) {
                 int player = opoyareport_oya(arg0);
                 ResetTable(); // Reset the bet displays and such
