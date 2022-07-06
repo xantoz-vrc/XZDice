@@ -384,7 +384,7 @@ namespace XZDice
                             maxbet -= c_bets[j];
                         }
                     }
-                    maxbet = Mathf.Min(maxbet, udonChips.money/3);
+                    maxbet = Mathf.Clamp(Mathf.Min(maxbet, udonChips.money/3), 0.0f, MAXBET);
 
                     text.text = string.Format("Player {0}\nMax Bet: {1}", i + 1, formatChips(maxbet));
                 }
@@ -1162,7 +1162,7 @@ namespace XZDice
 
         private float getOyaMaxBet()
         {
-            return Mathf.Min(udonChips.money/3, MAXBET);
+            return Mathf.Clamp(Mathf.Min(udonChips.money/3, MAXBET), 0.0f, MAXBET);
         }
 
         private void MakeTableEmpty()
