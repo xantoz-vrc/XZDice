@@ -7,7 +7,6 @@ using VRC.Udon.Common;
 using VRC.Udon.Common.Enums;
 using UnityEngine.UI;
 using TMPro;
-using UCS;
 
 namespace XZDice
 {
@@ -36,7 +35,7 @@ namespace XZDice
         [SerializeField]
         private TextMeshProUGUI textMeshPro = null;
 
-        private UdonChips udonChips = null;
+        private UdonBehaviour udonChips = null;
 
         [UdonSynced] private float newEntry_amount = float.NaN;
         [UdonSynced] private int newEntry_id = -1;
@@ -48,7 +47,7 @@ namespace XZDice
 
         private void Start()
         {
-            udonChips = GameObject.Find("UdonChips").GetComponent<UdonChips>();
+            udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
 
             if (textMeshPro == null) {
                 textMeshPro = GetComponent<TextMeshProUGUI>();
@@ -192,7 +191,13 @@ namespace XZDice
 
         private string formatChips(float amount)
         {
-            return string.Format(udonChips.format, amount);
+            string formatString = (string)udonChips.GetProgramVariable("format");
+            return string.Format(formatString, amount);
+        }
+
+        private float getUdonChipsMoney()
+        {
+            return (float)udonChips.GetProgramVariable("money");
         }
 
         private void UpdateText()
@@ -215,19 +220,19 @@ namespace XZDice
         {
             // Do not update unless udonchips amount has changed
             // + a couple of safety checks to make Udon not whine at us when run in the editor 
-            if (udonChips == null || Networking.LocalPlayer == null || old_amount == udonChips.money) {
+            if (udonChips == null || Networking.LocalPlayer == null || old_amount == getUdonChipsMoney()) {
                 SendCustomEventDelayedSeconds(nameof(_SendAmount), refresh_fast);
                 return;
             }
 
-            old_amount = udonChips.money;
+            old_amount = getUdonChipsMoney();
 
             if (!Networking.IsOwner(gameObject))
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
 
             // Make a new entry for the local player, and first apply it locally, and then serialize it so it ends up on everyone elses list
             newEntry_id = Networking.LocalPlayer.playerId;
-            newEntry_amount = udonChips.money;
+            newEntry_amount = getUdonChipsMoney();
             AddEntry();
             UpdateText();
             RequestSerialization();
