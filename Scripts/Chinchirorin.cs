@@ -2081,6 +2081,18 @@ namespace XZDice
         private readonly uint OPCODE_NOOYA     = 0x00u; // Sent by the oya when it is the last person leaving, resetting the game. Also the value in arg0 on start
         private readonly uint OPCODE_NOOP      = 0xFFu;
 
+        // Helper that input values for bet/balance money float arguments
+        // that are transferred as 16 bit uints
+        private uint betAmountToUint(float amount)
+        {
+            return (uint)Mathf.Clamp(amount, 0.0f, MAXBET) & 0xFFFFu;
+        }
+
+        private uint balanceAmountToUint(float amount)
+        {
+            return (uint)Mathf.Clamp(amount, 0.0f, Mathf.Pow(2.0f, 16.0f)) & 0xFFFFu;
+        }
+
         uint op_getop(uint op)
         {
             return op & 0xFFu;
@@ -2118,7 +2130,7 @@ namespace XZDice
         private uint mkop_enable_bet(int player, float oyamaxbet)
         {
             uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
-            uint oyamaxbetpart = (uint)oyamaxbet & 0xFFFFu;  // 16 bit
+            uint oyamaxbetpart = betAmountToUint(oyamaxbet);  // 16 bit
             return OPCODE_ENABLE_BET | playerpart << 8 | oyamaxbetpart << 16;
         }
 
@@ -2135,7 +2147,7 @@ namespace XZDice
         private uint mkop_bet(int player, float total)
         {
             uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
-            uint totalpart = (uint)total & 0xFFFFu;  // 16 bit
+            uint totalpart = betAmountToUint(total);  // 16 bit
             return OPCODE_BET | playerpart << 8 | totalpart << 16;
         }
 
@@ -2148,14 +2160,14 @@ namespace XZDice
         private uint mkop_betdone(int player, float total)
         {
             uint playerpart = (uint)player & 0b111u;
-            uint totalpart = (uint)total & 0xFFFFu;
+            uint totalpart = betAmountToUint(total);
             return OPCODE_BETDONE | playerpart << 8 | totalpart << 16;
         }
 
         private uint mkop_betreject(int player, float total) // TODO: also inform about max bet? (requires switch to ulong)
         {
             uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
-            uint totalpart = (uint)total & 0xFFFFu;  // 16 bit
+            uint totalpart = betAmountToUint(total);  // 16 bit
             return OPCODE_BETREJECT | playerpart << 8 | totalpart << 16;
         }
 
@@ -2283,7 +2295,7 @@ namespace XZDice
         {
             uint playerpart = (uint)player & 0b111u;
             uint signpart = (amount < 0.0f) ? 1u : 0u;
-            uint amountpart = (uint)(Mathf.Abs(amount)) & 0xFFFFu;
+            uint amountpart = balanceAmountToUint(Mathf.Abs(amount));
             return OPCODE_BALANCE | playerpart << 8 | signpart << 15 | amountpart << 16;
         }
 
@@ -2291,7 +2303,7 @@ namespace XZDice
         {
             uint playerpart = (uint)player & 0b111u;
             uint signpart = (amount < 0.0f) ? 1u : 0u;
-            uint amountpart = (uint)(Mathf.Abs(amount)) & 0xFFFFu;
+            uint amountpart = balanceAmountToUint(Mathf.Abs(amount));
             return OPCODE_OYABALANCE | playerpart << 8 | signpart << 15 | amountpart << 16;
         }
 
