@@ -83,6 +83,8 @@ namespace XZDice
 
         // Client variables (also used on server)
         private int iAmPlayer = -1;
+        private int pendingPlayer = -1;
+        private int pendingPlayerNonce = 0;
         private int oya = -1;
         private float totalBet = 0.0f;
         private float oyaMaxBet = float.NaN;
@@ -224,6 +226,8 @@ namespace XZDice
             totalBet = 0.0f;
             oyaMaxBet = float.NaN;
             c_bets = new float[MAX_PLAYERS];
+            pendingPlayer = -1;
+            pendingPlayerNonce = -1;
             // Below is left out on purpose
             // oya = -1;
         }
@@ -283,36 +287,175 @@ namespace XZDice
 
         private void SendPlayerLeaveEvent(int player)
         {
-            string fnname = "EventPlayerLeave" + player.ToString();
+            string fnname = "EventLeavePlayer" + player.ToString();
             SendToOya(fnname);
         }
 
-        public void EventPlayerLeave1() { RecvEventPlayerLeave(1, false); }
-        public void EventPlayerLeave2() { RecvEventPlayerLeave(2, false); }
-        public void EventPlayerLeave3() { RecvEventPlayerLeave(3, false); }
-        public void EventPlayerLeave4() { RecvEventPlayerLeave(4, false); }
+        // EventLeavePlayerX
+        public void EventLeavePlayer1() { RecvEventPlayerLeave(1, false); }
+        public void EventLeavePlayer2() { RecvEventPlayerLeave(2, false); }
+        public void EventLeavePlayer3() { RecvEventPlayerLeave(3, false); }
+        public void EventLeavePlayer4() { RecvEventPlayerLeave(4, false); }
 
-        private void SendPlayerJoinEvent(int player)
+        private void SendPlayerJoinEvent(int player, int nonce)
         {
-            string fnname = "EventPlayerJoin" + player.ToString();
+            GameLogDebug(string.Format("SendPlayerJoinEvent({0}, {1})", player, nonce));
+
+            if (!isValidPlayer(player)) {
+                Debug.LogError("Bad player argument in SendPlayerJoinEvent");
+                GameLogError("Bad player argument in SendPlayerJoinEvent");
+                return;
+            }
+
+            if (nonce < 0 || nonce > 0x1F) {
+                Debug.LogError("Bad nonce argument in SendPlayerJoinEvent");
+                GameLogError("Bad nonce argument in SendPlayerJoinEvent");
+                return;
+            }
+
+            string fnname = string.Format("EventJoinPlayer{0}Nonce{1}", player, nonce);
             SendToOya(fnname);
         }
 
-        public void EventPlayerJoin1() { RecvEventPlayerJoin(1); }
-        public void EventPlayerJoin2() { RecvEventPlayerJoin(2); }
-        public void EventPlayerJoin3() { RecvEventPlayerJoin(3); }
-        public void EventPlayerJoin4() { RecvEventPlayerJoin(4); }
+        // EventJoinPlayerXNonceY
+        public void EventJoinPlayer1Nonce0()  { RecvEventPlayerJoin(1, 0); }
+        public void EventJoinPlayer1Nonce1()  { RecvEventPlayerJoin(1, 1); }
+        public void EventJoinPlayer1Nonce2()  { RecvEventPlayerJoin(1, 2); }
+        public void EventJoinPlayer1Nonce3()  { RecvEventPlayerJoin(1, 3); }
+        public void EventJoinPlayer1Nonce4()  { RecvEventPlayerJoin(1, 4); }
+        public void EventJoinPlayer1Nonce5()  { RecvEventPlayerJoin(1, 5); }
+        public void EventJoinPlayer1Nonce6()  { RecvEventPlayerJoin(1, 6); }
+        public void EventJoinPlayer1Nonce7()  { RecvEventPlayerJoin(1, 7); }
+        public void EventJoinPlayer1Nonce8()  { RecvEventPlayerJoin(1, 8); }
+        public void EventJoinPlayer1Nonce9()  { RecvEventPlayerJoin(1, 9); }
+        public void EventJoinPlayer1Nonce10() { RecvEventPlayerJoin(1, 10); }
+        public void EventJoinPlayer1Nonce11() { RecvEventPlayerJoin(1, 11); }
+        public void EventJoinPlayer1Nonce12() { RecvEventPlayerJoin(1, 12); }
+        public void EventJoinPlayer1Nonce13() { RecvEventPlayerJoin(1, 13); }
+        public void EventJoinPlayer1Nonce14() { RecvEventPlayerJoin(1, 14); }
+        public void EventJoinPlayer1Nonce15() { RecvEventPlayerJoin(1, 15); }
+        public void EventJoinPlayer1Nonce16() { RecvEventPlayerJoin(1, 16); }
+        public void EventJoinPlayer1Nonce17() { RecvEventPlayerJoin(1, 17); }
+        public void EventJoinPlayer1Nonce18() { RecvEventPlayerJoin(1, 18); }
+        public void EventJoinPlayer1Nonce19() { RecvEventPlayerJoin(1, 19); }
+        public void EventJoinPlayer1Nonce20() { RecvEventPlayerJoin(1, 20); }
+        public void EventJoinPlayer1Nonce21() { RecvEventPlayerJoin(1, 21); }
+        public void EventJoinPlayer1Nonce22() { RecvEventPlayerJoin(1, 22); }
+        public void EventJoinPlayer1Nonce23() { RecvEventPlayerJoin(1, 23); }
+        public void EventJoinPlayer1Nonce24() { RecvEventPlayerJoin(1, 24); }
+        public void EventJoinPlayer1Nonce25() { RecvEventPlayerJoin(1, 25); }
+        public void EventJoinPlayer1Nonce26() { RecvEventPlayerJoin(1, 26); }
+        public void EventJoinPlayer1Nonce27() { RecvEventPlayerJoin(1, 27); }
+        public void EventJoinPlayer1Nonce28() { RecvEventPlayerJoin(1, 28); }
+        public void EventJoinPlayer1Nonce29() { RecvEventPlayerJoin(1, 29); }
+        public void EventJoinPlayer1Nonce30() { RecvEventPlayerJoin(1, 30); }
+        public void EventJoinPlayer1Nonce31() { RecvEventPlayerJoin(1, 31); }
+
+        public void EventJoinPlayer2Nonce0()  { RecvEventPlayerJoin(2, 0); }
+        public void EventJoinPlayer2Nonce1()  { RecvEventPlayerJoin(2, 1); }
+        public void EventJoinPlayer2Nonce2()  { RecvEventPlayerJoin(2, 2); }
+        public void EventJoinPlayer2Nonce3()  { RecvEventPlayerJoin(2, 3); }
+        public void EventJoinPlayer2Nonce4()  { RecvEventPlayerJoin(2, 4); }
+        public void EventJoinPlayer2Nonce5()  { RecvEventPlayerJoin(2, 5); }
+        public void EventJoinPlayer2Nonce6()  { RecvEventPlayerJoin(2, 6); }
+        public void EventJoinPlayer2Nonce7()  { RecvEventPlayerJoin(2, 7); }
+        public void EventJoinPlayer2Nonce8()  { RecvEventPlayerJoin(2, 8); }
+        public void EventJoinPlayer2Nonce9()  { RecvEventPlayerJoin(2, 9); }
+        public void EventJoinPlayer2Nonce10() { RecvEventPlayerJoin(2, 10); }
+        public void EventJoinPlayer2Nonce11() { RecvEventPlayerJoin(2, 11); }
+        public void EventJoinPlayer2Nonce12() { RecvEventPlayerJoin(2, 12); }
+        public void EventJoinPlayer2Nonce13() { RecvEventPlayerJoin(2, 13); }
+        public void EventJoinPlayer2Nonce14() { RecvEventPlayerJoin(2, 14); }
+        public void EventJoinPlayer2Nonce15() { RecvEventPlayerJoin(2, 15); }
+        public void EventJoinPlayer2Nonce16() { RecvEventPlayerJoin(2, 16); }
+        public void EventJoinPlayer2Nonce17() { RecvEventPlayerJoin(2, 17); }
+        public void EventJoinPlayer2Nonce18() { RecvEventPlayerJoin(2, 18); }
+        public void EventJoinPlayer2Nonce19() { RecvEventPlayerJoin(2, 19); }
+        public void EventJoinPlayer2Nonce20() { RecvEventPlayerJoin(2, 20); }
+        public void EventJoinPlayer2Nonce21() { RecvEventPlayerJoin(2, 21); }
+        public void EventJoinPlayer2Nonce22() { RecvEventPlayerJoin(2, 22); }
+        public void EventJoinPlayer2Nonce23() { RecvEventPlayerJoin(2, 23); }
+        public void EventJoinPlayer2Nonce24() { RecvEventPlayerJoin(2, 24); }
+        public void EventJoinPlayer2Nonce25() { RecvEventPlayerJoin(2, 25); }
+        public void EventJoinPlayer2Nonce26() { RecvEventPlayerJoin(2, 26); }
+        public void EventJoinPlayer2Nonce27() { RecvEventPlayerJoin(2, 27); }
+        public void EventJoinPlayer2Nonce28() { RecvEventPlayerJoin(2, 28); }
+        public void EventJoinPlayer2Nonce29() { RecvEventPlayerJoin(2, 29); }
+        public void EventJoinPlayer2Nonce30() { RecvEventPlayerJoin(2, 30); }
+        public void EventJoinPlayer2Nonce31() { RecvEventPlayerJoin(2, 31); }
+
+        public void EventJoinPlayer3Nonce0()  { RecvEventPlayerJoin(3, 0); }
+        public void EventJoinPlayer3Nonce1()  { RecvEventPlayerJoin(3, 1); }
+        public void EventJoinPlayer3Nonce2()  { RecvEventPlayerJoin(3, 2); }
+        public void EventJoinPlayer3Nonce3()  { RecvEventPlayerJoin(3, 3); }
+        public void EventJoinPlayer3Nonce4()  { RecvEventPlayerJoin(3, 4); }
+        public void EventJoinPlayer3Nonce5()  { RecvEventPlayerJoin(3, 5); }
+        public void EventJoinPlayer3Nonce6()  { RecvEventPlayerJoin(3, 6); }
+        public void EventJoinPlayer3Nonce7()  { RecvEventPlayerJoin(3, 7); }
+        public void EventJoinPlayer3Nonce8()  { RecvEventPlayerJoin(3, 8); }
+        public void EventJoinPlayer3Nonce9()  { RecvEventPlayerJoin(3, 9); }
+        public void EventJoinPlayer3Nonce10() { RecvEventPlayerJoin(3, 10); }
+        public void EventJoinPlayer3Nonce11() { RecvEventPlayerJoin(3, 11); }
+        public void EventJoinPlayer3Nonce12() { RecvEventPlayerJoin(3, 12); }
+        public void EventJoinPlayer3Nonce13() { RecvEventPlayerJoin(3, 13); }
+        public void EventJoinPlayer3Nonce14() { RecvEventPlayerJoin(3, 14); }
+        public void EventJoinPlayer3Nonce15() { RecvEventPlayerJoin(3, 15); }
+        public void EventJoinPlayer3Nonce16() { RecvEventPlayerJoin(3, 16); }
+        public void EventJoinPlayer3Nonce17() { RecvEventPlayerJoin(3, 17); }
+        public void EventJoinPlayer3Nonce18() { RecvEventPlayerJoin(3, 18); }
+        public void EventJoinPlayer3Nonce19() { RecvEventPlayerJoin(3, 19); }
+        public void EventJoinPlayer3Nonce20() { RecvEventPlayerJoin(3, 20); }
+        public void EventJoinPlayer3Nonce21() { RecvEventPlayerJoin(3, 21); }
+        public void EventJoinPlayer3Nonce22() { RecvEventPlayerJoin(3, 22); }
+        public void EventJoinPlayer3Nonce23() { RecvEventPlayerJoin(3, 23); }
+        public void EventJoinPlayer3Nonce24() { RecvEventPlayerJoin(3, 24); }
+        public void EventJoinPlayer3Nonce25() { RecvEventPlayerJoin(3, 25); }
+        public void EventJoinPlayer3Nonce26() { RecvEventPlayerJoin(3, 26); }
+        public void EventJoinPlayer3Nonce27() { RecvEventPlayerJoin(3, 27); }
+        public void EventJoinPlayer3Nonce28() { RecvEventPlayerJoin(3, 28); }
+        public void EventJoinPlayer3Nonce29() { RecvEventPlayerJoin(3, 29); }
+        public void EventJoinPlayer3Nonce30() { RecvEventPlayerJoin(3, 30); }
+        public void EventJoinPlayer3Nonce31() { RecvEventPlayerJoin(3, 31); }
+
+        public void EventJoinPlayer4Nonce0()  { RecvEventPlayerJoin(4, 0); }
+        public void EventJoinPlayer4Nonce1()  { RecvEventPlayerJoin(4, 1); }
+        public void EventJoinPlayer4Nonce2()  { RecvEventPlayerJoin(4, 2); }
+        public void EventJoinPlayer4Nonce3()  { RecvEventPlayerJoin(4, 3); }
+        public void EventJoinPlayer4Nonce4()  { RecvEventPlayerJoin(4, 4); }
+        public void EventJoinPlayer4Nonce5()  { RecvEventPlayerJoin(4, 5); }
+        public void EventJoinPlayer4Nonce6()  { RecvEventPlayerJoin(4, 6); }
+        public void EventJoinPlayer4Nonce7()  { RecvEventPlayerJoin(4, 7); }
+        public void EventJoinPlayer4Nonce8()  { RecvEventPlayerJoin(4, 8); }
+        public void EventJoinPlayer4Nonce9()  { RecvEventPlayerJoin(4, 9); }
+        public void EventJoinPlayer4Nonce10() { RecvEventPlayerJoin(4, 10); }
+        public void EventJoinPlayer4Nonce11() { RecvEventPlayerJoin(4, 11); }
+        public void EventJoinPlayer4Nonce12() { RecvEventPlayerJoin(4, 12); }
+        public void EventJoinPlayer4Nonce13() { RecvEventPlayerJoin(4, 13); }
+        public void EventJoinPlayer4Nonce14() { RecvEventPlayerJoin(4, 14); }
+        public void EventJoinPlayer4Nonce15() { RecvEventPlayerJoin(4, 15); }
+        public void EventJoinPlayer4Nonce16() { RecvEventPlayerJoin(4, 16); }
+        public void EventJoinPlayer4Nonce17() { RecvEventPlayerJoin(4, 17); }
+        public void EventJoinPlayer4Nonce18() { RecvEventPlayerJoin(4, 18); }
+        public void EventJoinPlayer4Nonce19() { RecvEventPlayerJoin(4, 19); }
+        public void EventJoinPlayer4Nonce20() { RecvEventPlayerJoin(4, 20); }
+        public void EventJoinPlayer4Nonce21() { RecvEventPlayerJoin(4, 21); }
+        public void EventJoinPlayer4Nonce22() { RecvEventPlayerJoin(4, 22); }
+        public void EventJoinPlayer4Nonce23() { RecvEventPlayerJoin(4, 23); }
+        public void EventJoinPlayer4Nonce24() { RecvEventPlayerJoin(4, 24); }
+        public void EventJoinPlayer4Nonce25() { RecvEventPlayerJoin(4, 25); }
+        public void EventJoinPlayer4Nonce26() { RecvEventPlayerJoin(4, 26); }
+        public void EventJoinPlayer4Nonce27() { RecvEventPlayerJoin(4, 27); }
+        public void EventJoinPlayer4Nonce28() { RecvEventPlayerJoin(4, 28); }
+        public void EventJoinPlayer4Nonce29() { RecvEventPlayerJoin(4, 29); }
+        public void EventJoinPlayer4Nonce30() { RecvEventPlayerJoin(4, 30); }
+        public void EventJoinPlayer4Nonce31() { RecvEventPlayerJoin(4, 31); }
 
         private void JoinGame(int player)
         {
-            // TODO: do not set this here, but instead set it after we get confirmation from owner
-            //       that we can actually join. This would require some sort of two-step thing so we
-            //       can still identify ourselves in OnDeserialization
-            iAmPlayer = player;
-
             // First person joining when table is empty is oya
             if (op_getop(arg0) == OPCODE_NOOYA) {
                 GameLogDebug(string.Format("First person joining the table (arg0={0:X})", arg0));
+                iAmPlayer = player;
                 oya = iAmPlayer; // Set this already here so OnOwnerShipTransferred knows this wasn't the oya leaving the instance
                 if (!Networking.IsOwner(gameObject))
                     Networking.SetOwner(Networking.LocalPlayer, gameObject);
@@ -326,9 +469,13 @@ namespace XZDice
 
                 // We do not need to do the playerjoin event in this special
                 // case. The oyachange thing takes its place.
-
             } else {
-                SendPlayerJoinEvent(iAmPlayer);
+                // We set pendingPlayer and pendingPlayerNonce here, and only when receiving
+                // confirmation from the owner that we were allowed to actually join, do we set iAmPlayer.
+                pendingPlayer = player;
+                // pendingPlaySalt is based on a random number and the players instance id to avoid collisions
+                pendingPlayerNonce = (Networking.LocalPlayer.playerId ^ Mathf.RoundToInt(Random.Range(0.0f, 31.0f))) & 0x1F;
+                SendPlayerJoinEvent(pendingPlayer, pendingPlayerNonce);
             }
         }
 
@@ -904,11 +1051,43 @@ namespace XZDice
             } else if (op_getop(arg0) == OPCODE_PLAYERJOIN) {
                 int player = opplayer_player(arg0);
                 oya = opplayerjoin_oya(arg0); // Syncs up this variable in case we don't have it
+                int nonce = opplayerjoin_nonce(arg0);
                 bool[] pa = opplayer_playerActive(arg0);
                 bool showbuttons = opplayer_showbuttons(arg0);
                 GameLog2(string.Format("P{0} entered the game", player),
-                         string.Format("P{0} entered the game (playerActive: {1},{2},{3},{4})",
-                                       player, pa[0], pa[1], pa[2], pa[3]));
+                         string.Format("P{0} entered the game (nonce: {1}, pa: {2},{3},{4},{5})",
+                                       player, nonce, pa[0], pa[1], pa[2], pa[3]));
+
+                // Set the iAmPlayer variable if pendingPlayer and pendingPlayerNonce match up
+                if (pendingPlayer == player) {
+                    if (nonce != pendingPlayerNonce) {
+                        GameLogError("Mismatched nonce");
+                        iAmPlayer = -1;
+                    } else {
+                        iAmPlayer = pendingPlayer;
+                        GameLogDebug(string.Format("iAmPlayer = {0}", iAmPlayer));
+                    }
+                    pendingPlayer = -1;
+                    pendingPlayerNonce = -1;
+                }
+
+                if (showbuttons)
+                    UpdateJoinButtons(pa);
+                SetBetLabel(player, 0.0f);
+            } else if (op_getop(arg0) == OPCODE_PLAYERJOINREJECT) {
+                int player = opplayer_player(arg0);
+                int nonce = opplayerjoin_nonce(arg0);
+                bool showbuttons = opplayer_showbuttons(arg0);
+                bool[] pa = opplayer_playerActive(arg0);
+
+                GameLogError(string.Format("P{0} join request rejected (nonce: {1}, pa: {2},{3},{4},{5})",
+                                           player, nonce, pa[0], pa[1], pa[2], pa[3]));
+
+                if (pendingPlayer == player) {
+                    pendingPlayer = -1;
+                    pendingPlayerNonce = -1;
+                }
+
                 if (showbuttons)
                     UpdateJoinButtons(pa);
                 SetBetLabel(player, 0.0f);
@@ -1572,11 +1751,11 @@ namespace XZDice
 
         // TODO: perhaps limit the states during which a player can join? (would require a way to
         // communicate to a joining player that they couldn't join)
-        private void RecvEventPlayerJoin(int player)
+        private void RecvEventPlayerJoin(int player, int nonce)
         {
             // Nominally takes place during any of STATE_WAITINGFORPLAYERS, STATE_WAITINGFORBETS or STATE_WAITINGFORROUNDSTART
 
-            GameLogDebug(string.Format("RecvEventPlayerJoin({0}), state={1}", player, state));
+            GameLogDebug(string.Format("RecvEventPlayerJoin({0}, {1}), state={2}", player, nonce, state));
 
             if (!Networking.IsOwner(gameObject)) {
                 string str = string.Format("RecvEventPlayerJoin when not owner (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
@@ -1599,11 +1778,20 @@ namespace XZDice
                 return;
             }
 
-            playerActive[player - 1] = true;
             bool showButtons = (state == STATE_WAITINGFORPLAYERS ||
                                 state == STATE_WAITINGFORBETS ||
                                 state == STATE_WAITINGFORROUNDSTART);
-            Broadcast(mkop_playerjoin(player, oya, playerActive, showButtons));
+
+            if (playerActive[player - 1]) {
+                string str = string.Format("Someone tried to join as P{0} but that player was already active", player);
+                Debug.LogError(str);
+                GameLogError(str);
+                Broadcast(mkop_playerjoinreject(player, nonce, oya, playerActive, showButtons));
+                return;
+            }
+
+            playerActive[player - 1] = true;
+            Broadcast(mkop_playerjoin(player, nonce, oya, playerActive, showButtons));
 
             // Open the bet screen for the player, also tell them how much money oya has (can
             // display max bet locally)
@@ -1649,6 +1837,14 @@ namespace XZDice
             if (!isValidPlayer(player)) {
                 Debug.LogError("invalid player variable");
                 GameLogError("invalid player variable");
+                return;
+            }
+
+            if (!playerActive[player - 1]) {
+                string str = string.Format("Non-active P{0} tried to leave (playerActive: {1},{2},{3},{4})",
+                                           player, playerActive[0], playerActive[1], playerActive[2], playerActive[3]);
+                Debug.LogError(str);
+                GameLogError(str);
                 return;
             }
 
@@ -2187,6 +2383,7 @@ namespace XZDice
         private readonly uint OPCODE_PLAYERJOIN = 0x10u; // A player has joined: Switch their join button to leave, and make it so only that player can press it
         private readonly uint OPCODE_PLAYERLEAVE = 0x11u;
         private readonly uint OPCODE_DISABLE_JOINBUTTONS = 0x12u;
+        private readonly uint OPCODE_PLAYERJOINREJECT = 0x15u; // A player was rejected from joining
         private readonly uint OPCODE_YOURTHROW = 0x20u; // This enables the dice for one particular player, but disables them (pickup disabled) for everyone else (if player nbr is 0 just disable)
         private readonly uint OPCODE_THROWRESULT = 0x21u;
         private readonly uint OPCODE_OYATHROWRESULT = 0x22u;
@@ -2307,18 +2504,34 @@ namespace XZDice
             return (float)((op >> 16) & 0xFFFFu);
         }
 
-        private uint mkop_playerjoin(int player, int oya, bool[] playerActive, bool showbuttons)
+        private uint mkop_playerjoin(int player, int nonce, int oya, bool[] playerActive, bool showbuttons)
         {
-            uint playerpart = playerToUint(player);
-            uint oyapart = playerToUint(oya);
-            uint playerActivePart = _mk_playerActivePart(playerActive);
-            uint showbuttonspart = (showbuttons) ? 1u : 0u;
-            return OPCODE_PLAYERJOIN | playerpart << 8 | oyapart << 11 | playerActivePart << 14 | showbuttonspart << 18;
+            uint playerpart = playerToUint(player); // 3 bits
+            uint noncepart = (uint)System.Math.Abs(nonce) & 0x1FU; // 5 bits
+            uint oyapart = playerToUint(oya); // 3 bits
+            uint playerActivePart = _mk_playerActivePart(playerActive); // 4 bits
+            uint showbuttonspart = (showbuttons) ? 1u : 0u; // 1 bit
+            return OPCODE_PLAYERJOIN | playerpart << 8 | oyapart << 11 | playerActivePart << 14 | showbuttonspart << 18 | noncepart << 19;
+        }
+
+        private uint mkop_playerjoinreject(int player, int nonce, int oya, bool[] playerActive, bool showbuttons)
+        {
+            uint playerpart = playerToUint(player); // 3 bits
+            uint oyapart = playerToUint(oya); // 3 bits
+            uint noncepart = (uint)System.Math.Abs(nonce) & 0x1FU; // 5 bits
+            uint playerActivePart = _mk_playerActivePart(playerActive); // 4 bits
+            uint showbuttonspart = (showbuttons) ? 1u : 0u; // 1 bit
+            return OPCODE_PLAYERJOINREJECT | playerpart << 8 | playerActivePart << 14 | showbuttonspart << 18 | noncepart << 19;
         }
 
         private int opplayerjoin_oya(uint op)
         {
             return (int)((op >> 11) & 0b111u);
+        }
+
+        private int opplayerjoin_nonce(uint op)
+        {
+            return (int)((op >> 19) & 0x1Fu);
         }
 
         // player: player who left/was kicked
