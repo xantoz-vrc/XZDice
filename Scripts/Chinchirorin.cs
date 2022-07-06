@@ -93,7 +93,6 @@ namespace XZDice
         private bool[] betDone; // Used only by owner
         private int[] betMultiplier;
 
-        private int[] oyaResult; // Use only by owner
         private uint oyaThrowType; // Use only by owner
         private int[] recvResult; // Used only by owner
         int recvResult_cntr = 0; // Used only by owner
@@ -234,7 +233,6 @@ namespace XZDice
         {
             recvResult = new int[dieGrabSphere._GetLength()];
             recvResult_cntr = 0;
-            oyaResult = new int[dieGrabSphere._GetLength()];
             oyaThrowType = THROW_INVALID;
             rethrowCount = 0;
             currentPlayer = -1;
@@ -1761,9 +1759,6 @@ namespace XZDice
 
                 player = oya;
                 op = mkop_oyathrowresult(oya, recvResult, throw_type);
-                for (int i = 0; i < oyaResult.Length; ++i) {
-                    oyaResult[i] = recvResult[i];
-                }
                 oyaThrowType = throw_type;
                 GameLogDebug(string.Format("Wrote oyaThrowType: {0}", oyaThrowType));
             } else {
