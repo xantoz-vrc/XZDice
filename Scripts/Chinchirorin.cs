@@ -1771,9 +1771,11 @@ namespace XZDice
 
             // Delay here before we advance the state machine
 
+
+            float delay = (throw_type == THROW_MENASHI) ? 1.0f : 2.0f;
             _ProcessDiceResult_throw_type = throw_type; // Save some vars for the continuation
             _ProcessDiceResult_player = player;
-            SendCustomEventDelayedSeconds(nameof(_ProcessDiceResult_Continuation), 1.0f);
+            SendCustomEventDelayedSeconds(nameof(_ProcessDiceResult_Continuation), delay);
         }
 
         public void _ProcessDiceResult_Continuation()
