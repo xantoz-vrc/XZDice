@@ -2208,6 +2208,17 @@ namespace XZDice
             return (uint)Mathf.Clamp(amount, 0.0f, Mathf.Pow(2.0f, 16.0f)) & 0xFFFFu;
         }
 
+        private uint playerToUint(int player)
+        {
+            if (player < 0) {
+                return 0;
+            } else if (player > MAX_PLAYERS) {
+                return 0;
+            } else {
+                return (uint)player & 0b111u;
+            }
+        }
+
         uint op_getop(uint op)
         {
             return op & 0xFFu;
@@ -2215,19 +2226,19 @@ namespace XZDice
 
         private uint mkop_waitingforplayers(int oya)
         {
-            uint oyapart = (uint)oya & 0b111u;
+            uint oyapart = playerToUint(oya);
             return OPCODE_WAITINGFORPLAYERS | oyapart << 8;
         }
 
         private uint mkop_waitingforbets(int oya)
         {
-            uint oyapart = (uint)oya & 0b111u;
+            uint oyapart = playerToUint(oya);
             return OPCODE_WAITINGFORBETS | oyapart << 8;
         }
 
         private uint mkop_waitingforroundstart(int oya, bool[] pa)
         {
-            uint oyapart = (uint)oya & 0b111u;
+            uint oyapart = playerToUint(oya);
             uint playerActivePart = _mk_playerActivePart(pa);
             return OPCODE_WAITINGFORROUNDSTART | oyapart << 8 | playerActivePart << 14;
         }
@@ -2244,7 +2255,7 @@ namespace XZDice
 
         private uint mkop_enable_bet(int player, float oyamaxbet)
         {
-            uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
+            uint playerpart = playerToUint(player);   // Player numbers are three bit
             uint oyamaxbetpart = betAmountToUint(oyamaxbet);  // 16 bit
             return OPCODE_ENABLE_BET | playerpart << 8 | oyamaxbetpart << 16;
         }
@@ -2261,27 +2272,27 @@ namespace XZDice
 
         private uint mkop_bet(int player, float total)
         {
-            uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
+            uint playerpart = playerToUint(player);   // Player numbers are three bit
             uint totalpart = betAmountToUint(total);  // 16 bit
             return OPCODE_BET | playerpart << 8 | totalpart << 16;
         }
 
         private uint mkop_betundo(int player)
         {
-            uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
+            uint playerpart = playerToUint(player);   // Player numbers are three bit
             return OPCODE_BETUNDO | playerpart << 8;
         }
 
         private uint mkop_betdone(int player, float total)
         {
-            uint playerpart = (uint)player & 0b111u;
+            uint playerpart = playerToUint(player);
             uint totalpart = betAmountToUint(total);
             return OPCODE_BETDONE | playerpart << 8 | totalpart << 16;
         }
 
         private uint mkop_betreject(int player, float total) // TODO: also inform about max bet? (requires switch to ulong)
         {
-            uint playerpart = (uint)player & 0b111u;   // Player numbers are three bit
+            uint playerpart = playerToUint(player);   // Player numbers are three bit
             uint totalpart = betAmountToUint(total);  // 16 bit
             return OPCODE_BETREJECT | playerpart << 8 | totalpart << 16;
         }
@@ -2298,8 +2309,8 @@ namespace XZDice
 
         private uint mkop_playerjoin(int player, int oya, bool[] playerActive, bool showbuttons)
         {
-            uint playerpart = (uint)player & 0b111u;
-            uint oyapart = (uint)oya & 0b111u;
+            uint playerpart = playerToUint(player);
+            uint oyapart = playerToUint(oya);
             uint playerActivePart = _mk_playerActivePart(playerActive);
             uint showbuttonspart = (showbuttons) ? 1u : 0u;
             return OPCODE_PLAYERJOIN | playerpart << 8 | oyapart << 11 | playerActivePart << 14 | showbuttonspart << 18;
@@ -2316,7 +2327,7 @@ namespace XZDice
         // timeout: true when player was kicked due to timeout, false usually means player left of their own accord
         private uint mkop_playerleave(int player, bool[] playerActive, bool showbuttons, bool timeout)
         {
-            uint playerpart = (uint)player & 0b111u;
+            uint playerpart = playerToUint(player);
             uint playerActivePart = _mk_playerActivePart(playerActive);
             uint showbuttonspart = (showbuttons) ? 1u : 0u;
             uint timeoutpart = (timeout) ? 1u : 0u;
@@ -2350,7 +2361,7 @@ namespace XZDice
 
         private uint mkop_yourthrow(int player, int rethrow)
         {
-            uint playerpart = (uint)player & 0b111u;
+            uint playerpart = playerToUint(player);
             uint rethrowpart = (uint)rethrow & 0b111u;
             return OPCODE_YOURTHROW | playerpart << 8 | rethrowpart << 25;
         }
@@ -2367,7 +2378,7 @@ namespace XZDice
 
         private uint _mkop_throw_helper(uint opcode, int player, int[] result, uint throw_type)
         {
-            uint playerpart = (uint)player & 0b111u;
+            uint playerpart = playerToUint(player);
             uint resultpart =
                 ((uint)result[0] & 0b111u) | ((uint)result[1] & 0b111u) << 3 | ((uint)result[2] & 0b111u) << 6;
             uint throwpart = throw_type & 0b1111u;
@@ -2408,7 +2419,7 @@ namespace XZDice
 
         private uint mkop_balance(int player, float amount)
         {
-            uint playerpart = (uint)player & 0b111u;
+            uint playerpart = playerToUint(player);
             uint signpart = (amount < 0.0f) ? 1u : 0u;
             uint amountpart = balanceAmountToUint(Mathf.Abs(amount));
             return OPCODE_BALANCE | playerpart << 8 | signpart << 15 | amountpart << 16;
@@ -2416,7 +2427,7 @@ namespace XZDice
 
         private uint mkop_oyabalance(int player, float amount)
         {
-            uint playerpart = (uint)player & 0b111u;
+            uint playerpart = playerToUint(player);
             uint signpart = (amount < 0.0f) ? 1u : 0u;
             uint amountpart = balanceAmountToUint(Mathf.Abs(amount));
             return OPCODE_OYABALANCE | playerpart << 8 | signpart << 15 | amountpart << 16;
@@ -2447,7 +2458,7 @@ namespace XZDice
 
         private uint mkop_oyareport(int player, bool[] playerActive)
         {
-            uint playerPart = (uint)player & 0b111u;
+            uint playerPart = playerToUint(player);
             uint playerActivePart = _mk_playerActivePart(playerActive);
 
             return OPCODE_OYAREPORT | playerPart << 8 | playerActivePart << 14;
@@ -2465,8 +2476,8 @@ namespace XZDice
 
         private uint mkop_oyachange(int fromPlayer, int toPlayer, bool[] playerActive)
         {
-            uint toPlayerPart = (uint)toPlayer & 0b111u;
-            uint fromPlayerPart = (uint)fromPlayer & 0b111u;
+            uint toPlayerPart = playerToUint(toPlayer);
+            uint fromPlayerPart = playerToUint(fromPlayer);
             uint playerActivePart = _mk_playerActivePart(playerActive);
             return OPCODE_OYACHANGE | toPlayerPart << 8 | fromPlayerPart << 11 | playerActivePart << 14;
         }
