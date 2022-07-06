@@ -104,15 +104,25 @@ namespace XZDice
         {
             if (Utilities.IsValid(Networking.LocalPlayer) && !Networking.IsOwner(gameObject)) {
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
+
+                foreach (GameObject die in dice) {
+                    if (!Networking.IsOwner(die))
+                        Networking.SetOwner(Networking.LocalPlayer, die);
+                }
             }
         }
 
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
-            if (player.isLocal) {
-                foreach (GameObject die in dice) {
-                    if (!player.IsOwner(die))
-                        Networking.SetOwner(player, die);
+            if (!Utilities.IsValid(Networking.LocalPlayer))
+                return;
+
+            if (player.playerId != Networking.LocalPlayer.playerId)
+                return;
+
+            foreach (GameObject die in dice) {
+                if (!Networking.IsOwner(die)) {
+                    Networking.SetOwner(player, die);
                 }
             }
         }
