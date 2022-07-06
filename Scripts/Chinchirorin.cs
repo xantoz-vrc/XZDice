@@ -7,7 +7,6 @@ using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 using UnityEngine.UI;
 using TMPro;
-using UCS;
 
 namespace XZDice
 {
@@ -69,7 +68,7 @@ namespace XZDice
 
         private readonly bool SPAM = true; // Enable spam level debug logs
 
-        private UdonChips udonChips = null;
+        private UdonBehaviour udonChips = null;
 
         private bool langJp = false;
 
@@ -195,7 +194,7 @@ namespace XZDice
             if (diceSpawns.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("diceSpawns must be {0} long", MAX_PLAYERS));
 
-            udonChips = GameObject.Find("UdonChips").GetComponent<UdonChips>();
+            udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
 
             ResetClientVariables();
             ResetServerVariables();
@@ -247,6 +246,18 @@ namespace XZDice
             timeoutTimeOya = float.NaN;
             state = -1;
         }
+
+
+        private string formatChips(float amount)
+        {
+            string formatString = (string)udonChips.GetProgramVariable("format");
+            return string.Format(formatString, amount);
+        }
+
+        private float getUdonChipsMoney()             { return (float)udonChips.GetProgramVariable("money"); }
+        private void  setUdonChipsMoney(float amount) { udonChips.SetProgramVariable("money", amount); }
+        private void  incUdonChipsMoney(float amount) { setUdonChipsMoney(getUdonChipsMoney() + amount); }
+        private void  decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
 
         // Client to server communication (but sent locally if we are master)
         private void SendToOya(string fnname)
@@ -384,7 +395,7 @@ namespace XZDice
                             maxbet -= c_bets[j];
                         }
                     }
-                    maxbet = Mathf.Clamp(Mathf.Min(maxbet, udonChips.money/3), 0.0f, MAXBET);
+                    maxbet = Mathf.Clamp(Mathf.Min(maxbet, getUdonChipsMoney()/3), 0.0f, MAXBET);
 
                     text.text = string.Format("Player {0}\nMax Bet: {1}", i + 1, formatChips(maxbet));
                 }
@@ -398,10 +409,10 @@ namespace XZDice
 
             GameLogDebug(string.Format("SendBetEvent({0}, {1}), totalBet={2}",
                                        player, bet, totalBet));
-            if ((totalBet + bet)*3 > udonChips.money) {
+            if ((totalBet + bet)*3 > getUdonChipsMoney()) {
                 PlayErrorSound();
                 GameLog(string.Format("<color=\"red\">You can at most bet a third of your total ({0})</color>",
-                                      formatChips(udonChips.money/3.0f)));
+                                      formatChips(getUdonChipsMoney()/3.0f)));
                 return;
             }
 
@@ -584,11 +595,6 @@ namespace XZDice
             SendToOya(fnname);
         }
 
-        private string formatChips(float amount)
-        {
-            return string.Format(udonChips.format, amount);
-        }
-
         // EventDiceResultXPlayerY
         public void EventDiceResult0Player1() { RecvEventDiceResult(0, 1); }
         public void EventDiceResult1Player1() { RecvEventDiceResult(1, 1); }
@@ -640,7 +646,7 @@ namespace XZDice
             if (isValidPlayer(iAmPlayer) && player == iAmPlayer) {
                 label.text =
                     string.Format("Player {0} (you)\nMoney: {1}\nBet: {2}",
-                                  player, formatChips(udonChips.money), formatChips(amount));
+                                  player, formatChips(getUdonChipsMoney()), formatChips(amount));
             } else {
                 label.text =
                     string.Format("Player {0}\nBet: {1}", player, formatChips(amount));
@@ -1009,7 +1015,7 @@ namespace XZDice
                 int player = opbalance_player(arg0);
                 float amount = opbalance_amount(arg0);
                 if (isValidPlayer(iAmPlayer) && player == iAmPlayer)
-                    udonChips.money += amount;
+                    incUdonChipsMoney(amount);
 
                 if (amount > 0.0f)
                     GameLog(string.Format("P{0} won <color=\"lime\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
@@ -1162,7 +1168,7 @@ namespace XZDice
 
         private float getOyaMaxBet()
         {
-            return Mathf.Clamp(Mathf.Min(udonChips.money/3, MAXBET), 0.0f, MAXBET);
+            return Mathf.Clamp(Mathf.Min(getUdonChipsMoney()/3, MAXBET), 0.0f, MAXBET);
         }
 
         private void MakeTableEmpty()
@@ -1530,20 +1536,20 @@ namespace XZDice
                 } else if (state == STATE_BALANCE) {
                     GameLogDebug("state = STATE_BALANCE");
 
-                    float oyaMoneyBefore = udonChips.money;
+                    float oyaMoneyBefore = getUdonChipsMoney();
 
                     for (int i = 0; i < MAX_PLAYERS; ++i) {
                         if (i + 1 != oya && playerActive[i]) {
                             float amount = bets[i]*betMultiplier[i];
                             GameLogDebug(string.Format("amount={1}, bets[{0}]={2}, betMultiplier[{0}]={3}",
                                                        i, amount, bets[i], betMultiplier[i]));
-                            udonChips.money -= amount;
+                            decUdonChipsMoney(amount);
                             Broadcast(mkop_balance(i+1, amount));
                         }
                     }
 
                     // Tell everyone how oyas balance changed
-                    Broadcast(mkop_oyabalance(oya, udonChips.money - oyaMoneyBefore));
+                    Broadcast(mkop_oyabalance(oya, getUdonChipsMoney() - oyaMoneyBefore));
 
                     if (oyaLost) {
                         // We failed. All gets reset and oya gets passed on
@@ -1682,9 +1688,9 @@ namespace XZDice
                 bool reject = false;
 
                 float totalBets = getTotalBets() + amount;
-                if (totalBets*3.0f > udonChips.money) {
+                if (totalBets*3.0f > getUdonChipsMoney()) {
                     GameLogDebug(string.Format("Reject bet, because oya might not be able to pay (getTotalBets()+amount={0}, udonChips.money={1})",
-                                               formatChips(totalBets), formatChips(udonChips.money)));
+                                               formatChips(totalBets), formatChips(getUdonChipsMoney())));
                     reject = true;
                 }
 
