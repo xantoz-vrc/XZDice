@@ -1182,7 +1182,7 @@ namespace XZDice
             BroadcastImmediate(mkop_nooya());
         }
 
-        private void CheckOwnerIsOya()
+        private bool CheckOwnerIsOya()
         {
             if (Networking.IsOwner(gameObject)) {
                 // If we were explicitly instructed to become oya, iAmPlayer
@@ -1191,8 +1191,11 @@ namespace XZDice
 
                 if (!isValidPlayer(iAmPlayer) || iAmPlayer != oya) {
                     MakeTableEmpty();
+
+                    return false;
                 }
             }
+            return true;
         }
 
         private void PrepareRecvThrow()
@@ -1575,6 +1578,21 @@ namespace XZDice
 
             GameLogDebug(string.Format("RecvEventPlayerJoin({0}), state={1}", player, state));
 
+            if (!Networking.IsOwner(gameObject)) {
+                string str = string.Format("RecvEventPlayerJoin when not owner (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                MakeTableEmpty();
+                return;
+            }
+
+            if (!CheckOwnerIsOya()) {
+                string str = string.Format("RecvEventPlayerJoin when not oya (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                return;
+            }
+
             if (!isValidPlayer(player)) {
                 Debug.LogError("invalid player variable");
                 GameLogError("invalid player variable");
@@ -1612,6 +1630,21 @@ namespace XZDice
             // STATE_WAITINGFORROUNDSTART, but could potentially happen elsewhere when shenanigans abound.
 
             GameLogDebug(string.Format("RecvEventPlayerLeave({0}), state={1}", player, state));
+
+            if (!Networking.IsOwner(gameObject)) {
+                string str = string.Format("RecvEventPlayerLeave when not owner (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                MakeTableEmpty();
+                return;
+            }
+
+            if (!CheckOwnerIsOya()) {
+                string str = string.Format("RecvEventPlayerLeave when not oya (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                return;
+            }
 
             if (!isValidPlayer(player)) {
                 Debug.LogError("invalid player variable");
@@ -1669,6 +1702,23 @@ namespace XZDice
         // This button is only ever visible to the owner (oya) so there's no need for networking.
         public void _BtnStartRound()
         {
+            GameLogDebug("_BtnStartRound");
+
+            if (!Networking.IsOwner(gameObject)) {
+                string str = string.Format("_BtnStartRound when not owner (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                MakeTableEmpty();
+                return;
+            }
+
+            if (!CheckOwnerIsOya()) {
+                string str = string.Format("_BtnStartRound when not oya (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                return;
+            }
+
             if (state == STATE_WAITINGFORROUNDSTART) {
                 startRoundButtons[oya - 1].SetActive(false);
 
@@ -1683,6 +1733,21 @@ namespace XZDice
         private void RecvBetEvent(int player, float amount)
         {
             GameLogDebug(string.Format("RecvBetEvent({0}, {1})", player, amount));
+
+            if (!Networking.IsOwner(gameObject)) {
+                string str = string.Format("RecvBetEvent when not owner (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                MakeTableEmpty();
+                return;
+            }
+
+            if (!CheckOwnerIsOya()) {
+                string str = string.Format("RecvBetEvent when not oya (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                return;
+            }
 
             if (state == STATE_WAITINGFORBETS) {
                 bool reject = false;
@@ -1712,6 +1777,23 @@ namespace XZDice
 
         private void RecvBetUndoEvent(int player)
         {
+            GameLogDebug("RecvBetUndoEvent");
+
+            if (!Networking.IsOwner(gameObject)) {
+                string str = string.Format("RecvBetUndoEvent when not owner (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                MakeTableEmpty();
+                return;
+            }
+
+            if (!CheckOwnerIsOya()) {
+                string str = string.Format("RecvBetUndoEvent when not oya (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                return;
+            }
+
             if (state == STATE_WAITINGFORBETS) {
                 bets[player - 1] = 0.0f;
                 Broadcast(mkop_betundo(player));
@@ -1721,6 +1803,21 @@ namespace XZDice
         private void RecvBetDoneEvent(int player)
         {
             GameLogDebug("RecvBetDoneEvent");
+
+            if (!Networking.IsOwner(gameObject)) {
+                string str = string.Format("RecvBetDoneEvent when not owner (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                MakeTableEmpty();
+                return;
+            }
+
+            if (!CheckOwnerIsOya()) {
+                string str = string.Format("RecvBetDoneEvent when not oya (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                return;
+            }
 
             // TODO: reject if players bet is too small (0.0f)
 
@@ -1745,7 +1842,7 @@ namespace XZDice
         private void ProcessDiceResult()
         {
             GameLogDebug("ProcessDiceResult");
-            
+
             // Assert: recvResult_cntr == 3 and that recvResult contains valid numbers
             if (recvResult_cntr != 3 || !validDiceResult(recvResult))
             {
@@ -1884,6 +1981,21 @@ namespace XZDice
         private void RecvEventDiceResult(int result, int player)
         {
             GameLogDebug(string.Format("RecvEventDiceResult({0}, {1})", result, player));
+
+            if (!Networking.IsOwner(gameObject)) {
+                string str = string.Format("RecvEventDiceResult when not owner (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                MakeTableEmpty();
+                return;
+            }
+
+            if (!CheckOwnerIsOya()) {
+                string str = string.Format("RecvEventDiceResult when not oya (iAmPlayer={0}, oya={1})", iAmPlayer, oya);
+                Debug.LogError(str);
+                GameLogError(str);
+                return;
+            }
             
             // Ignore the result if we got a result, but not for the player we expected (can happen
             // if a thrower times out at a very inopportune moment, such as when their dice are in mid-air)
