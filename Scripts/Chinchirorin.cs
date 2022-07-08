@@ -914,7 +914,8 @@ namespace XZDice
         {
             if (op_getop(arg0) == OPCODE_NOOYA ||
                 op_getop(arg0) == OPCODE_OYAREPORT ||
-                op_getop(arg0) == OPCODE_OYACHANGE) {
+                op_getop(arg0) == OPCODE_OYACHANGE ||
+                op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
                 synced = true;
             }
 
@@ -934,11 +935,16 @@ namespace XZDice
                                        oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
             } else if (op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
+                GameLogDebug("Waiting for players to join...");
+
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(false);
                 } else {
                     oya = opwaiting_oya(arg0);
                 }
+
+                bool[] pa = opwaiting_playerActive(arg0);
+                UpdateJoinButtons(pa);
                 SetTimeoutDisplay(oya, true);
                 ClearAllWaitingTexts();
                 SetWaitingText(oya, _jp("Waiting for players to join..."));
@@ -964,7 +970,7 @@ namespace XZDice
                 SetTimeoutDisplay(oya, true);
                 ClearAllWaitingTexts();
                 if (isValidPlayer(iAmPlayer)) {
-                    bool[] pa = opwaitingforroundstart_playeractive(arg0);
+                    bool[] pa = opwaiting_playerActive(arg0);
                     for (int i = 0; i < MAX_PLAYERS; ++i) {
                         if (pa[i] && i + 1 != oya) {
                             SetWaitingText(i + 1, _jp("Waiting on round start..."));
@@ -1618,7 +1624,7 @@ namespace XZDice
                     }
 
                     ArmOyaWaitingForPlayersTimeout();
-                    Broadcast(mkop_waitingforplayers(oya));
+                    Broadcast(mkop_waitingforplayers(oya, playerActive));
                     return; // Wait for players to increase
                 } else if (state == STATE_WAITINGFORBETS) {
                     GameLogDebug("state = STATE_WAITINGFORBETS");
@@ -2083,7 +2089,7 @@ namespace XZDice
 
             if (!(state == STATE_OYATHROW || state == STATE_THROW))
                 return;
-            
+
             // Below here we advance the state machine based on the result
             uint throw_type = _ProcessDiceResult_throw_type;
             int player = _ProcessDiceResult_player;
@@ -2421,10 +2427,11 @@ namespace XZDice
             return op & 0xFFu;
         }
 
-        private uint mkop_waitingforplayers(int oya)
+        private uint mkop_waitingforplayers(int oya, bool[] pa)
         {
             uint oyapart = playerToUint(oya);
-            return OPCODE_WAITINGFORPLAYERS | oyapart << 8;
+            uint playerActivePart = _mk_playerActivePart(pa);
+            return OPCODE_WAITINGFORPLAYERS | oyapart << 8 | playerActivePart << 14;
         }
 
         private uint mkop_waitingforbets(int oya)
@@ -2445,7 +2452,7 @@ namespace XZDice
             return (int)((op >> 8) & 0b111u);
         }
 
-        private bool[] opwaitingforroundstart_playeractive(uint op)
+        private bool[] opwaiting_playerActive(uint op)
         {
             return _get_playerActive(op, 14);
         }
