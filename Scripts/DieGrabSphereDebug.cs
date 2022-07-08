@@ -8,8 +8,8 @@ using TMPro;
 
 namespace XZDice
 {
-    // [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
+    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+    // [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class DieGrabSphereDebug : UdonSharpBehaviour
     {
         [SerializeField]
