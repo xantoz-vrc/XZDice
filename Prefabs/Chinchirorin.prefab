@@ -1722,7 +1722,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Gain: 120
   Far: 40
-  Near: 1
+  Near: 2
   VolumetricRadius: 0
   EnableSpatialization: 1
   UseAudioSourceVolumeCurve: 0
@@ -3664,7 +3664,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Gain: 120
   Far: 40
-  Near: 1
+  Near: 2
   VolumetricRadius: 0
   EnableSpatialization: 1
   UseAudioSourceVolumeCurve: 0
@@ -4396,7 +4396,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Gain: 120
   Far: 40
-  Near: 1
+  Near: 2
   VolumetricRadius: 0
   EnableSpatialization: 1
   UseAudioSourceVolumeCurve: 0
@@ -4675,7 +4675,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Gain: 160
   Far: 40
-  Near: 1
+  Near: 2
   VolumetricRadius: 0
   EnableSpatialization: 1
   UseAudioSourceVolumeCurve: 0
@@ -6083,7 +6083,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Gain: 120
   Far: 40
-  Near: 1
+  Near: 2
   VolumetricRadius: 0
   EnableSpatialization: 1
   UseAudioSourceVolumeCurve: 0
