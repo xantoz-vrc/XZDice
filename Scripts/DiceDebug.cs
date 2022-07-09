@@ -5,7 +5,11 @@ using VRC.Udon;
 using UnityEngine.UI;
 using TMPro;
 
+#if VITDECK_HIDE_MENUITEM
+namespace Vket2022Summer.Circle314
+#else
 namespace XZDice
+#endif
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class DiceDebug : UdonSharpBehaviour

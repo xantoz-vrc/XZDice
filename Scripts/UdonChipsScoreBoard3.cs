@@ -1,5 +1,4 @@
-﻿
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
@@ -8,7 +7,11 @@ using VRC.Udon.Common.Enums;
 using UnityEngine.UI;
 using TMPro;
 
+#if VITDECK_HIDE_MENUITEM
+namespace Vket2022Summer.Circle314
+#else
 namespace XZDice
+#endif
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class UdonChipsScoreBoard3 : UdonSharpBehaviour
