@@ -866,13 +866,17 @@ namespace XZDice
                 (tt > 0 && tt <= 6 && tt < oya_tt)      ? "#ff0000" : "#ff00ff";
         }
 
-        private void SetToBeatLabels(int[] result, uint throw_type)
+        private void SetToBeatLabels(int[] result, uint throw_type, int oya)
         {
             string text = (langJp) ? "親の出目: " : "To beat:\n";
             text += string.Format("{0} {1} {2} = <color={3}>{4}</color>",
                                   result[0], result[1], result[2],
                                   getThrowTypeColor(throw_type), formatThrowType(throw_type));
+
+            int player = 1;
             foreach (var label in toBeatLabels) {
+                if (player++ == oya)
+                    continue;
                 label.text = text;
                 label.gameObject.SetActive(true);
             }
@@ -899,7 +903,7 @@ namespace XZDice
 
             // Show oyas result to everyone
             if (oya) {
-                SetToBeatLabels(result, throw_type);
+                SetToBeatLabels(result, throw_type, player);
 
                 for (int i = 0; i < kachingLabels.Length; ++i) {
                     if (i + 1 != player) {
