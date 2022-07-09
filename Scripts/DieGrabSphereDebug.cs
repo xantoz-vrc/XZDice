@@ -5,10 +5,13 @@ using VRC.Udon;
 using UnityEngine.UI;
 using TMPro;
 
+#if VITDECK_HIDE_MENUITEM
+namespace Vket2022Summer.Circle314
+#else
 namespace XZDice
+#endif
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    // [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
+    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class DieGrabSphereDebug : UdonSharpBehaviour
     {
         [SerializeField]
@@ -17,33 +20,21 @@ namespace XZDice
         [SerializeField]
         TextMeshProUGUI textMeshPro = null;
 
-        // [SerializeField]
-        // private Text text = null;
-
         // [UdonSynced]
         private string output = "";
 
+#if VITDECK_HIDE_MENUITEM
+        public void _VketStart()
+#else
         void Start()
+#endif
         {
-            if (textMeshPro == null) {
-                textMeshPro = GetComponent<TextMeshProUGUI>();
-            }
-
-            // if(text == null) {
-            //     text = GetComponent<Text>();
-            // }
-
             dieGrabSphere._AddListener(this);
-
             AddText("Start");
         }
 
         public void ApplyText()
         {
-            // if (text != null) {
-            //     text.text = output;
-            // }
-
             if (textMeshPro != null) {
                 textMeshPro.text = output;
             }

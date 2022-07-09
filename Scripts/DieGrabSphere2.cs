@@ -5,7 +5,11 @@ using VRC.SDK3.Components;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 
+#if VITDECK_HIDE_MENUITEM
+namespace Vket2022Summer.Circle314
+#else
 namespace XZDice
+#endif
 {
     // Optimized variant of DieGrabSphere that works with dice without their own UdonBehaviour.
     // It assumes that the dice are not individually pickupable (no VRC_Pickup).
@@ -250,7 +254,11 @@ namespace XZDice
             return ListMinIndex(angles) + 1;
         }
 
+#if VITDECK_HIDE_MENUITEM
+        public void _VketFixedUpdate()
+#else
         private void FixedUpdate()
+#endif
         {
             // Have the dice follow the grabsphere while it is being grabbed
             // TODO: replace with parentconstraint usage?
