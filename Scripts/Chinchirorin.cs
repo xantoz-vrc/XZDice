@@ -1176,6 +1176,7 @@ namespace XZDice
                 int player = opyourthrow_player(arg0);
                 int rethrow = opyourthrow_rethrow(arg0);
 
+                dieGrabSphere._SetPickupable(false);
                 if (iAmPlayer == player) {
                     dieGrabSphere._BecomeOwner();
                     dieGrabSphere._TeleportTo(diceSpawns[player - 1]);

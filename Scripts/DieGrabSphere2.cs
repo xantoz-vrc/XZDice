@@ -142,10 +142,32 @@ namespace XZDice
             }
         }
 
+        private bool acquiredOriginalColor = false;
+        private Color originalColor;
+        private Color originalEmissionColor;
         public void _SetPickupable(bool val)
         {
+            MeshRenderer mr = GetComponent<MeshRenderer>();
+            if (mr != null) {
+                Material mat = mr.material;
+                if (!acquiredOriginalColor) {
+                    originalColor = mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.magenta;
+                    originalEmissionColor = mat.HasProperty("_EmissionColor") ? mat.GetColor("_EmissionColor") : Color.magenta;
+                    acquiredOriginalColor = true;
+                }
+
+                if (mat.HasProperty("_Color")) {
+                    mat.SetColor("_Color", (val) ? originalColor : Color.grey);
+                }
+
+                if (mat.HasProperty("_EmissionColor")) {
+                    mat.SetColor("_EmissionColor", (val) ? originalEmissionColor : Color.grey);
+                }
+            }
+
             VRC_Pickup p = (VRC_Pickup)GetComponent(typeof(VRC_Pickup));
             p.pickupable = val;
+
         }
 
         public void _SetPickupableTrue() { _SetPickupable(true); }
