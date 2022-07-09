@@ -165,9 +165,7 @@ namespace XZDice
                 }
             }
 
-            VRC_Pickup p = (VRC_Pickup)GetComponent(typeof(VRC_Pickup));
-            p.pickupable = val;
-
+            pickup.pickupable = val;
         }
 
         public void _SetPickupableTrue() { _SetPickupable(true); }
@@ -200,12 +198,6 @@ namespace XZDice
         {
             int idx = 0;
             foreach (GameObject die in dice) {
-                VRC_Pickup p = (VRC_Pickup)die.GetComponent(typeof(VRC_Pickup));
-                if (p != null) {
-                    p.Drop();
-                    p.pickupable = false;
-                }
-
                 Rigidbody rb = die.GetComponent<Rigidbody>();
                 rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f));
                 rb.useGravity = false;
