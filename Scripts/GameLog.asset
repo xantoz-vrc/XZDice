@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: GameLog
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 674d97c8229819a4d9b32a32146b1dc6,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 84d7c1cbba640144a99b755cb67012f3,
     type: 2}
   udonAssembly: 
   assemblyError: 

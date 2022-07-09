@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: DiceDebug
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 3b4ff5732a269f04b9d0bdac34dfed18,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: e24bbb2ac51c71748a42a3420e4d83ac,
     type: 2}
   udonAssembly: 
   assemblyError: 
@@ -62,7 +62,7 @@ MonoBehaviour:
       Data: 4|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: XZDice.Die[], Assembly-CSharp
+      Data: Vket2022Summer.Circle314.Die[], Assembly-CSharp
     - Name: 
       Entry: 8
       Data: 

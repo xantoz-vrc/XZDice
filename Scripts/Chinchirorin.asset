@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: Chinchirorin
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: abc1079216dcc174b9fc4a95acd6b9b1,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: f7ef78d97a1a60944a803393ca6747f9,
     type: 2}
   udonAssembly: 
   assemblyError: 
@@ -63,7 +63,7 @@ MonoBehaviour:
       Data: 4|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: XZDice.DieGrabSphere2, Assembly-CSharp
+      Data: Vket2022Summer.Circle314.DieGrabSphere2, Assembly-CSharp
     - Name: 
       Entry: 8
       Data: 
@@ -1079,7 +1079,7 @@ MonoBehaviour:
       Data: 74|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: XZDice.GameLog, Assembly-CSharp
+      Data: Vket2022Summer.Circle314.GameLog, Assembly-CSharp
     - Name: 
       Entry: 8
       Data: 
