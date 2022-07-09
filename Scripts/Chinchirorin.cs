@@ -3,6 +3,7 @@
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
+using VRC.SDK3.Components;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 using UnityEngine.UI;
@@ -48,6 +49,9 @@ namespace XZDice
 
         [SerializeField]
         private TextMeshProUGUI[] resultPopupLabels;
+
+        [SerializeField]
+        private GameObject oyaMarker;
 
         [SerializeField]
         private AudioSource[] diceSounds;
@@ -109,6 +113,8 @@ namespace XZDice
         private float[] bets;
         private bool[] playerActive;
         private int state = -1; // Used only by owner (drives the oya statemachine)
+
+        private bool showOyaMarker = false;
 
         // These variables are used when the oya sends messages to other players.
         // E.g. when to change udonchips balances;
@@ -944,6 +950,44 @@ namespace XZDice
             timeoutDisplays[player - 1].SetActive(enable);
         }
 
+        private void OyaMarkerUpdate()
+        {
+            VRCPlayerApi player = Networking.LocalPlayer;
+            if (!Utilities.IsValid(player))
+                return;
+
+            if (!Networking.IsOwner(oyaMarker))
+                Networking.SetOwner(player, oyaMarker);
+
+            Vector3 pos = player.GetBonePosition(HumanBodyBones.Head);
+            pos.y += 0.25f;
+
+            oyaMarker.transform.position = pos;
+        }
+
+        private void ShowOyaMarker()
+        {
+            if (isOya()) {
+                OyaMarkerUpdate();
+                VRCObjectSync os = (VRCObjectSync)oyaMarker.GetComponent(typeof(VRCObjectSync));
+                os.FlagDiscontinuity();
+            }
+
+            showOyaMarker = true;
+            oyaMarker.SetActive(true);
+        }
+
+        private void HideOyaMarker()
+        {
+            if (isOya()) {
+                VRCObjectSync os = (VRCObjectSync)oyaMarker.GetComponent(typeof(VRCObjectSync));
+                os.Respawn();
+            }
+
+            showOyaMarker = false;
+            oyaMarker.SetActive(false);
+        }
+
         public override void OnOwnershipTransferred(VRCPlayerApi player)
         {
             CheckOwnerIsOya();
@@ -973,6 +1017,7 @@ namespace XZDice
                          string.Format("P{0} is the dealer (playerActive: {1},{2},{3},{4})",
                                        oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
+                ShowOyaMarker();
             } else if (op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
                 GameLogDebug("Waiting for players to join...");
 
@@ -1307,6 +1352,8 @@ namespace XZDice
                 bets[toPlayer - 1] = 0.0f;
                 UpdateBetScreens();
 
+                HideOyaMarker();
+
                 if (isValidPlayer(iAmPlayer) && toPlayer == iAmPlayer) {
                     // Become owner/oya
                     if (!Networking.IsOwner(gameObject))
@@ -1358,6 +1405,7 @@ namespace XZDice
                 int player = i + 1;
                 SetBetLabel(player, 0.0f);
             }
+            HideOyaMarker();
             dieGrabSphere._HideWithDice();
         }
 
@@ -2861,6 +2909,10 @@ namespace XZDice
         {
             if (!isOwner())
                 return;
+
+            if (showOyaMarker) {
+                OyaMarkerUpdate();
+            }
 
             if (opqueue_Pending() && !serializing) {
                 opqueue_Serialize();
