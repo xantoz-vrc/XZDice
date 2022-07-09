@@ -889,7 +889,9 @@ namespace XZDice
 
         private void SetToBeatLabels(int[] result, uint throw_type, int oya)
         {
-            if (throw_type == THROW_MENASHI)
+            // Only time something will go on is if the oya throws between 2 and 5 points, anything
+            // else immediately ends the round.
+            if (!(THROW_2 <= throw_type && throw_type <= THROW_5))
                 return;
 
             string text = (langJp) ? "親の出目: " : "To beat:\n";
@@ -975,7 +977,7 @@ namespace XZDice
                 Networking.SetOwner(player, oyaMarker);
 
             Vector3 pos = player.GetBonePosition(HumanBodyBones.Head);
-            pos.y += 0.25f;
+            pos.y += 0.4f;
 
             oyaMarker.transform.position = pos;
         }
@@ -1470,7 +1472,7 @@ namespace XZDice
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
 
-            GameLog("Oya disappeared: Game reset");
+            GameLog("Dealer disappeared: Game reset");
             opqueue_Reset();
             BroadcastImmediate(mkop_nooya());
         }
