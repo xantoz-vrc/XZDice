@@ -687,20 +687,12 @@ namespace XZDice
         public void _DiceResult5() { SendDiceResultEvent(5, iAmPlayer); }
         public void _DiceResult6() { SendDiceResultEvent(6, iAmPlayer); }
 
-        private bool diceSoundPlaying = false;
         public void PlayDiceSound()
         {
-            if (diceSounds != null && diceSounds.Length > 0 && !diceSoundPlaying) {
+            if (diceSounds != null && diceSounds.Length > 0) {
                 int idx = Mathf.RoundToInt(Random.Range(0.0f, (float)(diceSounds.Length - 1)));
-                diceSoundPlaying = true;
                 diceSounds[idx].Play();
-                SendCustomEventDelayedSeconds(nameof(_ResetDiceSound), 3.0f);
             }
-        }
-
-        public void _ResetDiceSound()
-        {
-            diceSoundPlaying = false;
         }
 
         private bool kachingSoundPlaying = false;
