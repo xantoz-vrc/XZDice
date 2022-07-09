@@ -800,12 +800,23 @@ namespace XZDice
             var label = betLabels[player - 1];
 
             if (isValidPlayer(iAmPlayer) && player == iAmPlayer) {
-                label.text =
-                    string.Format("Player {0} (you)\nMoney: {1}\nBet: {2}",
-                                  player, formatChips(getUdonChipsMoney()), formatChips(amount));
+                if (isOya()) {
+                    label.text =
+                        string.Format("Player {0}<sup><color=\"yellow\">親</color></sup> (you)\nMoney: {1}\n",
+                                      player, formatChips(getUdonChipsMoney()));
+                } else {
+                    label.text =
+                        string.Format("Player {0} (you)\nMoney: {1}\nBet: {2}",
+                                      player, formatChips(getUdonChipsMoney()), formatChips(amount));
+                }
             } else {
-                label.text =
-                    string.Format("Player {0}\nBet: {1}", player, formatChips(amount));
+                if (player == oya) {
+                    label.text =
+                        string.Format("Player {0}<sup><color=\"yellow\">親</color></sup>", player);
+                } else {
+                    label.text =
+                        string.Format("Player {0}\nBet: {1}", player, formatChips(amount));
+                }
             }
         }
 
