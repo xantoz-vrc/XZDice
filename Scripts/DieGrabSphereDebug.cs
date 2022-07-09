@@ -31,6 +31,7 @@ namespace XZDice
         {
             dieGrabSphere._AddListener(this);
             AddText("Start");
+            dieGrabSphere._SetPickupable(true);
         }
 
         public void ApplyText()

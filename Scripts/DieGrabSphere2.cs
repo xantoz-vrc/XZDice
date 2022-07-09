@@ -263,6 +263,22 @@ namespace XZDice
         }
 
 #if VITDECK_HIDE_MENUITEM
+        public void _VketOnBoothEnter()
+        {
+            _SetPickupable(true);
+        }
+
+        public void _VketOnBoothExit()
+        {
+            if (Networking.IsOwner(gameObject)) {
+                pickup.Drop();
+            }
+
+            _SetPickupable(false);
+        }
+#endif
+
+#if VITDECK_HIDE_MENUITEM
         public void _VketFixedUpdate()
 #else
         private void FixedUpdate()
