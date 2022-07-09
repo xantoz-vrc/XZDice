@@ -1466,7 +1466,7 @@ namespace XZDice
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
 
-            GameLog("Oya disappeared: Game reset");
+            GameLog("Dealer disappeared: Game reset");
             opqueue_Reset();
             BroadcastImmediate(mkop_nooya());
         }
