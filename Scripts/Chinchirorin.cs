@@ -908,7 +908,7 @@ namespace XZDice
                         // Toggling the gameobject restarts the animation
                         lbl.gameObject.SetActive(false);
                         lbl.text = string.Format("<size=40%>{0}</size>\n<color={1}>{2}</color>",
-                                                 (langJp) ? "親の出目" : "Oya Result", color, formatThrowType(throw_type));
+                                                 (langJp) ? "親の出目" : "Dealers Result", color, formatThrowType(throw_type));
                         lbl.gameObject.SetActive(true);
                     }
                 }
@@ -961,8 +961,8 @@ namespace XZDice
 
                 oya = player;
                 bool[] pa = opoyareport_playerActive(arg0);
-                GameLog2(string.Format("P{0} is oya", oya),
-                         string.Format("P{0} is oya (playerActive: {1},{2},{3},{4})",
+                GameLog2(string.Format("P{0} is the dealer", oya),
+                         string.Format("P{0} is the dealer (playerActive: {1},{2},{3},{4})",
                                        oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
             } else if (op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
@@ -990,9 +990,10 @@ namespace XZDice
                 ClearAllWaitingTexts();
                 SetWaitingText(oya, _jp("Waiting on bets..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORROUNDSTART) {
-                GameLog("Waiting for oya to start the round...");
+                GameLog("Waiting for dealer to start the round...");
 
                 if (isOya()) {
+
                     startRoundButtons[oya - 1].SetActive(true);
                 } else {
                     oya = opwaiting_oya(arg0);
@@ -1072,12 +1073,12 @@ namespace XZDice
             } else if (op_getop(arg0) == OPCODE_BETREJECT) {
                 int player = opbet_getplayer(arg0);
                 float total = opbet_gettotal(arg0);
-                GameLogDebug(string.Format("Oya rejected bet from P{0}", player, formatChips(total)));
+                GameLogDebug(string.Format("Dealer rejected bet from P{0}", player, formatChips(total)));
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
                     totalBet = total;
                     PlayErrorSound();
-                    GameLog("<color=\"red\">Oya rejected bet as too big</color>");
+                    GameLog("<color=\"red\">Dealer rejected bet as too big</color>");
                     GameObject bs = betScreens[player - 1];
                     SetBetScreenButtons(bs, true, total > 0.0f);
                 }
@@ -1220,10 +1221,10 @@ namespace XZDice
                 uint throw_type = opthrow_type(arg0);
                 c_oyaThrowType = throw_type; // Save for later
                 if (throw_type == THROW_SHONBEN)
-                    GameLog(string.Format("P{0} (oya) threw <color={1}>outside</color>",
+                    GameLog(string.Format("P{0} (dealer) threw <color={1}>outside</color>",
                                           player, getThrowTypeColor(throw_type)));
                 else
-                    GameLog(string.Format("P{0} (oya) threw {1} {2} {3}: <color={4}>{5}</color>",
+                    GameLog(string.Format("P{0} (dealer) threw {1} {2} {3}: <color={4}>{5}</color>",
                                           player, result[0], result[1], result[2],
                                           getThrowTypeColor(throw_type), formatThrowType(throw_type)));
 
@@ -1251,11 +1252,11 @@ namespace XZDice
                 float amount = opbalance_amount(arg0);
 
                 if (amount > 0.0f)
-                    GameLog(string.Format("P{0} (oya) won <color=\"lime\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                    GameLog(string.Format("P{0} (dealer) won <color=\"lime\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
                 else if (amount < 0.0f)
-                    GameLog(string.Format("P{0} (oya) lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                    GameLog(string.Format("P{0} (dealer) lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
                 else
-                    GameLog(string.Format("P{0} (oya) <color=\"yellow\">no change</color>", player));
+                    GameLog(string.Format("P{0} (dealer) <color=\"yellow\">no change</color>", player));
 
                 PlayKachingSound();
                 KachingLabel(player, amount);
@@ -1271,12 +1272,12 @@ namespace XZDice
 
                 // TODO: display clearly who is oya (change playerlabel?)
                 if (!isValidPlayer(fromPlayer))
-                    GameLog2(string.Format("P{0} became oya", toPlayer),
-                             string.Format("P{0} became oya (playerActive: {1},{2},{3},{4})",
+                    GameLog2(string.Format("P{0} wants to play", toPlayer),
+                             string.Format("P{0} wants to play (playerActive: {1},{2},{3},{4})",
                                            toPlayer, pa[0], pa[1], pa[2], pa[3]));
                 else
-                    GameLog2(string.Format("Oya P{0} -> P{1}", fromPlayer, toPlayer),
-                             string.Format("Oya P{0} -> P{1} (playerActive: {2},{3},{4},{5})",
+                    GameLog2(string.Format("Dealer change P{0} -> P{1}", fromPlayer, toPlayer),
+                             string.Format("Dealer change P{0} -> P{1} (playerActive: {2},{3},{4},{5})",
                                            fromPlayer, toPlayer, pa[0], pa[1], pa[2], pa[3]));
 
                 // Nobody gets to leave or join until oyareport, because it can
@@ -1960,7 +1961,7 @@ namespace XZDice
 
                 // Disable join/leave buttons everywhere
                 Broadcast(mkop_disablejoinbuttons());
-                
+
                 state = STATE_PREPARE_OYATHROW;
                 _OyaStateMachine();
             }
@@ -2390,19 +2391,19 @@ namespace XZDice
                     return throw_type.ToString() + " points";
 
                 if (throw_type == THROW_ZOROME)
-                    return "Zorome";
+                    return "Triple";
 
                 if (throw_type == THROW_456)
-                    return "Shigoro";
+                    return "4-5-6";
 
                 if (throw_type == THROW_123)
-                    return "Hifumi";
+                    return "1-2-3";
 
                 if (throw_type == THROW_MENASHI)
-                    return "No points";
+                    return "Indeterminate";
 
                 if (throw_type == THROW_SHONBEN)
-                    return "Shonben";
+                    return "Outside";
             }
 
             return "???";
