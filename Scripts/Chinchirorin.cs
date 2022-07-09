@@ -899,9 +899,10 @@ namespace XZDice
 
             // Toggling the gameobject restarts the animation
             label.gameObject.SetActive(false);
-            label.text = string.Format("<size=40%>{0} {1} {2}</size>\n<color={3}>{4}</color>",
-                                       result[0], result[1], result[2],
-                                       color, formatThrowType(throw_type));
+
+            string resultStr = (throw_type == THROW_SHONBEN) ? "" : string.Format("{0} {1} {2}", result[0], result[1], result[2]);
+            label.text = string.Format("<size=40%>{0}</size>\n<color={1}>{2}</color>",
+                                       resultStr, color, formatThrowType(throw_type));
             label.gameObject.SetActive(true);
 
             // Show oyas result to everyone
