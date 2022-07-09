@@ -2405,7 +2405,7 @@ namespace XZDice
                     return "1-2-3";
 
                 if (throw_type == THROW_MENASHI)
-                    return "Indeterminate";
+                    return "No points";
 
                 if (throw_type == THROW_SHONBEN)
                     return "Outside";
