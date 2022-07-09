@@ -92,6 +92,7 @@ namespace XZDice
         private float totalBet = 0.0f;
         private float oyaMaxBet = float.NaN;
         private float[] c_bets;
+        private uint c_oyaThrowType;
 
         // Server variables (only used on server)
         private bool[] betDone; // Used only by owner
@@ -235,6 +236,7 @@ namespace XZDice
             totalBet = 0.0f;
             oyaMaxBet = float.NaN;
             c_bets = new float[MAX_PLAYERS];
+            c_oyaThrowType = THROW_INVALID;
             pendingPlayer = -1;
             pendingPlayerNonce = -1;
             // Below is left out on purpose
@@ -846,9 +848,22 @@ namespace XZDice
         private string getThrowTypeColor(uint throw_type)
         {
             return
+                (throw_type == THROW_INVALID)                      ? "#ff00ff" :
                 (throw_type == THROW_1 || throw_type == THROW_123) ? "#ff0000" :
-                (throw_type == THROW_SHONBEN)                      ? "#ff00ff" :
+                (throw_type == THROW_SHONBEN)                      ? "#a52a2a" :
                 (throw_type == THROW_MENASHI)                      ? "#c0c0c0" : "#00ff00";
+        }
+
+        private string getRelativeThrowTypeColor(uint tt, uint oya_tt)
+        {
+            return
+                (tt == THROW_123)                       ? "#ff0000" :
+                (tt == THROW_SHONBEN)                   ? "#a52a2a" :
+                (tt == THROW_MENASHI)                   ? "#c0c0c0" :
+                (tt == THROW_ZOROME || tt == THROW_456) ? "#00ff00" :
+                (tt > 0 && tt <= 6 && tt > oya_tt)      ? "#00ff00" :
+                (tt > 0 && tt <= 6 && tt == oya_tt)     ? "#ffff00" :
+                (tt > 0 && tt <= 6 && tt < oya_tt)      ? "#ff0000" : "#ff00ff";
         }
 
         private void SetToBeatLabels(int[] result, uint throw_type)
@@ -870,7 +885,8 @@ namespace XZDice
                 result = new int[3];
             }
 
-            string color = getThrowTypeColor(throw_type);
+            string color =
+                (oya) ? getThrowTypeColor(throw_type) : getRelativeThrowTypeColor(throw_type, c_oyaThrowType);
 
             var label = resultPopupLabels[player - 1];
 
@@ -1189,11 +1205,12 @@ namespace XZDice
                 uint throw_type = opthrow_type(arg0);
                 if (throw_type == THROW_SHONBEN)
                     GameLog(string.Format("P{0} threw <color={1}>outside</color>",
-                                          player, getThrowTypeColor(throw_type)));
+                                          player, getRelativeThrowTypeColor(throw_type, c_oyaThrowType)));
                 else
                     GameLog(string.Format("P{0} threw {1} {2} {3}: <color={4}>{5}</color>",
                                           player, result[0], result[1], result[2],
-                                          getThrowTypeColor(throw_type), formatThrowType(throw_type)));
+                                          getRelativeThrowTypeColor(throw_type, c_oyaThrowType),
+                                          formatThrowType(throw_type)));
 
                 ShowThrowResult(player, result, throw_type, false);
                 SetTimeoutDisplay(player, false);
@@ -1201,6 +1218,7 @@ namespace XZDice
                 int player = opthrow_player(arg0);
                 int[] result = opthrow_result(arg0);
                 uint throw_type = opthrow_type(arg0);
+                c_oyaThrowType = throw_type; // Save for later
                 if (throw_type == THROW_SHONBEN)
                     GameLog(string.Format("P{0} (oya) threw <color={1}>outside</color>",
                                           player, getThrowTypeColor(throw_type)));
