@@ -74,7 +74,6 @@ namespace XZDice
             if (insideBowlCollider == null)
                 return true;
 
-            bool inside = false;
             Collider[] colliders = Physics.OverlapBox(die.transform.position, die.GetComponent<Collider>().bounds.extents);
             // Collider[] colliders = Physics.OverlapSphere(die.transform.position, 0.05f);
             foreach (Collider col in colliders) {
