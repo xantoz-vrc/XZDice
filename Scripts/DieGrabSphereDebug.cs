@@ -1,5 +1,4 @@
-﻿
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
@@ -13,13 +12,13 @@ namespace XZDice
     public class DieGrabSphereDebug : UdonSharpBehaviour
     {
         [SerializeField]
-        private DieGrabSphere dieGrabSphere;
+        private DieGrabSphere2 dieGrabSphere;
 
         [SerializeField]
         TextMeshProUGUI textMeshPro = null;
 
-        [SerializeField]
-        private Text text = null;
+        // [SerializeField]
+        // private Text text = null;
 
         // [UdonSynced]
         private string output = "";
@@ -30,9 +29,9 @@ namespace XZDice
                 textMeshPro = GetComponent<TextMeshProUGUI>();
             }
 
-            if(text == null) {
-                text = GetComponent<Text>();
-            }
+            // if(text == null) {
+            //     text = GetComponent<Text>();
+            // }
 
             dieGrabSphere._AddListener(this);
 
@@ -41,9 +40,9 @@ namespace XZDice
 
         public void ApplyText()
         {
-            if (text != null) {
-                text.text = output;
-            }
+            // if (text != null) {
+            //     text.text = output;
+            // }
 
             if (textMeshPro != null) {
                 textMeshPro.text = output;
@@ -52,10 +51,9 @@ namespace XZDice
 
         private void BecomeOwner()
         {
-            if (Utilities.IsValid(Networking.LocalPlayer) && !Networking.IsOwner(gameObject))
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
+            // if (Utilities.IsValid(Networking.LocalPlayer) && !Networking.IsOwner(gameObject))
+            //     Networking.SetOwner(Networking.LocalPlayer, gameObject);
         }
-        
 
         // public override void OnDeserialization()
         // {

@@ -14,7 +14,7 @@ namespace XZDice
     public class Chinchirorin : UdonSharpBehaviour
     {
         [SerializeField]
-        private DieGrabSphere dieGrabSphere;
+        private DieGrabSphere2 dieGrabSphere;
 
         [SerializeField]
         private GameObject[] joinButtons;
@@ -2198,7 +2198,7 @@ namespace XZDice
                 GameLogError(str);
                 return;
             }
-            
+
             // Ignore the result if we got a result, but not for the player we expected (can happen
             // if a thrower times out at a very inopportune moment, such as when their dice are in mid-air)
             if (state == STATE_OYATHROW) {
