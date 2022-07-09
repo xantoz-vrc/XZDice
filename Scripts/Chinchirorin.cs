@@ -973,7 +973,7 @@ namespace XZDice
                 Networking.SetOwner(player, oyaMarker);
 
             Vector3 pos = player.GetBonePosition(HumanBodyBones.Head);
-            pos.y += 0.25f;
+            pos.y += 0.4f;
 
             oyaMarker.transform.position = pos;
         }
