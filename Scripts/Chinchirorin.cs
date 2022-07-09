@@ -868,6 +868,9 @@ namespace XZDice
 
         private void SetToBeatLabels(int[] result, uint throw_type, int oya)
         {
+            if (throw_type == THROW_MENASHI)
+                return;
+
             string text = (langJp) ? "親の出目: " : "To beat:\n";
             text += string.Format("{0} {1} {2} = <color={3}>{4}</color>",
                                   result[0], result[1], result[2],
