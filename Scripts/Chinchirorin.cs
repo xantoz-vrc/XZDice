@@ -889,7 +889,9 @@ namespace XZDice
 
         private void SetToBeatLabels(int[] result, uint throw_type, int oya)
         {
-            if (throw_type == THROW_MENASHI)
+            // Only time something will go on is if the oya throws between 2 and 5 points, anything
+            // else immediately ends the round.
+            if (!(THROW_2 <= throw_type && throw_type <= THROW_5))
                 return;
 
             string text = (langJp) ? "親の出目: " : "To beat:\n";
