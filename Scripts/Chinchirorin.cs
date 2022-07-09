@@ -26,6 +26,9 @@ namespace XZDice
         private TextMeshProUGUI[] betLabels;
 
         [SerializeField]
+        private TextMeshProUGUI[] toBeatLabels;
+
+        [SerializeField]
         [Tooltip("Positions where the dice spawn for each player")]
         private Transform[] diceSpawns;
 
@@ -181,6 +184,15 @@ namespace XZDice
             if (betScreens.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("betScreens must be {0} long", MAX_PLAYERS));
 
+            if (betLabels.Length != MAX_PLAYERS)
+                Debug.LogError(string.Format("betLabels must be {0} long", MAX_PLAYERS));
+
+            if (toBeatLabels.Length != MAX_PLAYERS)
+                Debug.LogError(string.Format("toBeatLabels must be {0} long", MAX_PLAYERS));
+
+            if (diceSpawns.Length != MAX_PLAYERS)
+                Debug.LogError(string.Format("diceSpawns must be {0} long", MAX_PLAYERS));
+
             if (timeoutDisplays.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("timeoutDisplays must be {0} long", MAX_PLAYERS));
 
@@ -192,9 +204,6 @@ namespace XZDice
 
             if (resultPopupLabels.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("resultPopupLabels must be {0} long", MAX_PLAYERS));
-
-            if (diceSpawns.Length != MAX_PLAYERS)
-                Debug.LogError(string.Format("diceSpawns must be {0} long", MAX_PLAYERS));
 
             udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
 
@@ -842,6 +851,18 @@ namespace XZDice
                 (throw_type == THROW_MENASHI)                      ? "#c0c0c0" : "#00ff00";
         }
 
+        private void SetToBeatLabels(int[] result, uint throw_type)
+        {
+            string text = (langJp) ? "親の出目: " : "To beat:\n";
+            text += string.Format("{0} {1} {2} = <color={3}>{4}</color>",
+                                  result[0], result[1], result[2],
+                                  getThrowTypeColor(throw_type), formatThrowType(throw_type));
+            foreach (var label in toBeatLabels) {
+                label.text = text;
+                label.gameObject.SetActive(true);
+            }
+        }
+
         private void ShowThrowResult(int player, int[] result, uint throw_type, bool oya)
         {
             if (result.Length != 3) {
@@ -862,6 +883,8 @@ namespace XZDice
 
             // Show oyas result to everyone
             if (oya) {
+                SetToBeatLabels(result, throw_type);
+
                 for (int i = 0; i < kachingLabels.Length; ++i) {
                     if (i + 1 != player) {
                         var lbl = resultPopupLabels[i];
@@ -869,7 +892,7 @@ namespace XZDice
                         // Toggling the gameobject restarts the animation
                         lbl.gameObject.SetActive(false);
                         lbl.text = string.Format("<size=40%>{0}</size>\n<color={1}>{2}</color>",
-                                                 _jp("Oya Result"), color, formatThrowType(throw_type));
+                                                 (langJp) ? "親の出目" : "Oya Result", color, formatThrowType(throw_type));
                         lbl.gameObject.SetActive(true);
                     }
                 }
@@ -1292,6 +1315,7 @@ namespace XZDice
         private void ResetTable()
         {
             for (int i = 0; i < MAX_PLAYERS; ++i) {
+                toBeatLabels[i].gameObject.SetActive(false);
                 betScreens[i].SetActive(false);
                 startRoundButtons[i].SetActive(false);
                 timeoutDisplays[i].SetActive(false);
