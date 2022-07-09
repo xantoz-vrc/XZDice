@@ -178,7 +178,7 @@ MonoBehaviour:
   m_Script: {fileID: -1783056023, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AllowCollisionOwnershipTransfer: 1
+  AllowCollisionOwnershipTransfer: 0
 --- !u!1001 &7041342365003778172
 PrefabInstance:
   m_ObjectHideFlags: 0
