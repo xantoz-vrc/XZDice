@@ -45,6 +45,10 @@ namespace XZDice
         // Toggled on when FixedUpdate should make the dice follow the Sphere
         private bool diceFollow = false;
 
+#if VITDECK_HIDE_MENUITEM
+        private bool inBooth = false;
+#endif
+
         private uint thrown = 0;
         private void SetThrown(int i) { thrown = thrown | (1u << i); }
         private void ClrThrown(int i) { thrown = thrown & ~(1u << i); }
@@ -255,6 +259,51 @@ namespace XZDice
         }
 
 #if VITDECK_HIDE_MENUITEM
+        public void _VketOnBoothEnter()
+        {
+            inBooth = true;
+        }
+
+        public void _VketOnBoothExit()
+        {
+            inBooth = false;
+            diceFollow = false;
+            firstFixedUpdate = false;
+
+            if (!Networking.IsOwner(gameObject))
+                return;
+
+            pickup.Drop();
+
+            VRCObjectSync objectSync = (VRCObjectSync)GetComponent(typeof(VRCObjectSync));
+            if (objectSync != null)
+                objectSync.Respawn();
+
+            int idx = 0;
+            foreach (GameObject die in dice) {
+                Rigidbody rb = die.GetComponent<Rigidbody>();
+                rb.useGravity = false;
+                rb.isKinematic = true;
+
+                VRCObjectSync os = (VRCObjectSync)die.GetComponent(typeof(VRCObjectSync));
+                if (os != null) {
+                    os.Respawn();
+                } else {
+                    rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f));
+                    rb.rotation = Random.rotation;
+                }
+
+                Collider c = die.GetComponent<Collider>();
+                c.enabled = false;
+
+                ClrThrown(idx);
+
+                ++idx;
+            }
+        }
+#endif
+
+#if VITDECK_HIDE_MENUITEM
         public void _VketFixedUpdate()
 #else
         private void FixedUpdate()
@@ -297,6 +346,10 @@ namespace XZDice
 
         public override void OnPickup()
         {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
             int idx = 0;
             foreach (GameObject die in dice) {
                 if (Utilities.IsValid(Networking.LocalPlayer) && !Networking.IsOwner(die))
@@ -326,6 +379,10 @@ namespace XZDice
 
         public override void OnDrop()
         {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
             int idx = 0;
             foreach (GameObject die in dice) {
                 if (Utilities.IsValid(Networking.LocalPlayer) && !Networking.IsOwner(die))
