@@ -1026,7 +1026,6 @@ namespace XZDice
                 int player = opoyareport_oya(arg0);
                 ResetTable(); // Reset the bet displays and such
                 ResetClientVariables();
-                ClearAllWaitingTexts();
 
                 oya = player;
                 bool[] pa = opoyareport_playerActive(arg0);
@@ -1399,7 +1398,6 @@ namespace XZDice
                 oya = -1;
                 iAmPlayer = -1;
 
-                ClearAllWaitingTexts();
                 ResetTable();
                 UpdateJoinButtons(playerActive);
             }
@@ -1422,6 +1420,7 @@ namespace XZDice
                 int player = i + 1;
                 SetBetLabel(player, 0.0f);
             }
+            ClearAllWaitingTexts();
             HideOyaMarker();
             dieGrabSphere._HideWithDice();
         }
