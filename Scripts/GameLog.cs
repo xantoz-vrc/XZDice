@@ -17,21 +17,30 @@ namespace XZDice
 
         [SerializeField] private Text[] screens;
 
-        private string[] lines;
+        [FieldChangeCallback(nameof(lines))]
+        private string[] _lines;
+        private string[] lines => (_lines != null) ? _lines : (_lines = new string[numlines]);
+
         private int insertPos = 0;
         private int startPos = 0;
         private int totalLines = 0;
 
         bool ready = false;
 
+#if VITDECK_HIDE_MENUITEM
+        public void _VketStart()
+#else
         private void Start()
+#endif
         {
             _Clear();
         }
 
         public void _Clear()
         {
-            lines = new string[numlines];
+            for (int i = 0; i < lines.Length; ++i) {
+                lines[i] = "";
+            }
             foreach (Text t in screens) {
                 t.text = "";
             }
