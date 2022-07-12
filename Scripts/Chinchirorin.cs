@@ -520,7 +520,7 @@ namespace XZDice
                 btn.SetActive(false);
             }
 
-            if (iAmPlayer > 0) {
+            if (isValidPlayer(iAmPlayer)) {
                 // Already joined means we leave
                 LeaveGame(iAmPlayer);
             } else {
