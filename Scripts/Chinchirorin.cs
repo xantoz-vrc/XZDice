@@ -238,12 +238,26 @@ namespace XZDice
             opqueue_Reset();
             ResetTable();
 
+#if VITDECK_HIDE_MENUITEM
+#else
+            EnableAudioSources(true);
+#endif
+
             // Delay this so first enabling of join buttons is likely to happen after serialization on late
             // joiners. Unfortunately cannot currently do it in a smarter way,
             // since the first joiner of instance (first master) does not get
             // OnDeserializatizon.
             // Maybe something with OnPlayerJoined could be done, though?
             SendCustomEventDelayedSeconds(nameof(_MaybeEnableJoinButtonsOnStart), 2.0f);
+        }
+
+        private void EnableAudioSources(bool val)
+        {
+            foreach (var sound in diceSounds) {
+                sound.enabled = val;
+            }
+            kachingSound.enabled = val;
+            errorSound.enabled = val;
         }
 
         public void _MaybeEnableJoinButtonsOnStart()
@@ -3020,12 +3034,14 @@ namespace XZDice
         public void _VketOnBoothEnter()
         {
             inBooth = true;
+            EnableAudioSources(true);
         }
 
         public void _VketOnBoothExit()
         {
             inBooth = false;
             ResetTable();
+            EnableAudioSources(false);
             if (isValidPlayer(iAmPlayer)) {
                 LeaveGame(iAmPlayer);
             }
