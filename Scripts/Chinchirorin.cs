@@ -243,11 +243,10 @@ namespace XZDice
 #if VITDECK_HIDE_MENUITEM
 #else
             EnableAudioSources(true);
-#endif
+            for (int p = 1; p <= MAX_PLAYERS; ++p) {
+                SetWaitingText(p, _jp("Waiting for synchronization..."));
+            }
 
-
-#if VITDECK_HIDE_MENUITEM
-#else
             // Delay this so first enabling of join buttons is likely to happen after serialization on late
             // joiners. Unfortunately cannot currently do it in a smarter way,
             // since the first joiner of instance (first master) does not get
@@ -1090,6 +1089,10 @@ namespace XZDice
                 op_getop(arg0) == OPCODE_OYAREPORT ||
                 op_getop(arg0) == OPCODE_OYACHANGE ||
                 op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
+                if (!synced) {
+                    // Clear the "Waiting for synchronization" text.
+                    ClearAllWaitingTexts();
+                }
                 synced = true;
             }
 
@@ -3051,7 +3054,9 @@ namespace XZDice
             inBooth = true;
             EnableAudioSources(true);
 
-            // _MaybeEnableJoinButtonsOnStart();
+            for (int p = 1; p <= MAX_PLAYERS; ++p) {
+                SetWaitingText(p, _jp("Waiting for synchronization..."));
+            }
 
             // If in a state that will sync up, run ondeserialization (timeouts
             // might not show correctly, however)
