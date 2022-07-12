@@ -79,7 +79,11 @@ namespace XZDice
 
         private readonly bool SPAM = true; // Enable spam level debug logs
 
+#if VITDECK_HIDE_MENUITEM
+        public UdonBehaviour VketUdonChips;
+#else
         private UdonBehaviour udonChips = null;
+#endif
 
         private bool langJp = false;
 
@@ -123,6 +127,10 @@ namespace XZDice
         // These variables are used when the oya sends messages to other players.
         // E.g. when to change udonchips balances;
         [UdonSynced] private uint arg0;
+
+#if VITDECK_HIDE_MENUITEM
+        private bool inBooth = false;
+#endif
 
         private void GameLog(string message)
         {
@@ -181,7 +189,11 @@ namespace XZDice
             return str;
         }
 
+#if VITDECK_HIDE_MENUITEM
+        public void _VketStart()
+#else
         private void Start()
+#endif
         {
             if (dieGrabSphere._GetLength() != 3)
                 Debug.LogError("Must be three dice");
@@ -216,7 +228,10 @@ namespace XZDice
             if (resultPopupLabels.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("resultPopupLabels must be {0} long", MAX_PLAYERS));
 
+#if VITDECK_HIDE_MENUITEM
+#else
             udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
+#endif
 
             ResetClientVariables();
             ResetServerVariables();
@@ -273,6 +288,19 @@ namespace XZDice
         }
 
 
+
+#if VITDECK_HIDE_MENUITEM
+        private string formatChips(float amount)
+        {
+            string formatString = (string)VketUdonChips.GetProgramVariable("format");
+            return string.Format(formatString, amount);
+        }
+
+        private float getUdonChipsMoney()             { return (float)VketUdonChips.GetProgramVariable("money"); }
+        private void  setUdonChipsMoney(float amount) { VketUdonChips.SetProgramVariable("money", amount); }
+        private void  incUdonChipsMoney(float amount) { setUdonChipsMoney(getUdonChipsMoney() + amount); }
+        private void  decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
+#else
         private string formatChips(float amount)
         {
             string formatString = (string)udonChips.GetProgramVariable("format");
@@ -283,6 +311,8 @@ namespace XZDice
         private void  setUdonChipsMoney(float amount) { udonChips.SetProgramVariable("money", amount); }
         private void  incUdonChipsMoney(float amount) { setUdonChipsMoney(getUdonChipsMoney() + amount); }
         private void  decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
+
+#endif
 
         // Client to server communication (but sent locally if we are master)
         private void SendToOya(string fnname)
@@ -511,6 +541,10 @@ namespace XZDice
 
         private void JoinPlayerBtn(int player)
         {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
             if (!synced)
                 return;
 
@@ -851,6 +885,10 @@ namespace XZDice
 
         private void KachingLabel(int player, float amount)
         {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
             if (!isValidPlayer(player))
                 return;
 
@@ -910,6 +948,10 @@ namespace XZDice
 
         private void ShowThrowResult(int player, int[] result, uint throw_type, bool oya)
         {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
             if (result.Length != 3) {
                 Debug.LogError("ShowThrowResult called with bad result array");
                 result = new int[3];
@@ -948,6 +990,10 @@ namespace XZDice
 
         private void UpdateJoinButtons(bool[] pa)
         {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
             for (int i = 0; i < MAX_PLAYERS; ++i) {
                 if (!isValidPlayer(iAmPlayer)) {
                     joinButtons[i].SetActive(!pa[i]);
@@ -984,6 +1030,10 @@ namespace XZDice
 
         private void ShowOyaMarker()
         {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
             if (isOya()) {
                 OyaMarkerUpdate();
                 VRCObjectSync os = (VRCObjectSync)oyaMarker.GetComponent(typeof(VRCObjectSync));
@@ -2921,7 +2971,11 @@ namespace XZDice
 
         // TODO: consider just having Broadcast cause a SendCustomEventDelayedSeconds-based thread
         //       do these as some sort of optimization?
+#if VITDECK_HIDE_MENUITEM
+        public void _VketUpdate()
+#else
         private void Update()
+#endif
         {
             if (!isOwner())
                 return;
@@ -2961,5 +3015,21 @@ namespace XZDice
             }
         }
         #endregion
+
+#if VITDECK_HIDE_MENUITEM
+        public void _VketOnBoothEnter()
+        {
+            inBooth = true;
+        }
+
+        public void _VketOnBoothExit()
+        {
+            inBooth = false;
+            ResetTable();
+            if (isValidPlayer(iAmPlayer)) {
+                LeaveGame(iAmPlayer);
+            }
+        }
+#endif
     }
 }
