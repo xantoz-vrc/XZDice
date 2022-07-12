@@ -1222,9 +1222,6 @@ namespace XZDice
                 bs.SetActive(false);
                 UpdateBetScreens();
 
-                if (iAmPlayer == player)
-                    iAmPlayer = -1;
-
                 ClearWaitingText(player);
                 SetTimeoutDisplay(player, false);
 
@@ -1234,6 +1231,9 @@ namespace XZDice
                 if (!showbuttons && iAmPlayer == player) {
                     joinButtons[player - 1].SetActive(false);
                 }
+
+                if (iAmPlayer == player)
+                    iAmPlayer = -1;
             } else if (op_getop(arg0) == OPCODE_DISABLE_JOINBUTTONS) {
                 GameLogDebug("Disable join buttons");
                 foreach (GameObject btn in joinButtons) {
