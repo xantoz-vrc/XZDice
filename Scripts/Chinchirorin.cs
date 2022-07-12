@@ -1470,6 +1470,9 @@ namespace XZDice
         private void ResetTable()
         {
             for (int i = 0; i < MAX_PLAYERS; ++i) {
+                kachingLabels[i].gameObject.SetActive(false);
+                resultPopupLabels[i].gameObject.SetActive(false);
+
                 toBeatLabels[i].gameObject.SetActive(false);
                 betScreens[i].SetActive(false);
                 startRoundButtons[i].SetActive(false);
