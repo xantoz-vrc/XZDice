@@ -195,6 +195,8 @@ namespace XZDice
         private void Start()
 #endif
         {
+            GameLogDebug("Start");
+
             if (dieGrabSphere._GetLength() != 3)
                 Debug.LogError("Must be three dice");
 
@@ -243,12 +245,16 @@ namespace XZDice
             EnableAudioSources(true);
 #endif
 
+
+#if VITDECK_HIDE_MENUITEM
+#else
             // Delay this so first enabling of join buttons is likely to happen after serialization on late
             // joiners. Unfortunately cannot currently do it in a smarter way,
             // since the first joiner of instance (first master) does not get
             // OnDeserializatizon.
             // Maybe something with OnPlayerJoined could be done, though?
             SendCustomEventDelayedSeconds(nameof(_MaybeEnableJoinButtonsOnStart), 2.0f);
+#endif
         }
 
         private void EnableAudioSources(bool val)
@@ -1076,6 +1082,10 @@ namespace XZDice
 
         public override void OnDeserialization()
         {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
             if (op_getop(arg0) == OPCODE_NOOYA ||
                 op_getop(arg0) == OPCODE_OYAREPORT ||
                 op_getop(arg0) == OPCODE_OYACHANGE ||
@@ -3036,18 +3046,45 @@ namespace XZDice
 #if VITDECK_HIDE_MENUITEM
         public void _VketOnBoothEnter()
         {
+            GameLogDebug("_VketOnBoothEnter");
+
             inBooth = true;
             EnableAudioSources(true);
+
+            // _MaybeEnableJoinButtonsOnStart();
+
+            // If in a state that will sync up, run ondeserialization (timeouts
+            // might not show correctly, however)
+            if (op_getop(arg0) == OPCODE_NOOYA ||
+                op_getop(arg0) == OPCODE_OYAREPORT ||
+                op_getop(arg0) == OPCODE_OYACHANGE ||
+                op_getop(arg0) == OPCODE_WAITINGFORPLAYERS) {
+                // So we can be sure if we are synced
+                OnDeserialization();
+            }
         }
 
         public void _VketOnBoothExit()
         {
+            GameLogDebug("_VketOnBoothExit");
+
             inBooth = false;
             ResetTable();
+            foreach (GameObject btn in joinButtons)
+                btn.SetActive(false);
+
             EnableAudioSources(false);
-            if (isValidPlayer(iAmPlayer)) {
+
+            if (isOya()) {
+                MakeTableEmpty();
+            } else if (isValidPlayer(iAmPlayer)) {
                 LeaveGame(iAmPlayer);
             }
+
+            synced = false;
+            ResetClientVariables();
+            ResetServerVariables();
+            opqueue_Reset();
         }
 #endif
     }
