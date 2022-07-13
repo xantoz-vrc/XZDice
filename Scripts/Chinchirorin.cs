@@ -1342,7 +1342,7 @@ namespace XZDice
                 dieGrabSphere._Show();
 
                 if (rethrow > 0) {
-                    GameLog(string.Format("P{0} rethrow ({1}/3)", player, rethrow + 1));
+                    GameLog(string.Format("P{0} rethrow ({1}/{2})", player, rethrow + 1, MAX_RETHROWS));
                 } else {
                     GameLog(string.Format("P{0} it is your turn", player));
                 }
