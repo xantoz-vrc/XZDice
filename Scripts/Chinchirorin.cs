@@ -1139,7 +1139,6 @@ namespace XZDice
                 GameLog("Waiting for dealer to start the round...");
 
                 if (isOya()) {
-
                     startRoundButtons[oya - 1].SetActive(true);
                 } else {
                     oya = opwaiting_oya(arg0);
