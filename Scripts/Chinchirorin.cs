@@ -3088,6 +3088,8 @@ namespace XZDice
             synced = false;
             ResetClientVariables();
             ResetServerVariables();
+            oya = -1;
+            iAmPlayer = -1;
             opqueue_Reset();
         }
 #endif
