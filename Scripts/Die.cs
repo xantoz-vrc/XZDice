@@ -82,8 +82,10 @@ namespace XZDice
         {
             inBooth = true;
 
-            if (!onlyPhysicsWhenThrown)
-                rigidbody.isKinematic = true;
+            if (!onlyPhysicsWhenThrown) {
+                rigidbody.isKinematic = false;
+                rigidbody.WakeUp();
+            }
         }
 
         public void _VketOnBoothExit()
