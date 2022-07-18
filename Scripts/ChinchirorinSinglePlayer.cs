@@ -540,11 +540,11 @@ namespace XZDice
                 } else if (state == STATE_BET) {
                     GameLogDebug("state == STATE_BET");
 
-                    int currentPlayer = (oya == OYA_NPC) ? PLAYER_NPC : PLAYER_HUMAN;
+                    int currentPlayer = (oya == OYA_NPC) ? PLAYER_HUMAN : PLAYER_NPC;
                     if (ev == EVENT_BETDONE) {
                         GameLog(string.Format("{0} bet {1}",
                                               getPlayerName(currentPlayer),
-                                              formatChips((currentPlayer == PLAYER_HUMAN) ? playerBet : npcBet)));
+                                              formatChips((currentPlayer == PLAYER_HUMAN) ? playerBet : (float)arg)));
                     }
 
                     if (oya == OYA_NPC) {
