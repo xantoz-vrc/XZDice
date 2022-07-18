@@ -318,7 +318,9 @@ namespace XZDice
 
         private void SetBetLabelPlayer(float amount)
         {
-            if (oya == OYA_PLAYER) {
+            if (!active) {
+                betLabelPlayer.text = "Player";
+            } else if (oya == OYA_PLAYER) {
                 betLabelPlayer.text =
                     string.Format("{0}{1}\nMoney: {2}\n",
                                   getPlayerName(PLAYER_HUMAN), oyaString, formatChips(getUdonChipsMoney()));
@@ -521,8 +523,9 @@ namespace XZDice
             while (true) {
                 if (ev == EVENT_LEAVE) {
                     GameLogDebug("ev == EVENT_LEAVE");
-                    ResetTable();
+                    oya = -1;
                     active = false;
+                    ResetTable();
                     return;
                 }
 
