@@ -740,6 +740,7 @@ namespace XZDice
             return Networking.IsOwner(gameObject);
         }
 
+        #region DieGrabSphereListener
         // DiGrabSphereListener
         public void _SetThrown()
         {
@@ -760,7 +761,9 @@ namespace XZDice
         public void _DiceResult4() { SendDiceResultEvent(4, iAmPlayer); }
         public void _DiceResult5() { SendDiceResultEvent(5, iAmPlayer); }
         public void _DiceResult6() { SendDiceResultEvent(6, iAmPlayer); }
+        #endregion
 
+        #region sounds
         public void PlayDiceSound()
         {
             if (diceSounds != null && diceSounds.Length > 0) {
@@ -790,6 +793,7 @@ namespace XZDice
                 errorSound.Play();
             }
         }
+        #endregion
 
         // We have unique network events per player so the server can tel if the result we got was
         // from the player we expected results for.
