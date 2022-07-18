@@ -836,64 +836,64 @@ namespace XZDice
         private void ShowOyaMarker()
         {
 #if VITDECK_HIDE_MENUITEM
-                if (!inBooth) return;
+            if (!inBooth) return;
 #endif
 
-                showOyaMarker = true;
-                oyaMarker.SetActive(true);
-            }
+            showOyaMarker = true;
+            oyaMarker.SetActive(true);
+        }
 
-            private void HideOyaMarker()
+        private void HideOyaMarker()
+        {
+            showOyaMarker = false;
+            oyaMarker.SetActive(false);
+        }
+
+        private void OyaMarkerUpdate()
+        {
+            if (oya == OYA_NPC)
             {
-                showOyaMarker = false;
-                oyaMarker.SetActive(false);
+                oyaMarker.transform.position = NPCOyaMarkerPos.position;
             }
-
-            private void OyaMarkerUpdate()
+            else
             {
-                if (oya == OYA_NPC)
-                {
-                    oyaMarker.transform.position = NPCOyaMarkerPos.position;
-                }
-                else
-                {
-                    VRCPlayerApi player = Networking.LocalPlayer;
-                    if (!Utilities.IsValid(player))
-                        return;
+                VRCPlayerApi player = Networking.LocalPlayer;
+                if (!Utilities.IsValid(player))
+                    return;
 
-                    Vector3 pos = player.GetBonePosition(HumanBodyBones.Head);
-                    pos.y += 0.4f;
+                Vector3 pos = player.GetBonePosition(HumanBodyBones.Head);
+                pos.y += 0.4f;
 
-                    oyaMarker.transform.position = pos;
-                }
+                oyaMarker.transform.position = pos;
             }
+        }
 
 #if VITDECK_HIDE_MENUITEM
-            public void _VketUpdate()
+        public void _VketUpdate()
 #else
-        private void Update()
+            private void Update()
 #endif
+        {
+            if (showOyaMarker)
             {
-                if (showOyaMarker)
-                {
-                    OyaMarkerUpdate();
-                }
+                OyaMarkerUpdate();
             }
+        }
 
-            #region throw
-            // Helpers for a simple little format that we use to compare dice results
-            private uint diceres(uint d1, uint d2, uint d3)
-            {
-                uint d1part = d1 & 0xFFu;
-                uint d2part = d2 & 0xFFu;
-                uint d3part = d3 & 0xFFu;
-                return d1part | d2part << 8 | d3part << 16;
-            }
+        #region throw
+        // Helpers for a simple little format that we use to compare dice results
+        private uint diceres(uint d1, uint d2, uint d3)
+        {
+            uint d1part = d1 & 0xFFu;
+            uint d2part = d2 & 0xFFu;
+            uint d3part = d3 & 0xFFu;
+            return d1part | d2part << 8 | d3part << 16;
+        }
 
-            private uint diceres_fromArray(int[] array)
-            {
-                return diceres((uint)array[0], (uint)array[1], (uint)array[2]);
-            }
+        private uint diceres_fromArray(int[] array)
+        {
+            return diceres((uint)array[0], (uint)array[1], (uint)array[2]);
+        }
 
         // Throw result "enum":
         // The integers 1 to 6 represent that many points (pair + that die)
