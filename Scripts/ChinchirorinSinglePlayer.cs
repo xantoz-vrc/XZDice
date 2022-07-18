@@ -755,6 +755,9 @@ namespace XZDice
                         KachingLabel(PLAYER_NPC, -amount, true);
                     }
 
+                    if (getUdonChipsMoney() < 0.0f)
+                        setUdonChipsMoney(0.0f);
+
                     if (oyaLost) {
                         int currentOya = (oya == OYA_NPC) ? PLAYER_NPC : PLAYER_HUMAN;
                         int nextOya = (oya == OYA_NPC) ? PLAYER_HUMAN : PLAYER_NPC;
