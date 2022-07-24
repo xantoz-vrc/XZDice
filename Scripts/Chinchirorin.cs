@@ -1648,10 +1648,10 @@ namespace XZDice
             GameLogSpam(string.Format("RecvBetTimeout({0}), Time.time={1}, timeoutTime[{2}]={3}",
                                       player, Time.time, player - 1, timeoutTime[player - 1]));
 
-            CheckOwnerIsOya(); // timeoutTime[player - 1] might have been set NaN by ResetServerVariables, so always check this
-
             if (!(Time.time > timeoutTime[player - 1]))
                 return;
+
+            CheckOwnerIsOya();
 
             timeoutTime[player - 1] = float.NaN;
 
@@ -1673,10 +1673,10 @@ namespace XZDice
             GameLogSpam(string.Format("_OyaWaitingForPlayersTimeout(), Time.time={0}, timeoutTimeOya={1}",
                                        Time.time, timeoutTimeOya));
 
-            CheckOwnerIsOya(); // timeoutTimeOya might have been set NaN by ResetServerVariables, so always check this
-
             if (!(Time.time > timeoutTimeOya))
                 return;
+
+            CheckOwnerIsOya();
 
             timeoutTimeOya = float.NaN;
 
@@ -1697,10 +1697,10 @@ namespace XZDice
             GameLogSpam(string.Format("_OyaRoundstartTimeout(), Time.time={0}, timeoutTimeOya={1}",
                                        Time.time, timeoutTimeOya));
 
-            CheckOwnerIsOya(); // timeoutTimeOya might have been set NaN by ResetServerVariables, so always check this
-
             if (!(Time.time > timeoutTimeOya))
                 return;
+
+            CheckOwnerIsOya();
 
             timeoutTimeOya = float.NaN;
 
@@ -1721,10 +1721,10 @@ namespace XZDice
             GameLogSpam(string.Format("_OyaThrowTimeout(), Time.time={0}, timeoutTimeOya={1}",
                                        Time.time, timeoutTimeOya));
 
-            CheckOwnerIsOya(); // timeoutTimeOya might have been set NaN by ResetServerVariables, so always check this
-
             if (!(Time.time > timeoutTimeOya))
                 return;
+
+            CheckOwnerIsOya();
 
             timeoutTimeOya = float.NaN;
 
