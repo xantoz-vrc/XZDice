@@ -27,6 +27,9 @@ namespace XZDice
 
         bool ready = false;
 
+        [SerializeField]
+        private bool visible = true;
+
 #if VITDECK_HIDE_MENUITEM
         public void _VketStart()
 #else
@@ -34,6 +37,7 @@ namespace XZDice
 #endif
         {
             _Clear();
+            _SetVisible(visible);
         }
 
         public void _Clear()
@@ -76,6 +80,19 @@ namespace XZDice
             foreach (Text t in screens) {
                 t.text = contents;
             }
+        }
+
+        public void _SetVisible(bool val)
+        {
+            foreach (Text t in screens) {
+                t.enabled = val;
+            }
+            visible = val;
+        }
+
+        public void _ToggleVisible()
+        {
+            _SetVisible(!visible);
         }
     }
 }
