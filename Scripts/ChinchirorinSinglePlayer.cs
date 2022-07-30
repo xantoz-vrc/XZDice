@@ -9,11 +9,15 @@ using VRC.Udon.Common.Interfaces;
 using UnityEngine.UI;
 using TMPro;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
 namespace Vket2022Summer.Circle314
+/*
 #else
 namespace XZDice
 #endif
+*/
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class ChinchirorinSinglePlayer : UdonSharpBehaviour
@@ -87,11 +91,15 @@ namespace XZDice
 
         private readonly bool SPAM = true; // Enable spam level debug logs
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public UdonBehaviour VketUdonChips;
+/*
 #else
         private UdonBehaviour udonChips = null;
 #endif
+*/
 
         private bool langJp = false;
 
@@ -125,9 +133,13 @@ namespace XZDice
 
         private int rethrowCount = 0;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private bool inBooth = false;
+/*
 #endif
+*/
 
         private void GameLog(string message)
         {
@@ -187,11 +199,15 @@ namespace XZDice
             return str;
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketStart()
+/*
 #else
         private void Start()
 #endif
+*/
         {
             GameLogDebug("Start");
 
@@ -201,21 +217,27 @@ namespace XZDice
             dieGrabSphere._AddListener(this);
             dieGrabSphere.hideOnThrow = true; // Ensure hideOnThrow is set
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
             udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
 #endif
+*/
 
             ResetTable();
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
             EnableAudioSources(true);
             joinButton.SetActive(true);
 #endif
+*/
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private string formatChips(float amount)
         {
             string formatString = (string)VketUdonChips.GetProgramVariable("format");
@@ -226,6 +248,7 @@ namespace XZDice
         private void setUdonChipsMoney(float amount) { VketUdonChips.SetProgramVariable("money", amount); }
         private void incUdonChipsMoney(float amount) { setUdonChipsMoney(getUdonChipsMoney() + amount); }
         private void decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
+/*
 #else
         private string formatChips(float amount)
         {
@@ -238,6 +261,7 @@ namespace XZDice
         private void  incUdonChipsMoney(float amount) { setUdonChipsMoney(getUdonChipsMoney() + amount); }
         private void  decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
 #endif
+*/
 
         private readonly int STATE_BEGIN = 1;
         private readonly int STATE_BET = 2;
@@ -403,9 +427,13 @@ namespace XZDice
 
         private void KachingLabel(int player, float amount, bool isOya)
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             string color =
                 (amount < 0.0f) ? "#ff0000" :
@@ -474,9 +502,13 @@ namespace XZDice
 
         private void ShowThrowResult(int player, int[] result, uint throw_type, bool oyaThrow)
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             if (result.Length != 3) {
                 Debug.LogError("ShowThrowResult called with bad result array");
@@ -835,9 +867,13 @@ namespace XZDice
 
         private void ShowOyaMarker()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             showOyaMarker = true;
             oyaMarker.SetActive(true);
@@ -868,11 +904,15 @@ namespace XZDice
             }
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketUpdate()
+/*
 #else
             private void Update()
 #endif
+*/
         {
             if (showOyaMarker)
             {
@@ -1114,7 +1154,9 @@ namespace XZDice
         }
         #endregion
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketOnBoothEnter()
         {
             GameLogDebug("_VketOnBoothEnter");
@@ -1133,6 +1175,8 @@ namespace XZDice
             inBooth = false;
             EnableAudioSources(false);
         }
+/*
 #endif
+*/
     }
 }

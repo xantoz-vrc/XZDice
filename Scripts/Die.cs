@@ -3,18 +3,26 @@ using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
 namespace Vket2022Summer.Circle314
+/*
 #else
 namespace XZDice
 #endif
+*/
 {
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
+/*
 #else
     [UdonBehaviourSyncMode(BehaviourSyncMode.Continuous)]
 #endif
+*/
     public class Die : UdonSharpBehaviour
     {
         [Tooltip("Optimization where we only turn off the isKinematic flag on the rigidbody when it is thrown until it has settled")]
@@ -29,16 +37,23 @@ namespace XZDice
         private bool thrown = false;
         private bool firstFixedUpdate = false;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private bool inBooth = false;
+/*
 #endif
+*/
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
         [UdonSynced]
 #endif
+*/
         private int result = -1;
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
         private void Start()
@@ -47,6 +62,7 @@ namespace XZDice
                 rigidbody.isKinematic = true;
         }
 #endif
+*/
 
         private int _ListMinIndex(float[] list)
         {
@@ -77,7 +93,9 @@ namespace XZDice
             result = _ListMinIndex(angles) + 1;
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketOnBoothEnter()
         {
             inBooth = true;
@@ -97,13 +115,19 @@ namespace XZDice
             firstFixedUpdate = false;
             rigidbody.isKinematic = true;
         }
+/*
 #endif
+*/
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketFixedUpdate()
+/*
 #else
         private void FixedUpdate()
 #endif
+*/
         {
             if (!firstFixedUpdate && thrown) {
                 if (rigidbody.velocity.sqrMagnitude < 0.0001 && rigidbody.angularVelocity.sqrMagnitude < 0.0001) {
@@ -154,18 +178,26 @@ namespace XZDice
 
         public override void OnDrop()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             _SetThrown();
         }
 
         public override void OnPickup()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             _SetHeld();
         }

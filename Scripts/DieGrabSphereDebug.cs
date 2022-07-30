@@ -5,11 +5,15 @@ using VRC.Udon;
 using UnityEngine.UI;
 using TMPro;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
 namespace Vket2022Summer.Circle314
+/*
 #else
 namespace XZDice
 #endif
+*/
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class DieGrabSphereDebug : UdonSharpBehaviour
@@ -23,11 +27,15 @@ namespace XZDice
         // [UdonSynced]
         private string output = "";
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketStart()
+/*
 #else
         void Start()
 #endif
+*/
         {
             dieGrabSphere._AddListener(this);
             AddText("Start");

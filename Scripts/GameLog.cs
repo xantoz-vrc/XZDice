@@ -4,11 +4,15 @@ using VRC.SDKBase;
 using VRC.Udon;
 using UnityEngine.UI;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
 namespace Vket2022Summer.Circle314
+/*
 #else
 namespace XZDice
 #endif
+*/
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GameLog : UdonSharpBehaviour
@@ -30,11 +34,15 @@ namespace XZDice
         [SerializeField]
         private bool visible = true;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketStart()
+/*
 #else
         private void Start()
 #endif
+*/
         {
             _Clear();
             _SetVisible(visible);
