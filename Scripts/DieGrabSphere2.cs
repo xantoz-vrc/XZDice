@@ -24,6 +24,9 @@ namespace XZDice
         [Tooltip("When set DieGrabSphere will hide and become ungrabbable after being released")]
         public bool hideOnThrow = false;
 
+        [Tooltip("Whether hide on throw behaviour is networked via a network event")]
+        public bool networked = true;
+
         [FieldChangeCallback(nameof(pickup))]
         private VRC_Pickup _pickup;
         private VRC_Pickup pickup => _pickup ? _pickup : (_pickup = (VRC_Pickup)GetComponent(typeof(VRC_Pickup)));
@@ -409,7 +412,11 @@ namespace XZDice
             diceFollow = false;
 
             if (hideOnThrow) {
-                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(HideGlobal));
+                if (networked) {
+                    SendCustomNetworkEvent(NetworkEventTarget.All, nameof(HideGlobal));
+                } else {
+                    _Hide();
+                }
             }
 
             SendToListeners("_SetThrown");
