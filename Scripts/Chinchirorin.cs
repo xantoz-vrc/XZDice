@@ -272,6 +272,7 @@ namespace XZDice
             {
                 synced = true;
                 UpdateJoinButtons(playerActive);
+                ClearAllWaitingTexts();
             }
         }
 
