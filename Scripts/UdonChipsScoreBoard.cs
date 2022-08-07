@@ -14,7 +14,7 @@ namespace XZDice
 #endif
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class UdonChipsScoreBoard3 : UdonSharpBehaviour
+    public class UdonChipsScoreBoard : UdonSharpBehaviour
     {
         // Maximum amount of entries in the scoreboard. Set to 80 since that is the largest hard-cap we can have,
         // although our prefab can actually display a lot less lines than this.
