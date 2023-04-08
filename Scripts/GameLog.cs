@@ -4,11 +4,7 @@ using VRC.SDKBase;
 using VRC.Udon;
 using UnityEngine.UI;
 
-#if VITDECK_HIDE_MENUITEM
-namespace Vket2022Summer.Circle314
-#else
 namespace XZDice
-#endif
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GameLog : UdonSharpBehaviour

@@ -5,11 +5,7 @@ using VRC.SDK3.Components;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 
-#if VITDECK_HIDE_MENUITEM
-namespace Vket2022Summer.Circle314
-#else
 namespace XZDice
-#endif
 {
     //[UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class DieGrabSphere : UdonSharpBehaviour

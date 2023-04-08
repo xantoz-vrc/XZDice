@@ -9,11 +9,7 @@ using VRC.Udon.Common.Interfaces;
 using UnityEngine.UI;
 using TMPro;
 
-#if VITDECK_HIDE_MENUITEM
-namespace Vket2022Summer.Circle314
-#else
 namespace XZDice
-#endif
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class ChinchirorinSinglePlayer : UdonSharpBehaviour
@@ -247,6 +243,8 @@ namespace XZDice
         private readonly int STATE_THROW = 6;
         private readonly int STATE_BALANCE = 7;
         private int state = -1;
+        private int ev = -1;
+        private int arg = -1;
 
         private readonly int EVENT_NONE = 0;
         private readonly int EVENT_LEAVE = 2;
@@ -282,7 +280,7 @@ namespace XZDice
 
             oya = OYA_NPC;
             state = STATE_BEGIN;
-            _StateMachine(EVENT_NONE, 0);
+            _StateMachineHelper(EVENT_NONE, 0);
 
             SetButtonText(joinButton, "Leave");
             joinButton.SetActive(true);
@@ -292,7 +290,7 @@ namespace XZDice
         {
             joinButton.SetActive(false);
 
-            _StateMachine(EVENT_LEAVE, 0);
+            _StateMachineHelper(EVENT_LEAVE, 0);
 
             active = false;
 
@@ -368,12 +366,12 @@ namespace XZDice
             dieGrabSphere._HideWithDice();
         }
 
-        public void _BtnPlayerBet10()   { _StateMachine(EVENT_BET, 10); }
-        public void _BtnPlayerBet50()   { _StateMachine(EVENT_BET, 50); }
-        public void _BtnPlayerBet100()  { _StateMachine(EVENT_BET, 100); }
-        public void _BtnPlayerBet500()  { _StateMachine(EVENT_BET, 500); }
-        public void _BtnPlayerBetUndo() { _StateMachine(EVENT_BETUNDO, 0); }
-        public void _BtnPlayerBetDone() { _StateMachine(EVENT_BETDONE, 0); }
+        public void _BtnPlayerBet10()   { _StateMachineHelper(EVENT_BET, 10); }
+        public void _BtnPlayerBet50()   { _StateMachineHelper(EVENT_BET, 50); }
+        public void _BtnPlayerBet100()  { _StateMachineHelper(EVENT_BET, 100); }
+        public void _BtnPlayerBet500()  { _StateMachineHelper(EVENT_BET, 500); }
+        public void _BtnPlayerBetUndo() { _StateMachineHelper(EVENT_BETUNDO, 0); }
+        public void _BtnPlayerBetDone() { _StateMachineHelper(EVENT_BETDONE, 0); }
 
         private void SetBetScreenButtons(bool val, bool enableDone)
         {
@@ -509,8 +507,16 @@ namespace XZDice
             }
         }
 
+        [RecursiveMethod]
+        private void _StateMachineHelper(int new_ev, int new_arg)
+        {
+            ev = new_ev;
+            arg = new_arg;
+            _StateMachine();
+        }
 
-        public void _StateMachine(int ev, int arg)
+        [RecursiveMethod]
+        public void _StateMachine()
         {
             GameLogDebug(string.Format("_StateMachine({0}, {1}), state={2}",
                                        ev, arg, state));
@@ -809,7 +815,7 @@ namespace XZDice
         {
             int[] bets = new int[] { 10, 10, 10, 10, 50, 50, 50, 100, 100, 500 };
             Utilities.ShuffleArray(bets);
-            _StateMachine(EVENT_BETDONE, bets[0]);
+            _StateMachineHelper(EVENT_BETDONE, bets[0]);
         }
 
         private void NPCDoThrow()
@@ -1069,7 +1075,7 @@ namespace XZDice
 
             if (recvResult_cntr == length) {
                 uint throw_type = classify_throw(recvResult);
-                _StateMachine(EVENT_THROWRESULT, (int)throw_type);
+                _StateMachineHelper(EVENT_THROWRESULT, (int)throw_type);
             }
         }
         #endregion
