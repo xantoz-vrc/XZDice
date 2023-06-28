@@ -75,11 +75,15 @@ namespace Vket2023Summer.Circle1306
 
         private readonly bool SPAM = true; // Enable spam level debug logs
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public UdonBehaviour VketUdonChips;
+/*
 #else
         private UdonBehaviour udonChips = null;
 #endif
+*/
 
         private bool langJp = false;
 
@@ -124,9 +128,13 @@ namespace Vket2023Summer.Circle1306
         // E.g. when to change udonchips balances;
         [UdonSynced] private uint arg0;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private bool inBooth = false;
+/*
 #endif
+*/
 
         private void GameLog(string message)
         {
@@ -185,11 +193,15 @@ namespace Vket2023Summer.Circle1306
             return str;
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketStart()
+/*
 #else
         private void Start()
 #endif
+*/
         {
             GameLogDebug("Start");
 
@@ -226,16 +238,19 @@ namespace Vket2023Summer.Circle1306
             if (resultPopupLabels.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("resultPopupLabels must be {0} long", MAX_PLAYERS));
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
             udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
 #endif
+*/
 
             ResetClientVariables();
             ResetServerVariables();
             opqueue_Reset();
             ResetTable();
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
             EnableAudioSources(true);
@@ -250,6 +265,7 @@ namespace Vket2023Summer.Circle1306
             // Maybe something with OnPlayerJoined could be done, though?
             SendCustomEventDelayedSeconds(nameof(_MaybeEnableJoinButtonsOnStart), 2.0f);
 #endif
+*/
         }
 
         private void EnableAudioSources(bool val)
@@ -305,7 +321,9 @@ namespace Vket2023Summer.Circle1306
 
 
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private string formatChips(float amount)
         {
             string formatString = (string)VketUdonChips.GetProgramVariable("format");
@@ -316,6 +334,7 @@ namespace Vket2023Summer.Circle1306
         private void  setUdonChipsMoney(float amount) { VketUdonChips.SetProgramVariable("money", amount); }
         private void  incUdonChipsMoney(float amount) { setUdonChipsMoney(getUdonChipsMoney() + amount); }
         private void  decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
+/*
 #else
         private string formatChips(float amount)
         {
@@ -329,6 +348,7 @@ namespace Vket2023Summer.Circle1306
         private void  decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
 
 #endif
+*/
 
         // Client to server communication (but sent locally if we are master)
         private void SendToOya(string fnname)
@@ -557,9 +577,13 @@ namespace Vket2023Summer.Circle1306
 
         private void JoinPlayerBtn(int player)
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             if (!synced)
                 return;
@@ -905,9 +929,13 @@ namespace Vket2023Summer.Circle1306
 
         private void KachingLabel(int player, float amount)
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             if (!isValidPlayer(player))
                 return;
@@ -968,9 +996,13 @@ namespace Vket2023Summer.Circle1306
 
         private void ShowThrowResult(int player, int[] result, uint throw_type, bool oya)
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             if (result.Length != 3) {
                 Debug.LogError("ShowThrowResult called with bad result array");
@@ -1010,9 +1042,13 @@ namespace Vket2023Summer.Circle1306
 
         private void UpdateJoinButtons(bool[] pa)
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             for (int i = 0; i < MAX_PLAYERS; ++i) {
                 if (!isValidPlayer(iAmPlayer)) {
@@ -1050,9 +1086,13 @@ namespace Vket2023Summer.Circle1306
 
         private void ShowOyaMarker()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             if (isOya()) {
                 OyaMarkerUpdate();
@@ -1082,9 +1122,13 @@ namespace Vket2023Summer.Circle1306
 
         public override void OnDeserialization()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             if (op_getop(arg0) == OPCODE_NOOYA ||
                 op_getop(arg0) == OPCODE_OYAREPORT ||
@@ -3001,11 +3045,15 @@ namespace Vket2023Summer.Circle1306
 
         // TODO: consider just having Broadcast cause a SendCustomEventDelayedSeconds-based thread
         //       do these as some sort of optimization?
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketUpdate()
+/*
 #else
         private void Update()
 #endif
+*/
         {
             if (!isOwner())
                 return;
@@ -3046,7 +3094,9 @@ namespace Vket2023Summer.Circle1306
         }
         #endregion
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketOnBoothEnter()
         {
             GameLogDebug("_VketOnBoothEnter");
@@ -3093,6 +3143,8 @@ namespace Vket2023Summer.Circle1306
             iAmPlayer = -1;
             opqueue_Reset();
         }
+/*
 #endif
+*/
     }
 }

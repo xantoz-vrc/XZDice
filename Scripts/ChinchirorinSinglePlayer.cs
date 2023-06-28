@@ -83,11 +83,15 @@ namespace Vket2023Summer.Circle1306
 
         private readonly bool SPAM = true; // Enable spam level debug logs
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public UdonBehaviour VketUdonChips;
+/*
 #else
         private UdonBehaviour udonChips = null;
 #endif
+*/
 
         private bool langJp = false;
 
@@ -121,9 +125,13 @@ namespace Vket2023Summer.Circle1306
 
         private int rethrowCount = 0;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private bool inBooth = false;
+/*
 #endif
+*/
 
         private void GameLog(string message)
         {
@@ -183,11 +191,15 @@ namespace Vket2023Summer.Circle1306
             return str;
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketStart()
+/*
 #else
         private void Start()
 #endif
+*/
         {
             GameLogDebug("Start");
 
@@ -197,21 +209,27 @@ namespace Vket2023Summer.Circle1306
             dieGrabSphere._AddListener(this);
             dieGrabSphere.hideOnThrow = true; // Ensure hideOnThrow is set
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
             udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
 #endif
+*/
 
             ResetTable();
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
             EnableAudioSources(true);
             joinButton.SetActive(true);
 #endif
+*/
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private string formatChips(float amount)
         {
             string formatString = (string)VketUdonChips.GetProgramVariable("format");
@@ -222,6 +240,7 @@ namespace Vket2023Summer.Circle1306
         private void setUdonChipsMoney(float amount) { VketUdonChips.SetProgramVariable("money", amount); }
         private void incUdonChipsMoney(float amount) { setUdonChipsMoney(getUdonChipsMoney() + amount); }
         private void decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
+/*
 #else
         private string formatChips(float amount)
         {
@@ -234,6 +253,7 @@ namespace Vket2023Summer.Circle1306
         private void  incUdonChipsMoney(float amount) { setUdonChipsMoney(getUdonChipsMoney() + amount); }
         private void  decUdonChipsMoney(float amount) { incUdonChipsMoney(-amount); }
 #endif
+*/
 
         private readonly int STATE_BEGIN = 1;
         private readonly int STATE_BET = 2;
@@ -401,9 +421,13 @@ namespace Vket2023Summer.Circle1306
 
         private void KachingLabel(int player, float amount, bool isOya)
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             string color =
                 (amount < 0.0f) ? "#ff0000" :
@@ -472,9 +496,13 @@ namespace Vket2023Summer.Circle1306
 
         private void ShowThrowResult(int player, int[] result, uint throw_type, bool oyaThrow)
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             if (result.Length != 3) {
                 Debug.LogError("ShowThrowResult called with bad result array");
@@ -841,9 +869,13 @@ namespace Vket2023Summer.Circle1306
 
         private void ShowOyaMarker()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             showOyaMarker = true;
             oyaMarker.SetActive(true);
@@ -874,11 +906,15 @@ namespace Vket2023Summer.Circle1306
             }
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketUpdate()
+/*
 #else
             private void Update()
 #endif
+*/
         {
             if (showOyaMarker)
             {
@@ -1120,7 +1156,9 @@ namespace Vket2023Summer.Circle1306
         }
         #endregion
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketOnBoothEnter()
         {
             GameLogDebug("_VketOnBoothEnter");
@@ -1139,6 +1177,8 @@ namespace Vket2023Summer.Circle1306
             inBooth = false;
             EnableAudioSources(false);
         }
+/*
 #endif
+*/
     }
 }

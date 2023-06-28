@@ -6,11 +6,15 @@ using VRC.Udon;
 namespace Vket2023Summer.Circle1306
 {
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
+/*
 #else
     [UdonBehaviourSyncMode(BehaviourSyncMode.Continuous)]
 #endif
+*/
     public class Die : UdonSharpBehaviour
     {
         [Tooltip("Optimization where we only turn off the isKinematic flag on the rigidbody when it is thrown until it has settled")]
@@ -25,16 +29,23 @@ namespace Vket2023Summer.Circle1306
         private bool thrown = false;
         private bool firstFixedUpdate = false;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private bool inBooth = false;
+/*
 #endif
+*/
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
         [UdonSynced]
 #endif
+*/
         private int result = -1;
 
+/*
 #if VITDECK_HIDE_MENUITEM
 #else
         private void Start()
@@ -43,6 +54,7 @@ namespace Vket2023Summer.Circle1306
                 rigidbody.isKinematic = true;
         }
 #endif
+*/
 
         private int _ListMinIndex(float[] list)
         {
@@ -73,7 +85,9 @@ namespace Vket2023Summer.Circle1306
             result = _ListMinIndex(angles) + 1;
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketOnBoothEnter()
         {
             inBooth = true;
@@ -93,13 +107,19 @@ namespace Vket2023Summer.Circle1306
             firstFixedUpdate = false;
             rigidbody.isKinematic = true;
         }
+/*
 #endif
+*/
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketFixedUpdate()
+/*
 #else
         private void FixedUpdate()
 #endif
+*/
         {
             if (!firstFixedUpdate && thrown) {
                 if (rigidbody.velocity.sqrMagnitude < 0.0001 && rigidbody.angularVelocity.sqrMagnitude < 0.0001) {
@@ -150,18 +170,26 @@ namespace Vket2023Summer.Circle1306
 
         public override void OnDrop()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             _SetThrown();
         }
 
         public override void OnPickup()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             _SetHeld();
         }

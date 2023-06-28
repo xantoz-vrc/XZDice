@@ -44,9 +44,13 @@ namespace Vket2023Summer.Circle1306
         // Toggled on when FixedUpdate should make the dice follow the Sphere
         private bool diceFollow = false;
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         private bool inBooth = false;
+/*
 #endif
+*/
 
         private uint thrown = 0;
         private void SetThrown(int i) { thrown = thrown | (1u << i); }
@@ -257,7 +261,9 @@ namespace Vket2023Summer.Circle1306
             return ListMinIndex(angles) + 1;
         }
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketOnBoothEnter()
         {
             inBooth = true;
@@ -300,13 +306,19 @@ namespace Vket2023Summer.Circle1306
                 ++idx;
             }
         }
+/*
 #endif
+*/
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketFixedUpdate()
+/*
 #else
         private void FixedUpdate()
 #endif
+*/
         {
             // Have the dice follow the grabsphere while it is being grabbed
             // TODO: replace with parentconstraint usage?
@@ -345,9 +357,13 @@ namespace Vket2023Summer.Circle1306
 
         public override void OnPickup()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             int idx = 0;
             foreach (GameObject die in dice) {
@@ -378,9 +394,13 @@ namespace Vket2023Summer.Circle1306
 
         public override void OnDrop()
         {
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
             if (!inBooth) return;
+/*
 #endif
+*/
 
             int idx = 0;
             foreach (GameObject die in dice) {

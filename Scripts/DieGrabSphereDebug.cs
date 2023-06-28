@@ -19,11 +19,15 @@ namespace Vket2023Summer.Circle1306
         // [UdonSynced]
         private string output = "";
 
+/*
 #if VITDECK_HIDE_MENUITEM
+*/
         public void _VketStart()
+/*
 #else
         void Start()
 #endif
+*/
         {
             dieGrabSphere._AddListener(this);
             AddText("Start");
