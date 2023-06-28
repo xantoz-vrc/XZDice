@@ -4,7 +4,7 @@ using VRC.SDKBase;
 using VRC.Udon;
 using UnityEngine.UI;
 
-namespace XZDice
+namespace Vket2023Summer.Circle1306
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GameLog : UdonSharpBehaviour

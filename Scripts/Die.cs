@@ -3,7 +3,7 @@ using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
 
-namespace XZDice
+namespace Vket2023Summer.Circle1306
 {
 
 #if VITDECK_HIDE_MENUITEM

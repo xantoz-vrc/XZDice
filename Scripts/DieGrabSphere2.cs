@@ -5,7 +5,7 @@ using VRC.SDK3.Components;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 
-namespace XZDice
+namespace Vket2023Summer.Circle1306
 {
     // Optimized variant of DieGrabSphere that works with dice without their own UdonBehaviour.
     // It assumes that the dice are not individually pickupable (no VRC_Pickup).

@@ -5,7 +5,7 @@ using VRC.Udon;
 using UnityEngine.UI;
 using TMPro;
 
-namespace XZDice
+namespace Vket2023Summer.Circle1306
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class DieGrabSphereDebug : UdonSharpBehaviour
