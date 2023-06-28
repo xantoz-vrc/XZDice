@@ -76,7 +76,7 @@ namespace Vket2023Summer.Circle1306
         private readonly bool SPAM = true; // Enable spam level debug logs
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public UdonBehaviour VketUdonChips;
 /*
@@ -129,7 +129,7 @@ namespace Vket2023Summer.Circle1306
         [UdonSynced] private uint arg0;
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         private bool inBooth = false;
 /*
@@ -194,7 +194,7 @@ namespace Vket2023Summer.Circle1306
         }
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketStart()
 /*
@@ -239,7 +239,7 @@ namespace Vket2023Summer.Circle1306
                 Debug.LogError(string.Format("resultPopupLabels must be {0} long", MAX_PLAYERS));
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
             udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
 #endif
@@ -251,7 +251,7 @@ namespace Vket2023Summer.Circle1306
             ResetTable();
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
             EnableAudioSources(true);
             for (int p = 1; p <= MAX_PLAYERS; ++p) {
@@ -322,7 +322,7 @@ namespace Vket2023Summer.Circle1306
 
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         private string formatChips(float amount)
         {
@@ -578,7 +578,7 @@ namespace Vket2023Summer.Circle1306
         private void JoinPlayerBtn(int player)
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -930,7 +930,7 @@ namespace Vket2023Summer.Circle1306
         private void KachingLabel(int player, float amount)
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -997,7 +997,7 @@ namespace Vket2023Summer.Circle1306
         private void ShowThrowResult(int player, int[] result, uint throw_type, bool oya)
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -1043,7 +1043,7 @@ namespace Vket2023Summer.Circle1306
         private void UpdateJoinButtons(bool[] pa)
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -1087,7 +1087,7 @@ namespace Vket2023Summer.Circle1306
         private void ShowOyaMarker()
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -1123,7 +1123,7 @@ namespace Vket2023Summer.Circle1306
         public override void OnDeserialization()
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -3046,7 +3046,7 @@ namespace Vket2023Summer.Circle1306
         // TODO: consider just having Broadcast cause a SendCustomEventDelayedSeconds-based thread
         //       do these as some sort of optimization?
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketUpdate()
 /*
@@ -3095,7 +3095,7 @@ namespace Vket2023Summer.Circle1306
         #endregion
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketOnBoothEnter()
         {

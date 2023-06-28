@@ -8,7 +8,7 @@ using TMPro;
 namespace Vket2023Summer.Circle1306
 {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 /*
@@ -28,7 +28,7 @@ namespace Vket2023Summer.Circle1306
         private Text text = null;
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
         [UdonSynced]
 #endif
@@ -36,7 +36,7 @@ namespace Vket2023Summer.Circle1306
         private string output;
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketStart()
 /*
@@ -46,7 +46,7 @@ namespace Vket2023Summer.Circle1306
 */
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             UpdateText("Start");
 /*
@@ -87,7 +87,7 @@ namespace Vket2023Summer.Circle1306
         }
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
         public override void OnDeserialization()
         {
@@ -110,7 +110,7 @@ namespace Vket2023Summer.Circle1306
         private void UpdateText(string extra)
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
             if (!Networking.IsOwner(gameObject) && Networking.LocalPlayer != null)
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
@@ -125,7 +125,7 @@ namespace Vket2023Summer.Circle1306
 
             ApplyText();
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
             RequestSerialization();
 #endif

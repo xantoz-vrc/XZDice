@@ -84,7 +84,7 @@ namespace Vket2023Summer.Circle1306
         private readonly bool SPAM = true; // Enable spam level debug logs
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public UdonBehaviour VketUdonChips;
 /*
@@ -126,7 +126,7 @@ namespace Vket2023Summer.Circle1306
         private int rethrowCount = 0;
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         private bool inBooth = false;
 /*
@@ -192,7 +192,7 @@ namespace Vket2023Summer.Circle1306
         }
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketStart()
 /*
@@ -210,7 +210,7 @@ namespace Vket2023Summer.Circle1306
             dieGrabSphere.hideOnThrow = true; // Ensure hideOnThrow is set
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
             udonChips = (UdonBehaviour)GameObject.Find("UdonChips").GetComponent(typeof(UdonBehaviour));
 #endif
@@ -219,7 +219,7 @@ namespace Vket2023Summer.Circle1306
             ResetTable();
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
             EnableAudioSources(true);
             joinButton.SetActive(true);
@@ -228,7 +228,7 @@ namespace Vket2023Summer.Circle1306
         }
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         private string formatChips(float amount)
         {
@@ -422,7 +422,7 @@ namespace Vket2023Summer.Circle1306
         private void KachingLabel(int player, float amount, bool isOya)
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -497,7 +497,7 @@ namespace Vket2023Summer.Circle1306
         private void ShowThrowResult(int player, int[] result, uint throw_type, bool oyaThrow)
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -870,7 +870,7 @@ namespace Vket2023Summer.Circle1306
         private void ShowOyaMarker()
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -907,7 +907,7 @@ namespace Vket2023Summer.Circle1306
         }
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketUpdate()
 /*
@@ -1157,7 +1157,7 @@ namespace Vket2023Summer.Circle1306
         #endregion
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketOnBoothEnter()
         {

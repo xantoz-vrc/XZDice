@@ -20,7 +20,7 @@ namespace Vket2023Summer.Circle1306
         private string output = "";
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketStart()
 /*

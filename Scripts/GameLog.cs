@@ -24,7 +24,7 @@ namespace Vket2023Summer.Circle1306
         bool ready = false;
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketStart()
 /*

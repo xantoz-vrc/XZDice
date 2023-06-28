@@ -7,7 +7,7 @@ namespace Vket2023Summer.Circle1306
 {
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 /*
@@ -30,7 +30,7 @@ namespace Vket2023Summer.Circle1306
         private bool firstFixedUpdate = false;
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         private bool inBooth = false;
 /*
@@ -38,7 +38,7 @@ namespace Vket2023Summer.Circle1306
 */
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
         [UdonSynced]
 #endif
@@ -46,7 +46,7 @@ namespace Vket2023Summer.Circle1306
         private int result = -1;
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 #else
         private void Start()
         {
@@ -86,7 +86,7 @@ namespace Vket2023Summer.Circle1306
         }
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketOnBoothEnter()
         {
@@ -112,7 +112,7 @@ namespace Vket2023Summer.Circle1306
 */
 
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
         public void _VketFixedUpdate()
 /*
@@ -171,7 +171,7 @@ namespace Vket2023Summer.Circle1306
         public override void OnDrop()
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
@@ -184,7 +184,7 @@ namespace Vket2023Summer.Circle1306
         public override void OnPickup()
         {
 /*
-#if VITDECK_HIDE_MENUITEM
+??=if VITDECK_HIDE_MENUITEM
 */
             if (!inBooth) return;
 /*
