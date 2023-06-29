@@ -63,6 +63,13 @@ namespace Vket2023Summer.Circle1306
             ApplyText();
         }
 
+        public void _ToggleVisible()
+        {
+            foreach (Text t in screens) {
+                t.enabled = !t.enabled;
+            }
+        }
+
         private void ApplyText()
         {
             string contents = "";
