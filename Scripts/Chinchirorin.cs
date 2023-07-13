@@ -81,7 +81,7 @@ namespace XZDice
         private UdonBehaviour udonChips = null;
 #endif
 
-        private bool langJp = false;
+        private bool langJp = true;
 
         // Max bet in part makes sure we do not go above 2^16 (even when tripled), as we serialize bets as 16 bit uint
         //   2*20000 = 60000 < 2^16 = 65536
@@ -177,6 +177,11 @@ namespace XZDice
         {
             if (!langJp)
                 return str;
+
+            if (str == "Waiting for synchronization...") return "同期を待っています";
+            if (str == "Waiting for players to join...") return "参加待ち";
+            if (str == "Waiting on bets...") return "賭け待ち";
+            if (str == "Waiting on round start...") return "親を待っています";
 
             // This will translate strings to the active
             // language when there is one
