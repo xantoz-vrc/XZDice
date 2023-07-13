@@ -456,7 +456,7 @@ namespace XZDice
             if (!(THROW_2 <= throw_type && throw_type <= THROW_5))
                 return;
 
-            string text = (langJp) ? "親の出目: " : "To beat:\n";
+            string text = (langJp) ? "親の出目:\n" : "To beat:\n";
             text += string.Format("{0} {1} {2} = <color={3}>{4}</color>",
                                   result[0], result[1], result[2],
                                   getThrowTypeColor(throw_type), formatThrowType(throw_type));
