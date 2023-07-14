@@ -910,7 +910,7 @@ namespace XZDice
                 string youStr = (langJp) ? "（貴方）" : " (you)";
                 if (isOya()) {
                     label.text =
-                        string.Format("Player {0}{1}<sup><color=\"yellow\">親</color></sup> (you)\nMoney: {2}\n",
+                        string.Format("Player {0}<sup><color=\"yellow\">親</color></sup>{1}\nMoney: {2}\n",
                                       player, youStr, formatChips(getUdonChipsMoney()));
                 } else {
                     label.text =
