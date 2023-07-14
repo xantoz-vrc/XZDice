@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4520306577756086357}
   - component: {fileID: 3968221163148288923}
   - component: {fileID: 6401053193430222086}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -202,7 +202,7 @@ GameObject:
   - component: {fileID: 670941007841779896}
   - component: {fileID: 6331065192567326278}
   - component: {fileID: 4044552903124363251}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: UdonChipsScoreBoard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -301,7 +301,7 @@ GameObject:
   - component: {fileID: 7346658636286740025}
   - component: {fileID: 8490657436865154190}
   - component: {fileID: 5822417558552590661}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
