@@ -20,7 +20,7 @@ namespace XZDice
 
         [FieldChangeCallback(nameof(rigidbody))]
         private Rigidbody _rigidbody;
-        private Rigidbody rigidbody => _rigidbody ? _rigidbody : (_rigidbody = gameObject.GetComponent<Rigidbody>());
+        private new Rigidbody rigidbody => _rigidbody ? _rigidbody : (_rigidbody = gameObject.GetComponent<Rigidbody>());
 
         private bool thrown = false;
         private bool firstFixedUpdate = false;
