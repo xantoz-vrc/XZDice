@@ -826,19 +826,11 @@ namespace XZDice
             }
         }
 
-        private bool kachingSoundPlaying = false;
         private void PlayKachingSound()
         {
-            if (kachingSound != null && !kachingSoundPlaying) {
-                kachingSoundPlaying = true;
+            if (kachingSound != null && !kachingSound.isPlaying) {
                 kachingSound.Play();
-                SendCustomEventDelayedSeconds(nameof(_ResetKachingSound), 5.0f);
             }
-        }
-
-        public void _ResetKachingSound()
-        {
-            kachingSoundPlaying = false;
         }
 
         private void PlayErrorSound()
