@@ -81,7 +81,12 @@ namespace XZDice
         private UdonBehaviour udonChips = null;
 #endif
 
+        [SerializeField]
+        [Tooltip("日本語")]
         private bool langJp = true;
+
+        [SerializeField]
+        private TextMeshProUGUI langToggleButtonLabel;
 
         // Max bet in part makes sure we do not go above 2^16 (even when tripled), as we serialize bets as 16 bit uint
         //   2*20000 = 60000 < 2^16 = 65536
@@ -173,6 +178,36 @@ namespace XZDice
             GameLog("<color=\"red\">ERR: " + message + "</color>");
         }
 
+        private void UpdateButtonsLanguage()
+        {
+            langToggleButtonLabel.text = (langJp) ? "Lang:JP": "Lang:EN";
+
+            foreach (GameObject btn in startRoundButtons) {
+                SetButtonText(btn, (langJp) ? "開始" : "Start\nround");
+            }
+
+            foreach (GameObject bs in betScreens) {
+                Button[] buttons = bs.GetComponentsInChildren<Button>();
+                foreach (Button btn in buttons) {
+                    if (btn.name == "DoneButton") {
+                        SetButtonText(btn.gameObject, (langJp) ? "完了" : "Done");
+                    } else if (btn.name == "UndoButton") {
+                        SetButtonText(btn.gameObject, (langJp) ? "取消" : "Undo");
+                    }
+                }
+            }
+
+            if (synced) {
+                UpdateJoinButtons(playerActive);
+            }
+        }
+
+        public void _ToggleLanguage()
+        {
+            langJp = !langJp;
+            UpdateButtonsLanguage();
+        }
+
         private string _jp(string str)
         {
             if (!langJp)
@@ -182,9 +217,26 @@ namespace XZDice
             if (str == "Waiting for players to join...") return "参加待ち";
             if (str == "Waiting on bets...") return "賭け待ち";
             if (str == "Waiting on round start...") return "親を待っています";
+            if (str == "Waiting for dealer to start the round...") return "親を待っています";
 
-            // This will translate strings to the active
-            // language when there is one
+            if (str == "P{0} is the dealer") return "P{0}が親です";
+            if (str == "P{0} bet {1}") return "P{0}が{1}を賭けました";
+            if (str == "Dealer rejected bet as too big") return "親：賭けが大きすぎます";
+            if (str == "P{0} entered the game") return "P{0}が参加しました";
+            if (str == "P{0} timed out and left the game") return "P{0}がゲームから退出しました（タイムアウト）";
+            if (str == "P{0} left the game") return "P{0}がゲームから退出しました";
+            if (str == "P{0} rethrow ({1}/{2})") return "P{0}の振り直し({1}/{2})";
+            if (str == "P{0} it is your turn") return "P{0}の番です";
+            if (str == "P{0}{1} threw <color={2}>outside</color>") return "P{0}{1}の結果：<color={2}>ションベン</color>";
+            if (str == "P{0}{1} threw {2} {3} {4}: <color={5}>{6}</color>") return "P{0}{1}の結果： {2} {3} {4} 【<color={5}>{6}</color>】";
+            if (str == "P{0}{1} won <color=\"lime\">{2}</color>") return "P{0}{1}が<color=\"lime\">{2}</color>を勝ちました";
+            if (str == "P{0}{1} lost <color=\"red\">{2}</color>") return "P{0}{1}が<color=\"red\">{2}</color>を負けてしまいました";
+            if (str == "P{0}{1} <color=\"yellow\">draw</color>") return "P{0}{1}：<color=\"yellow\">分かれ</color>";
+            if (str == "P{0} wants to play") return "P{0}が遊びたいようです";
+            if (str == "Dealer change P{0} -> P{1}") return "親がP{0}からP{1}に替わりました";
+            if (str == "Table is empty") return "卓が空いています";
+            if (str == "You can at most bet a third of your total ({0})") return "最大持ち金の三分の一（{0}）まで賭けられます";
+            if (str == "Dealer disappeared: Game reset") return "親が消失しました：リセットします";
 
             // Fallback
             return str;
@@ -230,6 +282,8 @@ namespace XZDice
 
             if (resultPopupLabels.Length != MAX_PLAYERS)
                 Debug.LogError(string.Format("resultPopupLabels must be {0} long", MAX_PLAYERS));
+
+            UpdateButtonsLanguage();
 
 #if VITDECK_HIDE_MENUITEM
 #else
@@ -307,8 +361,6 @@ namespace XZDice
             timeoutTimeOya = float.NaN;
             state = -1;
         }
-
-
 
 #if VITDECK_HIDE_MENUITEM
         private string formatChips(float amount)
@@ -634,7 +686,7 @@ namespace XZDice
                                        player, bet, totalBet));
             if ((totalBet + bet)*3 > getUdonChipsMoney()) {
                 PlayErrorSound();
-                GameLog(string.Format("<color=\"red\">You can at most bet a third of your total ({0})</color>",
+                GameLog(string.Format("<color=\"red\">" + _jp("You can at most bet a third of your total ({0})") + "</color>",
                                       formatChips(getUdonChipsMoney()/3.0f)));
                 return;
             }
@@ -863,14 +915,15 @@ namespace XZDice
             var label = betLabels[player - 1];
 
             if (isValidPlayer(iAmPlayer) && player == iAmPlayer) {
+                string youStr = (langJp) ? "（貴方）" : " (you)";
                 if (isOya()) {
                     label.text =
-                        string.Format("Player {0}<sup><color=\"yellow\">親</color></sup> (you)\nMoney: {1}\n",
-                                      player, formatChips(getUdonChipsMoney()));
+                        string.Format("Player {0}{1}<sup><color=\"yellow\">親</color></sup> (you)\nMoney: {2}\n",
+                                      player, youStr, formatChips(getUdonChipsMoney()));
                 } else {
                     label.text =
-                        string.Format("Player {0} (you)\nMoney: {1}\nBet: {2}",
-                                      player, formatChips(getUdonChipsMoney()), formatChips(amount));
+                        string.Format("Player {0}{1}\nMoney: {2}\nBet: {3}",
+                                      player, youStr, formatChips(getUdonChipsMoney()), formatChips(amount));
                 }
             } else {
                 if (player == oya) {
@@ -1022,10 +1075,10 @@ namespace XZDice
             for (int i = 0; i < MAX_PLAYERS; ++i) {
                 if (!isValidPlayer(iAmPlayer)) {
                     joinButtons[i].SetActive(!pa[i]);
-                    SetButtonText(joinButtons[i], "Join");
+                    SetButtonText(joinButtons[i], (langJp) ? "参加" : "Join");
                 } else {
                     joinButtons[i].SetActive(i + 1 == iAmPlayer);
-                    SetButtonText(joinButtons[i], "Leave");
+                    SetButtonText(joinButtons[i], (langJp) ? "退出" : "Leave");
                 }
             }
         }
@@ -1112,7 +1165,7 @@ namespace XZDice
 
                 oya = player;
                 bool[] pa = opoyareport_playerActive(arg0);
-                GameLog2(string.Format("P{0} is the dealer", oya),
+                GameLog2(string.Format(_jp("P{0} is the dealer"), oya),
                          string.Format("P{0} is the dealer (playerActive: {1},{2},{3},{4})",
                                        oya, pa[0], pa[1], pa[2], pa[3]));
                 UpdateJoinButtons(pa);
@@ -1132,7 +1185,7 @@ namespace XZDice
                 ClearAllWaitingTexts();
                 SetWaitingText(oya, _jp("Waiting for players to join..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORBETS) {
-                GameLog("Waiting on bets...");
+                GameLog(_jp("Waiting on bets..."));
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(false);
                 } else {
@@ -1142,7 +1195,7 @@ namespace XZDice
                 ClearAllWaitingTexts();
                 SetWaitingText(oya, _jp("Waiting on bets..."));
             } else if (op_getop(arg0) == OPCODE_WAITINGFORROUNDSTART) {
-                GameLog("Waiting for dealer to start the round...");
+                GameLog(_jp("Waiting for dealer to start the round..."));
 
                 if (isOya()) {
                     startRoundButtons[oya - 1].SetActive(true);
@@ -1209,7 +1262,7 @@ namespace XZDice
                 float total = opbet_gettotal(arg0);
                 GameObject bs = betScreens[player - 1];
                 bs.SetActive(false);
-                GameLog(string.Format("P{0} bet {1}", player, formatChips(total)));
+                GameLog(string.Format(_jp("P{0} bet {1}"), player, formatChips(total)));
                 SetBetLabel(player, total);
                 if (iAmPlayer == player) {
                     totalBet = total;
@@ -1229,7 +1282,7 @@ namespace XZDice
                 if (iAmPlayer == player) {
                     totalBet = total;
                     PlayErrorSound();
-                    GameLog("<color=\"red\">Dealer rejected bet as too big</color>");
+                    GameLog("<color=\"red\">" + _jp("Dealer rejected bet as too big") + "</color>");
                     GameObject bs = betScreens[player - 1];
                     SetBetScreenButtons(bs, true, total > 0.0f);
                 }
@@ -1243,7 +1296,7 @@ namespace XZDice
                 int nonce = opplayerjoin_nonce(arg0);
                 bool[] pa = opplayer_playerActive(arg0);
                 bool showbuttons = opplayer_showbuttons(arg0);
-                GameLog2(string.Format("P{0} entered the game", player),
+                GameLog2(string.Format(_jp("P{0} entered the game"), player),
                          string.Format("P{0} entered the game (nonce: {1}, pa: {2},{3},{4},{5})",
                                        player, nonce, pa[0], pa[1], pa[2], pa[3]));
 
@@ -1287,11 +1340,11 @@ namespace XZDice
                 bool timeout = opplayerleave_timeout(arg0);
 
                 if (timeout) {
-                    GameLog2(string.Format("P{0} timed out and left the game", player),
+                    GameLog2(string.Format(_jp("P{0} timed out and left the game"), player),
                              string.Format("P{0} timed out and left the game (playerActive: {1},{2},{3},{4})",
                                            player, pa[0], pa[1], pa[2], pa[3]));
                 } else {
-                    GameLog2(string.Format("P{0} left the game", player),
+                    GameLog2(string.Format(_jp("P{0} left the game"), player),
                              string.Format("P{0} left the game (playerActive: {1},{2},{3},{4})",
                                            player, pa[0], pa[1], pa[2], pa[3]));
                 }
@@ -1347,9 +1400,9 @@ namespace XZDice
                 dieGrabSphere._Show();
 
                 if (rethrow > 0) {
-                    GameLog(string.Format("P{0} rethrow ({1}/{2})", player, rethrow + 1, MAX_RETHROWS));
+                    GameLog(string.Format(_jp("P{0} rethrow ({1}/{2})"), player, rethrow + 1, MAX_RETHROWS));
                 } else {
-                    GameLog(string.Format("P{0} it is your turn", player));
+                    GameLog(string.Format(_jp("P{0} it is your turn"), player));
                 }
                 // TODO: perhaps a sound effect to draw the users attention? (it
                 // should be fine just to do it inline here)
@@ -1358,11 +1411,11 @@ namespace XZDice
                 int[] result = opthrow_result(arg0);
                 uint throw_type = opthrow_type(arg0);
                 if (throw_type == THROW_SHONBEN)
-                    GameLog(string.Format("P{0} threw <color={1}>outside</color>",
-                                          player, getRelativeThrowTypeColor(throw_type, c_oyaThrowType)));
+                    GameLog(string.Format(_jp("P{0}{1} threw <color={2}>outside</color>"),
+                                          player, "", getRelativeThrowTypeColor(throw_type, c_oyaThrowType)));
                 else
-                    GameLog(string.Format("P{0} threw {1} {2} {3}: <color={4}>{5}</color>",
-                                          player, result[0], result[1], result[2],
+                    GameLog(string.Format(_jp("P{0}{1} threw {2} {3} {4}: <color={5}>{6}</color>"),
+                                          player, "", result[0], result[1], result[2],
                                           getRelativeThrowTypeColor(throw_type, c_oyaThrowType),
                                           formatThrowType(throw_type)));
 
@@ -1373,12 +1426,13 @@ namespace XZDice
                 int[] result = opthrow_result(arg0);
                 uint throw_type = opthrow_type(arg0);
                 c_oyaThrowType = throw_type; // Save for later
+                string dealerStr = (langJp) ? "（親）" : " (dealer)";
                 if (throw_type == THROW_SHONBEN)
-                    GameLog(string.Format("P{0} (dealer) threw <color={1}>outside</color>",
-                                          player, getThrowTypeColor(throw_type)));
+                    GameLog(string.Format(_jp("P{0}{1} threw <color={2}>outside</color>"),
+                                          player, dealerStr, getThrowTypeColor(throw_type)));
                 else
-                    GameLog(string.Format("P{0} (dealer) threw {1} {2} {3}: <color={4}>{5}</color>",
-                                          player, result[0], result[1], result[2],
+                    GameLog(string.Format(_jp("P{0}{1} threw {2} {3} {4}: <color={5}>{6}</color>"),
+                                          player, dealerStr, result[0], result[1], result[2],
                                           getThrowTypeColor(throw_type), formatThrowType(throw_type)));
 
                 ShowThrowResult(player, result, throw_type, true);
@@ -1390,11 +1444,11 @@ namespace XZDice
                     incUdonChipsMoney(amount);
 
                 if (amount > 0.0f)
-                    GameLog(string.Format("P{0} won <color=\"lime\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                    GameLog(string.Format(_jp("P{0}{1} won <color=\"lime\">{2}</color>"), player, "", formatChips(Mathf.Abs(amount))));
                 else if (amount < 0.0f)
-                    GameLog(string.Format("P{0} lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                    GameLog(string.Format(_jp("P{0}{1} lost <color=\"red\">{2}</color>"), player, "", formatChips(Mathf.Abs(amount))));
                 else
-                    GameLog(string.Format("P{0} <color=\"yellow\">draw</color>", player));
+                    GameLog(string.Format(_jp("P{0}{1} <color=\"yellow\">draw</color>"), player, ""));
 
                 PlayKachingSound();
                 KachingLabel(player, amount);
@@ -1404,12 +1458,13 @@ namespace XZDice
                 int player = opbalance_player(arg0);
                 float amount = opbalance_amount(arg0);
 
+                string dealerStr = (langJp) ? "（親）" : " (dealer)";
                 if (amount > 0.0f)
-                    GameLog(string.Format("P{0} (dealer) won <color=\"lime\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                    GameLog(string.Format(_jp("P{0}{1} won <color=\"lime\">{2}</color>"), player, dealerStr, formatChips(Mathf.Abs(amount))));
                 else if (amount < 0.0f)
-                    GameLog(string.Format("P{0} (dealer) lost <color=\"red\">{1}</color>", player, formatChips(Mathf.Abs(amount))));
+                    GameLog(string.Format(_jp("P{0}{1} lost <color=\"red\">{2}</color>"), player, dealerStr, formatChips(Mathf.Abs(amount))));
                 else
-                    GameLog(string.Format("P{0} (dealer) <color=\"yellow\">no change</color>", player));
+                    GameLog(string.Format(_jp("P{0}{1} <color=\"yellow\">draw</color>"), player, dealerStr));
 
                 PlayKachingSound();
                 KachingLabel(player, amount);
@@ -1425,11 +1480,11 @@ namespace XZDice
 
                 // TODO: display clearly who is oya (change playerlabel?)
                 if (!isValidPlayer(fromPlayer))
-                    GameLog2(string.Format("P{0} wants to play", toPlayer),
+                    GameLog2(string.Format(_jp("P{0} wants to play"), toPlayer),
                              string.Format("P{0} wants to play (playerActive: {1},{2},{3},{4})",
                                            toPlayer, pa[0], pa[1], pa[2], pa[3]));
                 else
-                    GameLog2(string.Format("Dealer change P{0} -> P{1}", fromPlayer, toPlayer),
+                    GameLog2(string.Format(_jp("Dealer change P{0} -> P{1}"), fromPlayer, toPlayer),
                              string.Format("Dealer change P{0} -> P{1} (playerActive: {2},{3},{4},{5})",
                                            fromPlayer, toPlayer, pa[0], pa[1], pa[2], pa[3]));
 
@@ -1473,7 +1528,7 @@ namespace XZDice
                 // clear non-debug GameLog
                 gameLog._Clear();
 
-                GameLog("Table is empty");
+                GameLog(_jp("Table is empty"));
                 ResetServerVariables();
                 opqueue_Reset();
                 ResetClientVariables();
@@ -1556,7 +1611,7 @@ namespace XZDice
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
             }
 
-            GameLog("Dealer disappeared: Game reset");
+            GameLog(_jp("Dealer disappeared: Game reset"));
             opqueue_Reset();
             BroadcastImmediate(mkop_nooya());
         }
