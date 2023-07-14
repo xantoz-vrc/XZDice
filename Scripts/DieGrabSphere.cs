@@ -17,7 +17,7 @@ namespace XZDice
         public bool hideOnThrow = false;
 
         private VRC_Pickup pickup;
-        private Rigidbody rigidbody;
+        private new Rigidbody rigidbody;
 
         // Toggled on when FixedUpdate should make the dice follow the Sphere
         private bool diceFollow = false;

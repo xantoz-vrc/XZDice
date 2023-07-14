@@ -21,8 +21,6 @@ namespace XZDice
         private int startPos = 0;
         private int totalLines = 0;
 
-        bool ready = false;
-
 #if VITDECK_HIDE_MENUITEM
         public void _VketStart()
 #else

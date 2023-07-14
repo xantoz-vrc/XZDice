@@ -2646,7 +2646,7 @@ namespace XZDice
         private readonly uint OPCODE_OYABALANCE = 0x31u; // This is sent for display purposes only: to display the difference of oyas balance
         private readonly uint OPCODE_OYACHANGE = 0xF1u; // Requests that another player take over as oya
         private readonly uint OPCODE_NOOYA     = 0x00u; // Sent by the oya when it is the last person leaving, resetting the game. Also the value in arg0 on start
-        private readonly uint OPCODE_NOOP      = 0xFFu;
+        // private readonly uint OPCODE_NOOP      = 0xFFu;
 
         // Helper that input values for bet/balance money float arguments
         // that are transferred as 16 bit uints

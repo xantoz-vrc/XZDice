@@ -1100,7 +1100,6 @@ namespace XZDice
             }
         }
 
-        private bool kachingSoundPlaying = false;
         private void PlayKachingSound()
         {
             GameLogDebug("PlayKachingSound");
