@@ -5,7 +5,7 @@ using VRC.Udon;
 using UnityEngine.UI;
 using TMPro;
 
-namespace Vket2023Summer.Circle1306
+namespace Vket2023Winter.Circle504
 {
 /*
 ??=if VITDECK_HIDE_MENUITEM

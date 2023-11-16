@@ -9,7 +9,7 @@ using VRC.Udon.Common.Interfaces;
 using UnityEngine.UI;
 using TMPro;
 
-namespace Vket2023Summer.Circle1306
+namespace Vket2023Winter.Circle504
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class ChinchirorinSinglePlayer : UdonSharpBehaviour

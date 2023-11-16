@@ -3,7 +3,7 @@ using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
 
-namespace Vket2023Summer.Circle1306
+namespace Vket2023Winter.Circle504
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GameLogTester : UdonSharpBehaviour
