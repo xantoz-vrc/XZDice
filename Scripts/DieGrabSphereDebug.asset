@@ -21,7 +21,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 1
   hasInteractEvent: 0
-  scriptID: -739734978445460874
+  scriptID: -4445987452828251948
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -62,7 +62,7 @@ MonoBehaviour:
       Data: 3|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: XZDice.DieGrabSphere2, Assembly-CSharp
+      Data: Vket2023Summer.Circle1306.DieGrabSphere2, Assembly-CSharp
     - Name: 
       Entry: 8
       Data: 

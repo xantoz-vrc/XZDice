@@ -5,7 +5,7 @@ using VRC.Udon;
 using UnityEngine.UI;
 using TMPro;
 
-namespace XZDice
+namespace Vket2023Summer.Circle1306
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class DieGrabSphereDebug : UdonSharpBehaviour
@@ -19,11 +19,15 @@ namespace XZDice
         // [UdonSynced]
         private string output = "";
 
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
+*/
         public void _VketStart()
+/*
 #else
         void Start()
 #endif
+*/
         {
             dieGrabSphere._AddListener(this);
             AddText("Start");

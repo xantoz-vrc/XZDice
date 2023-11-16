@@ -5,7 +5,7 @@ using VRC.SDK3.Components;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 
-namespace XZDice
+namespace Vket2023Summer.Circle1306
 {
     //[UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class DieGrabSphere : UdonSharpBehaviour

@@ -4,7 +4,7 @@ using VRC.SDKBase;
 using VRC.Udon;
 using UnityEngine.UI;
 
-namespace XZDice
+namespace Vket2023Summer.Circle1306
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GameLog : UdonSharpBehaviour
@@ -21,11 +21,16 @@ namespace XZDice
         private int startPos = 0;
         private int totalLines = 0;
 
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
+*/
+>>>>>>> origin/vket2023summer
         public void _VketStart()
+/*
 #else
         private void Start()
 #endif
+*/
         {
             _Clear();
         }
@@ -55,6 +60,13 @@ namespace XZDice
             }
 
             ApplyText();
+        }
+
+        public void _ToggleVisible()
+        {
+            foreach (Text t in screens) {
+                t.enabled = !t.enabled;
+            }
         }
 
         private void ApplyText()

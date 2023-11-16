@@ -5,13 +5,17 @@ using VRC.Udon;
 using UnityEngine.UI;
 using TMPro;
 
-namespace XZDice
+namespace Vket2023Summer.Circle1306
 {
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
+*/
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
+/*
 #else
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
 #endif
+*/
     public class DiceDebug : UdonSharpBehaviour
     {
         [SerializeField]
@@ -23,20 +27,29 @@ namespace XZDice
         [SerializeField]
         private Text text = null;
 
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
 #else
         [UdonSynced]
 #endif
+*/
         private string output;
 
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
+*/
         public void _VketStart()
+/*
 #else
         private void Start()
 #endif
+*/
         {
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
+*/
             UpdateText("Start");
+/*
 #else
             if (textMeshPro == null) {
                 textMeshPro = GetComponent<TextMeshProUGUI>();
@@ -49,6 +62,7 @@ namespace XZDice
             if (Networking.IsOwner(gameObject))
                 UpdateText("Start");
 #endif
+*/
             foreach (Die die in dice) {
                 die._AddListener(this);
             }
@@ -72,13 +86,15 @@ namespace XZDice
             UpdateText("DiceResult");
         }
 
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
 #else
         public override void OnDeserialization()
         {
             ApplyText();
         }
 #endif
+*/
 
         private void ApplyText()
         {
@@ -93,11 +109,13 @@ namespace XZDice
 
         private void UpdateText(string extra)
         {
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
 #else
             if (!Networking.IsOwner(gameObject) && Networking.LocalPlayer != null)
                 Networking.SetOwner(Networking.LocalPlayer, gameObject);
 #endif
+*/
 
             string playerName = (Networking.LocalPlayer != null) ? Networking.LocalPlayer.displayName : "";
             output = extra + "\n" + "Thrower: " + playerName + "\n";
@@ -106,10 +124,12 @@ namespace XZDice
             }
 
             ApplyText();
-#if VITDECK_HIDE_MENUITEM
+/*
+??=if VITDECK_HIDE_MENUITEM
 #else
             RequestSerialization();
 #endif
+*/
         }
     }
 }
