@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: DieGrabSphere2
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 840da0896cbbca1428c6e8ce6cd07145,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: dfe7c0b72219453438f611b47c1c3b9b,
     type: 2}
   udonAssembly: 
   assemblyError: 
@@ -21,7 +21,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 2
   hasInteractEvent: 0
-  scriptID: -6637737273336629747
+  scriptID: 1245440256814743709
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 

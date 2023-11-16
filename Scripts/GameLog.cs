@@ -24,7 +24,6 @@ namespace Vket2023Winter.Circle504
 /*
 ??=if VITDECK_HIDE_MENUITEM
 */
->>>>>>> origin/vket2023summer
         public void _VketStart()
 /*
 #else
