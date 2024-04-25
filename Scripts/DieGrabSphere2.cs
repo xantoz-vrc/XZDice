@@ -4,6 +4,7 @@ using VRC.SDKBase;
 using VRC.SDK3.Components;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
+using TMPro;
 
 namespace XZDice
 {
@@ -32,14 +33,27 @@ namespace XZDice
         private new Rigidbody rigidbody => _rigidbody ? _rigidbody : (_rigidbody = gameObject.GetComponent<Rigidbody>());
 
         [SerializeField]
+        [Tooltip("(optional) Collider the dice need to land inside of to generate a valid result")]
         private Collider insideBowlCollider = null;
+
+        [SerializeField]
+        [Tooltip("(optional) debugging text field")]
+        TextMeshProUGUI debugText = null;
 
         private UdonSharpBehaviour[] listeners;
 
         // Used to give dice one fixed update before we start checking whether they are still or
         // not. Without this they can sometimes get stuck in mid-air, if they start out from a
         // complete stand-still.
-        private bool firstFixedUpdate = false;
+        private int firstFixedUpdate = 0;
+
+	private bool scheduleDrop;
+	private bool schedulePickup;
+
+	private Vector3 prevPos;
+	private Vector3 velocity;
+	private Vector3 prevVelocity;
+	private Vector3 prevRBVelocity;
 
         // Toggled on when FixedUpdate should make the dice follow the Sphere
         private bool diceFollow = false;
@@ -195,6 +209,9 @@ namespace XZDice
             if (os != null)
                 os.FlagDiscontinuity();
 
+	    prevPos = tf.position;
+	    velocity = new Vector3(0,0,0);
+	    prevVelocity = new Vector3(0,0,0);
             rigidbody.position = tf.position;
             rigidbody.rotation = tf.rotation;
         }
@@ -306,11 +323,16 @@ namespace XZDice
         public void _VketFixedUpdate()
 #else
         private void FixedUpdate()
+        // private void Update()
 #endif
-        {
+	{
+	    velocity = (rigidbody.position - prevPos)/Time.fixedDeltaTime;
+
             // Have the dice follow the grabsphere while it is being grabbed
-            // TODO: replace with parentconstraint usage?
+            // TODO: replace with parentconstraint usage? or just plain old reparenting somehow?
             if (diceFollow) {
+		doDebugText();
+
                 int idx = 0;
                 foreach (GameObject die in dice) {
                     Rigidbody rb = die.GetComponent<Rigidbody>();
@@ -321,8 +343,19 @@ namespace XZDice
                 }
             }
 
+	    if (scheduleDrop) {
+		doDrop();
+		scheduleDrop = false;
+	    }
+
+	    if (schedulePickup) {
+		doPickup();
+		schedulePickup = false;
+	    }
+	     
+	    
             // One or more dice not at rest, and not the very first fixed update after it has been thrown
-            if (!firstFixedUpdate && thrown !=0) {
+            if (firstFixedUpdate <= 0 && thrown != 0) {
                 int idx = 0;
                 foreach (GameObject die in dice) {
                     Rigidbody rb = die.GetComponent<Rigidbody>();
@@ -340,14 +373,23 @@ namespace XZDice
                 }
             }
 
-            firstFixedUpdate = false;
+	    if (firstFixedUpdate > 0) {
+		--firstFixedUpdate;
+	    }
+
+	    prevPos = rigidbody.position;
+	    prevVelocity = velocity;
+	    prevRBVelocity = rigidbody.velocity;
         }
 
-        public override void OnPickup()
-        {
+	private void doPickup()
+	{
 #if VITDECK_HIDE_MENUITEM
             if (!inBooth) return;
 #endif
+
+	    rigidbody.isKinematic = false;
+	    rigidbody.WakeUp();
 
             int idx = 0;
             foreach (GameObject die in dice) {
@@ -358,9 +400,9 @@ namespace XZDice
                 c.enabled = false;
 
                 Rigidbody rb = die.GetComponent<Rigidbody>();
+                rb.isKinematic = true;
                 rb.position = rigidbody.position + new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f);
                 rb.useGravity = false;
-                rb.isKinematic = true;
 
                 VRCObjectSync os = (VRCObjectSync)die.GetComponent(typeof(VRCObjectSync));
                 if (os != null)
@@ -374,10 +416,49 @@ namespace XZDice
             diceFollow = true;
 
             SendToListeners("_SetHeld");
+	}
+
+        public override void OnPickup()
+        {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
+	    schedulePickup = true;
+//	    doPickup();
         }
 
-        public override void OnDrop()
-        {
+	private void doDebugText()
+	{
+	    if (debugText == null)
+		return;
+
+	    debugText.text =
+		string.Format(
+		    "rigidbody.position: {0}\n" +
+		    "rigidbody.rotation: {1}\n" +
+		    "rigidbody.velocity: {2}\n" +
+		    "rigidbody.angularVelocity: {3}\n" + 
+		    "GetAccumulatedForce: {4}\n" +
+		    "GetPointVelocity: {5}\n" +
+		    "velocity: {6}\n" +
+		    "prevVelocity: {7}\n" +
+		    "prevRBVelocity: {8}\n",
+		    rigidbody.position,
+		    rigidbody.rotation,
+		    rigidbody.velocity, 
+		    rigidbody.angularVelocity,
+		    rigidbody.GetAccumulatedForce(),
+		    rigidbody.GetPointVelocity(rigidbody.position),
+		    velocity,
+		    prevVelocity,
+		    prevRBVelocity
+		    );
+
+	}
+
+	private void doDrop()
+	{
 #if VITDECK_HIDE_MENUITEM
             if (!inBooth) return;
 #endif
@@ -391,13 +472,16 @@ namespace XZDice
                 c.enabled = true;
 
                 Rigidbody rb = die.GetComponent<Rigidbody>();
+                rb.isKinematic = false;
+
                 rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f));
                 rb.rotation = Random.rotation;
-                rb.velocity = rigidbody.velocity;
-                rb.angularVelocity = rigidbody.angularVelocity;
+//                rb.velocity = prevVelocity;
+		rb.velocity = rigidbody.velocity;
+		rb.angularVelocity = rigidbody.angularVelocity;
+		
                 rb.useGravity = true;
 
-                rb.isKinematic = false;
                 rb.WakeUp();
 
                 SetThrown(idx);
@@ -417,7 +501,19 @@ namespace XZDice
 
             SendToListeners("_SetThrown");
 
-            firstFixedUpdate = true;
+            firstFixedUpdate = 3;
+
+	    rigidbody.isKinematic = true;
+	}
+
+        public override void OnDrop()
+        {
+#if VITDECK_HIDE_MENUITEM
+            if (!inBooth) return;
+#endif
+
+	    scheduleDrop = true;
+	    // doDrop();
         }
     }
 }
