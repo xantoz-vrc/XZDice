@@ -137,15 +137,51 @@ namespace XZDice
             _Hide();
         }
 
+        private void SetKinematic(GameObject obj, bool kinematic)
+        {
+            VRCObjectSync os = (VRCObjectSync)obj.GetComponent(typeof(VRCObjectSync));
+            if (os != null) {
+                os.SetKinematic(kinematic);
+            } else {
+                Debug.LogWarning("SetKinematic: Couldn't find VRCObjectSync on object");
+                Rigidbody rb = obj.GetComponent<Rigidbody>();
+                rb.isKinematic = kinematic;
+            }
+        }
+
+        private void SetGravity(GameObject obj, bool gravity)
+        {
+            VRCObjectSync os = (VRCObjectSync)obj.GetComponent(typeof(VRCObjectSync));
+            if (os != null) {
+                os.SetGravity(gravity);
+            } else {
+                Debug.LogWarning("SetGravity: Couldn't find VRCObjectSync on object");
+                Rigidbody rb = obj.GetComponent<Rigidbody>();
+                rb.useGravity = gravity;
+            }
+        }
+
+        private void SetGravityKinematic(GameObject obj, bool gravity, bool kinematic)
+        {
+            VRCObjectSync os = (VRCObjectSync)obj.GetComponent(typeof(VRCObjectSync));
+            if (os != null) {
+                os.SetGravity(gravity);
+                os.SetKinematic(kinematic);
+            } else {
+                Debug.LogWarning("SetGravityKinematic: Couldn't find VRCObjectSync on object");
+                Rigidbody rb = obj.GetComponent<Rigidbody>();
+                rb.useGravity = gravity;
+                rb.isKinematic = kinematic;
+            }
+        }
+
         public void _HideWithDice()
         {
             _Hide();
             foreach (GameObject die in dice) {
                 MeshRenderer mr = die.GetComponentInChildren<MeshRenderer>();
                 mr.enabled = false;
-                Rigidbody rb = die.GetComponent<Rigidbody>();
-                rb.useGravity = false;
-                rb.isKinematic = true;
+                SetGravityKinematic(die, false, true);
             }
         }
 
@@ -207,9 +243,8 @@ namespace XZDice
             foreach (GameObject die in dice) {
                 Rigidbody rb = die.GetComponent<Rigidbody>();
                 rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f));
-                rb.useGravity = false;
                 rb.rotation = Random.rotation;
-                rb.isKinematic = true;
+                SetGravityKinematic(die, false, true);
 
                 Collider c = die.GetComponent<Collider>();
                 c.enabled = false;
@@ -281,8 +316,7 @@ namespace XZDice
             int idx = 0;
             foreach (GameObject die in dice) {
                 Rigidbody rb = die.GetComponent<Rigidbody>();
-                rb.useGravity = false;
-                rb.isKinematic = true;
+                SetGravityKinematic(die, false, true);
 
                 VRCObjectSync os = (VRCObjectSync)die.GetComponent(typeof(VRCObjectSync));
                 if (os != null) {
@@ -315,7 +349,7 @@ namespace XZDice
                 foreach (GameObject die in dice) {
                     Rigidbody rb = die.GetComponent<Rigidbody>();
                     rb.position = rigidbody.position + rigidbody.rotation*(new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f));
-                    rb.useGravity = false;
+                    SetGravity(die, false);
                     rb.rotation = Random.rotation;
                     ++idx;
                 }
@@ -331,7 +365,7 @@ namespace XZDice
                         rb.velocity.sqrMagnitude < 0.0001 &&
                         rb.angularVelocity.sqrMagnitude < 0.0001) {
                         ClrThrown(idx);
-                        rb.isKinematic = true;
+                        SetKinematic(die, true);
                         int result = CalculateResult(die);
                         SendToListeners("_DiceResult" + result.ToString());
                     }
@@ -359,8 +393,7 @@ namespace XZDice
 
                 Rigidbody rb = die.GetComponent<Rigidbody>();
                 rb.position = rigidbody.position + new Vector3(0.03f*(idx - dice.Length/2), 0.0f, 0.0f);
-                rb.useGravity = false;
-                rb.isKinematic = true;
+                SetGravityKinematic(die, false, true);
 
                 VRCObjectSync os = (VRCObjectSync)die.GetComponent(typeof(VRCObjectSync));
                 if (os != null)
@@ -395,9 +428,9 @@ namespace XZDice
                 rb.rotation = Random.rotation;
                 rb.velocity = rigidbody.velocity;
                 rb.angularVelocity = rigidbody.angularVelocity;
-                rb.useGravity = true;
 
-                rb.isKinematic = false;
+                SetGravityKinematic(die, true, false);
+
                 rb.WakeUp();
 
                 SetThrown(idx);
@@ -421,3 +454,8 @@ namespace XZDice
         }
     }
 }
+
+// Local Variables:
+// fill-column: 120
+// indent-tabs-mode: nil
+// End:
